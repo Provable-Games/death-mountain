@@ -1,12 +1,12 @@
 [world]
-name = "Loot Survivor 2 Slot"
-description = "Slay The Beasts"
-seed = "lootsurvivor"
+name = "Death Mountain"
+description = "Onchain Dungeon Creator"
+seed = "death_mountain"
 
 [writers]
-"ls_0_0_1" = ["ls_0_0_1-game_systems", "ls_0_0_1-game_token_systems"]
+"death_mountain" = ["death_mountain-game_systems", "death_mountain-game_token_systems"]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
+"death_mountain-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
 ]

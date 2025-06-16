@@ -1,5 +1,5 @@
 pub mod NameUtils {
-    use lootsurvivor::constants::loot::{ItemNameSuffix, ItemSuffix};
+    use death_mountain::constants::loot::{ItemNameSuffix, ItemSuffix};
 
     pub fn is_special3_set1(name: u8) -> bool {
         (name == ItemNameSuffix::Bane
@@ -77,9 +77,9 @@ pub mod NameUtils {
 }
 
 pub mod ItemUtils {
-    use lootsurvivor::constants::combat::CombatEnums::{Slot, Tier, Type};
-    use lootsurvivor::constants::loot::ItemId;
-    use lootsurvivor::models::loot::Loot;
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
+    use death_mountain::constants::loot::ItemId;
+    use death_mountain::models::loot::Loot;
 
 
     #[inline(always)]
@@ -798,8 +798,8 @@ pub mod ItemUtils {
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::loot::ItemId;
-    use lootsurvivor::utils::loot::{ItemUtils};
+    use death_mountain::constants::loot::ItemId;
+    use death_mountain::utils::loot::{ItemUtils};
 
     #[test]
     #[available_gas(151130)]

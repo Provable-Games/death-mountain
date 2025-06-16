@@ -1,6 +1,6 @@
-use lootsurvivor::constants::combat::CombatEnums::{Tier, Type};
-use lootsurvivor::constants::obstacle::{ObstacleId, ObstacleSettings};
-use lootsurvivor::models::combat::{CombatSpec, ImplCombat};
+use death_mountain::constants::combat::CombatEnums::{Tier, Type};
+use death_mountain::constants::obstacle::{ObstacleId, ObstacleSettings};
+use death_mountain::models::combat::{CombatSpec, ImplCombat};
 
 #[derive(Drop, Copy)]
 pub struct Obstacle {
@@ -84,9 +84,9 @@ pub impl ImplObstacle of IObstacle {
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::combat::CombatEnums::{Tier, Type};
-    use lootsurvivor::constants::obstacle::{ObstacleId};
-    use lootsurvivor::models::obstacle::{ImplObstacle};
+    use death_mountain::constants::combat::CombatEnums::{Tier, Type};
+    use death_mountain::constants::obstacle::{ObstacleId};
+    use death_mountain::models::obstacle::{ImplObstacle};
 
     #[test]
     #[available_gas(1666510)]

@@ -1,5 +1,5 @@
-use lootsurvivor::constants::combat::CombatEnums::Type;
-use lootsurvivor::models::beast::Beast;
+use death_mountain::constants::combat::CombatEnums::Type;
+use death_mountain::models::beast::Beast;
 
 #[starknet::interface]
 pub trait IBeastSystems<T> {
@@ -20,8 +20,8 @@ pub trait IBeastSystems<T> {
 
 #[dojo::contract]
 mod beast_systems {
-    use lootsurvivor::constants::combat::CombatEnums::Type;
-    use lootsurvivor::models::beast::{Beast, ImplBeast};
+    use death_mountain::constants::combat::CombatEnums::Type;
+    use death_mountain::models::beast::{Beast, ImplBeast};
     use super::IBeastSystems;
 
     #[abi(embed_v0)]

@@ -1,12 +1,12 @@
 use core::num::traits::OverflowingAdd;
 use core::panic_with_felt252;
-use lootsurvivor::constants::combat::CombatEnums::{Slot, Tier, Type};
-use lootsurvivor::constants::loot::{
+use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
+use death_mountain::constants::loot::{
     ItemId, ItemIndex, ItemSlotLength, ItemSuffixLength, NUM_ITEMS, NamePrefixLength, NameSuffixLength,
     PREFIXES_UNLOCK_GREATNESS, SUFFIX_UNLOCK_GREATNESS,
 };
-use lootsurvivor::models::combat::{SpecialPowers};
-use lootsurvivor::utils::loot::ItemUtils;
+use death_mountain::models::combat::{SpecialPowers};
+use death_mountain::utils::loot::ItemUtils;
 
 #[derive(Copy, Drop, Serde)]
 pub struct Loot {
@@ -989,14 +989,14 @@ pub impl ImplLoot of ILoot {
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::combat::CombatEnums::{Slot, Tier, Type};
-    use lootsurvivor::constants::loot::{
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
+    use death_mountain::constants::loot::{
         ItemId, ItemNameSuffix, ItemSlotLength, ItemSuffixLength, NamePrefixLength, NameSuffixLength,
     };
-    use lootsurvivor::models::adventurer::item::{ImplItem};
-    use lootsurvivor::models::loot::{ImplLoot};
-    use lootsurvivor::utils::loot::ItemUtils;
-    use lootsurvivor::utils::loot::NameUtils::{
+    use death_mountain::models::adventurer::item::{ImplItem};
+    use death_mountain::models::loot::{ImplLoot};
+    use death_mountain::utils::loot::ItemUtils;
+    use death_mountain::utils::loot::NameUtils::{
         is_special1_set1, is_special1_set2, is_special2_set1, is_special2_set2, is_special2_set3, is_special3_set1,
         is_special3_set2, is_special3_set3,
     };

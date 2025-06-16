@@ -1,8 +1,8 @@
-use lootsurvivor::constants::discovery::DiscoveryEnums::DiscoveryType;
-use lootsurvivor::models::adventurer::adventurer::Adventurer;
-use lootsurvivor::models::adventurer::bag::Bag;
-use lootsurvivor::models::adventurer::item::Item;
-use lootsurvivor::models::adventurer::stats::Stats;
+use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
+use death_mountain::models::adventurer::adventurer::Adventurer;
+use death_mountain::models::adventurer::bag::Bag;
+use death_mountain::models::adventurer::item::Item;
+use death_mountain::models::adventurer::stats::Stats;
 
 #[starknet::interface]
 pub trait IAdventurerSystems<T> {
@@ -30,18 +30,18 @@ pub trait IAdventurerSystems<T> {
 
 #[dojo::contract]
 mod adventurer_systems {
+    use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType};
+
+    use death_mountain::constants::world::{DEFAULT_NS};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag, IBag, ImplBag};
+    use death_mountain::models::adventurer::equipment::IEquipment;
+    use death_mountain::models::adventurer::item::Item;
+    use death_mountain::models::adventurer::stats::{ImplStats, Stats};
+    use death_mountain::models::game::{AdventurerPacked, BagPacked};
+    use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
     use dojo::world::WorldStorage;
-    use lootsurvivor::constants::discovery::DiscoveryEnums::{DiscoveryType};
-
-    use lootsurvivor::constants::world::{DEFAULT_NS};
-    use lootsurvivor::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
-    use lootsurvivor::models::adventurer::bag::{Bag, IBag, ImplBag};
-    use lootsurvivor::models::adventurer::equipment::IEquipment;
-    use lootsurvivor::models::adventurer::item::Item;
-    use lootsurvivor::models::adventurer::stats::{ImplStats, Stats};
-    use lootsurvivor::models::game::{AdventurerPacked, BagPacked};
-    use lootsurvivor::models::market::ImplMarket;
     use super::IAdventurerSystems;
 
     use tournaments::components::models::game::TokenMetadata;

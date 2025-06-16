@@ -1,14 +1,14 @@
 [package]
 cairo-version = "=2.10.1"
-name = "lootsurvivor"
-version = "1.5.0"
+name = "death_mountain"
+version = "0.1.0"
 edition = "2024_07"
 
 [cairo]
 sierra-replace-ids = true
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
 openzeppelin_token = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v1.0.0" }
 openzeppelin_introspection = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v1.0.0" }
 tournaments = { git = "https://github.com/Provable-Games/tournaments.git" }
@@ -17,7 +17,7 @@ graffiti = { git = "https://github.com/rsodre/graffiti", rev = "url" }
 
 [dev-dependencies]
 cairo_test = "=2.10.1"
-dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.0" }
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
 
 [[target.starknet-contract]]
 sierra = true

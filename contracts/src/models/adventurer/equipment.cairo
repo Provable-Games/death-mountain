@@ -1,10 +1,10 @@
 use core::panic_with_felt252;
 use core::traits::DivRem;
-use lootsurvivor::constants::combat::CombatEnums::Slot;
-use lootsurvivor::constants::loot::SUFFIX_UNLOCK_GREATNESS;
-use lootsurvivor::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
-use lootsurvivor::models::adventurer::stats::{ImplStats, Stats};
-use lootsurvivor::models::loot::ImplLoot;
+use death_mountain::constants::combat::CombatEnums::Slot;
+use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
+use death_mountain::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
+use death_mountain::models::adventurer::stats::{ImplStats, Stats};
+use death_mountain::models::loot::ImplLoot;
 
 /// @notice The Equipment struct
 /// @dev The equipment struct is used to store the adventurer's equipment
@@ -316,12 +316,12 @@ const TWO_POW_112: u256 = 0x10000000000000000000000000000;
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::combat::CombatEnums::Slot;
-    use lootsurvivor::constants::loot::ItemId;
-    use lootsurvivor::models::adventurer::adventurer::{ImplAdventurer};
-    use lootsurvivor::models::adventurer::equipment::{Equipment, ImplEquipment, Item};
-    use lootsurvivor::models::adventurer::item::{MAX_ITEM_XP, MAX_PACKABLE_ITEM_ID, MAX_PACKABLE_XP};
-    use lootsurvivor::models::loot::ImplLoot;
+    use death_mountain::constants::combat::CombatEnums::Slot;
+    use death_mountain::constants::loot::ItemId;
+    use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
+    use death_mountain::models::adventurer::equipment::{Equipment, ImplEquipment, Item};
+    use death_mountain::models::adventurer::item::{MAX_ITEM_XP, MAX_PACKABLE_ITEM_ID, MAX_PACKABLE_XP};
+    use death_mountain::models::loot::ImplLoot;
 
     #[test]
     #[available_gas(1447420)]

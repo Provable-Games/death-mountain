@@ -1,5 +1,5 @@
-use lootsurvivor::models::adventurer::stats::Stats;
-use lootsurvivor::models::market::ItemPurchase;
+use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::market::ItemPurchase;
 
 const VRF_ENABLED: bool = true;
 
@@ -20,39 +20,39 @@ pub trait IGameSystems<T> {
 #[dojo::contract]
 mod game_systems {
     use core::panic_with_felt252;
+    use death_mountain::constants::adventurer::{
+        ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
+        POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
+    };
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
+    use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
+    use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
+    use death_mountain::constants::loot::{SUFFIX_UNLOCK_GREATNESS};
+    use death_mountain::constants::world::{DEFAULT_NS};
+
+    use death_mountain::libs::game::{GameLibs, ImplGameLibs};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag};
+    use death_mountain::models::adventurer::equipment::{ImplEquipment};
+    use death_mountain::models::adventurer::item::{ImplItem, Item};
+    use death_mountain::models::adventurer::stats::{ImplStats, Stats};
+    use death_mountain::models::beast::{Beast, IBeast};
+    use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
+    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings};
+    use death_mountain::models::game::{
+        AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
+        GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
+    };
+    use death_mountain::models::market::{ImplMarket, ItemPurchase};
+    use death_mountain::models::obstacle::{IObstacle, ImplObstacle};
+    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
+    use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
+    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
+    use death_mountain::utils::cartridge::VRFImpl;
 
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use lootsurvivor::constants::adventurer::{
-        ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
-        POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
-    };
-    use lootsurvivor::constants::combat::CombatEnums::{Slot, Tier};
-    use lootsurvivor::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
-    use lootsurvivor::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
-    use lootsurvivor::constants::loot::{SUFFIX_UNLOCK_GREATNESS};
-    use lootsurvivor::constants::world::{DEFAULT_NS};
-
-    use lootsurvivor::libs::game::{GameLibs, ImplGameLibs};
-    use lootsurvivor::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use lootsurvivor::models::adventurer::bag::{Bag};
-    use lootsurvivor::models::adventurer::equipment::{ImplEquipment};
-    use lootsurvivor::models::adventurer::item::{ImplItem, Item};
-    use lootsurvivor::models::adventurer::stats::{ImplStats, Stats};
-    use lootsurvivor::models::beast::{Beast, IBeast};
-    use lootsurvivor::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
-    use lootsurvivor::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings};
-    use lootsurvivor::models::game::{
-        AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
-        GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
-    };
-    use lootsurvivor::models::market::{ImplMarket, ItemPurchase};
-    use lootsurvivor::models::obstacle::{IObstacle, ImplObstacle};
-    use lootsurvivor::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use lootsurvivor::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
-    use lootsurvivor::systems::loot::contracts::{ILootSystemsDispatcherTrait};
-    use lootsurvivor::utils::cartridge::VRFImpl;
 
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{get_tx_info};
@@ -67,8 +67,8 @@ mod game_systems {
     impl GameSystemsImpl of super::IGameSystems<ContractState> {
         /// @title Start Game
         ///
-        /// @notice Starts a new game of Loot Survivor
-        /// @dev Starts a new game of Loot Survivor with the provided weapon.
+        /// @notice Starts a new game
+        /// @dev Starts a new game with the provided weapon.
         fn start_game(ref self: ContractState, adventurer_id: u64, weapon: u8) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
@@ -1919,7 +1919,7 @@ mod game_systems {
         let adventurer = game_libs.adventurer.get_adventurer(adventurer_id);
         assert!(
             adventurer.xp == 0 && adventurer.health == 0,
-            "Loot Survivor: Adventurer {} has already started",
+            "Death Mountain: Adventurer {} has already started",
             adventurer_id,
         );
     }
@@ -1934,33 +1934,33 @@ mod game_systems {
 
 #[cfg(test)]
 mod tests {
+    use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
+    use death_mountain::constants::beast::BeastSettings;
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
+    use death_mountain::constants::loot::{ItemId};
+
+    use death_mountain::constants::world::DEFAULT_NS;
+
+    use death_mountain::libs::game::{GameLibs, ImplGameLibs};
+    use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::stats::{IStat, Stats};
+    use death_mountain::models::game::{AdventurerEntropy};
+    use death_mountain::models::game::{
+        e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
+        m_SettingsCounter,
+    };
+    use death_mountain::models::market::{ItemPurchase};
+    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
+    use death_mountain::systems::beast::contracts::{beast_systems};
+    use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
+    use death_mountain::systems::game_token::contracts::{game_token_systems};
+    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
+    use death_mountain::systems::renderer::contracts::{renderer_systems};
     use dojo::model::{ModelStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
-    use lootsurvivor::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
-    use lootsurvivor::constants::beast::BeastSettings;
-    use lootsurvivor::constants::combat::CombatEnums::{Slot, Tier};
-    use lootsurvivor::constants::loot::{ItemId};
-
-    use lootsurvivor::constants::world::DEFAULT_NS;
-
-    use lootsurvivor::libs::game::{GameLibs, ImplGameLibs};
-    use lootsurvivor::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
-    use lootsurvivor::models::adventurer::stats::{IStat, Stats};
-    use lootsurvivor::models::game::{AdventurerEntropy};
-    use lootsurvivor::models::game::{
-        e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
-        m_SettingsCounter,
-    };
-    use lootsurvivor::models::market::{ItemPurchase};
-    use lootsurvivor::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
-    use lootsurvivor::systems::beast::contracts::{beast_systems};
-    use lootsurvivor::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
-    use lootsurvivor::systems::game_token::contracts::{game_token_systems};
-    use lootsurvivor::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
-    use lootsurvivor::systems::renderer::contracts::{renderer_systems};
     use starknet::{contract_address_const};
     use tournaments::components::interfaces::{IGameTokenDispatcher, IGameTokenDispatcherTrait};
 
@@ -2016,7 +2016,7 @@ mod tests {
             .span()
     }
 
-    fn deploy_lootsurvivor() -> (dojo::world::WorldStorage, IGameSystemsDispatcher, GameLibs) {
+    fn deploy_dungeon() -> (dojo::world::WorldStorage, IGameSystemsDispatcher, GameLibs) {
         let ndef = namespace_def();
         let mut world = spawn_test_world([ndef].span());
         world.sync_perms_and_inits(contract_defs());
@@ -2047,7 +2047,7 @@ mod tests {
 
     #[test]
     fn test_new_game() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // load player assets
@@ -2061,7 +2061,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn no_explore_during_battle() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to explore before defeating start beast
@@ -2070,7 +2070,7 @@ mod tests {
 
     #[test]
     fn defeat_starter_beast() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack beast
@@ -2087,7 +2087,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Cant flee starter beast', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_starter_beast() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // immediately attempt to flee starter beast
@@ -2098,7 +2098,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_attack_outside_battle() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, true);
@@ -2109,7 +2109,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_outside_battle() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);
@@ -2118,7 +2118,7 @@ mod tests {
 
     #[test]
     fn game_flow() { // adventurer_id 1 with simple entropy
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack starter beast
@@ -2157,7 +2157,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Stat upgrade available', 'ENTRYPOINT_FAILED'))]
     fn explore_not_allowed_with_avail_stat_upgrade() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2178,7 +2178,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn buy_items_during_battle() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
@@ -2189,7 +2189,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED'))]
     fn buy_items_with_stat_upgrades() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2211,7 +2211,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_equipped() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2240,7 +2240,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_bagged() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2270,7 +2270,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market item does not exist', 'ENTRYPOINT_FAILED'))]
     fn buy_item_not_on_market() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2291,7 +2291,7 @@ mod tests {
 
     #[test]
     fn buy_and_bag_item() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2318,7 +2318,7 @@ mod tests {
 
     #[test]
     fn buy_items() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2412,7 +2412,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item not in bag', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn equip_not_in_bag() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of items to equip that contains an item not in bag
@@ -2428,7 +2428,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Too many items', 'ENTRYPOINT_FAILED'))]
     fn equip_too_many_items() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of 9 items (too many to equip)
@@ -2451,7 +2451,7 @@ mod tests {
 
     #[test]
     fn equip() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2567,7 +2567,7 @@ mod tests {
 
     #[test]
     fn buy_potions() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2608,7 +2608,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Health already full', 'ENTRYPOINT_FAILED'))]
     fn buy_potions_exceed_max_health() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2641,7 +2641,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_with_stat_upgrade() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2656,7 +2656,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_during_battle() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attempt to immediately buy health before clearing starter beast
@@ -2669,7 +2669,7 @@ mod tests {
 
     #[test]
     fn get_potion_price_underflow() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let adventurer = game_libs.adventurer.get_adventurer(adventurer_id);
@@ -2701,7 +2701,7 @@ mod tests {
 
     #[test]
     fn drop_item() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2757,7 +2757,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
     fn drop_on_starter_beast() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let mut drop_list = ArrayTrait::<u8>::new();
@@ -2771,7 +2771,7 @@ mod tests {
 
     #[test]
     fn upgrade_stats() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2801,7 +2801,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('insufficient stat upgrades', 'ENTRYPOINT_FAILED'))]
     fn upgrade_stats_not_enough_points() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2817,7 +2817,7 @@ mod tests {
 
     #[test]
     fn upgrade_adventurer() {
-        let (world, game, game_libs) = deploy_lootsurvivor();
+        let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2868,7 +2868,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED'))]
     fn no_dropping_starter_weapon_during_starter_beast() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to drop starter weapon during starter beast battle
@@ -2878,7 +2878,7 @@ mod tests {
 
     #[test]
     fn drop_starter_item_after_starter_beast() {
-        let (world, game, _) = deploy_lootsurvivor();
+        let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast
@@ -2891,7 +2891,7 @@ mod tests {
 
     #[test]
     fn item_level_up() {
-        let (mut world, game, game_libs) = deploy_lootsurvivor();
+        let (mut world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);

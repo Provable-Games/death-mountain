@@ -1,6 +1,6 @@
 use core::num::traits::Sqrt;
 use core::traits::DivRem;
-use lootsurvivor::constants::loot::ItemId;
+use death_mountain::constants::loot::ItemId;
 
 #[derive(Introspect, Drop, Copy, PartialEq, Serde)]
 // 21 bits in storage
@@ -115,8 +115,10 @@ pub const MAX_ITEM_XP: u16 = 400;
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::loot::ItemId;
-    use lootsurvivor::models::adventurer::item::{IItemPrimitive, ImplItem, Item, MAX_PACKABLE_ITEM_ID, MAX_PACKABLE_XP};
+    use death_mountain::constants::loot::ItemId;
+    use death_mountain::models::adventurer::item::{
+        IItemPrimitive, ImplItem, Item, MAX_PACKABLE_ITEM_ID, MAX_PACKABLE_XP,
+    };
 
     #[test]
     fn item_packing() {

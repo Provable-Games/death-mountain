@@ -1,7 +1,7 @@
 use core::integer::u64_safe_divmod;
 use core::panic_with_felt252;
 use core::traits::DivRem;
-use lootsurvivor::constants::loot::ItemSuffix;
+use death_mountain::constants::loot::ItemSuffix;
 
 pub const MAX_STAT_VALUE: u8 = 31;
 
@@ -415,7 +415,7 @@ const TWO_POW_25: u256 = 0x2000000;
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::models::adventurer::stats::{IStat, ImplStats, MAX_STAT_VALUE, Stats};
+    use death_mountain::models::adventurer::stats::{IStat, ImplStats, MAX_STAT_VALUE, Stats};
 
     #[test]
     #[available_gas(1039260)]

@@ -2,7 +2,7 @@ use core::num::traits::OverflowingAdd;
 use core::panic_with_felt252;
 use core::poseidon::poseidon_hash_span;
 use core::traits::DivRem;
-use lootsurvivor::constants::adventurer::{
+use death_mountain::constants::adventurer::{
     BASE_POTION_PRICE, CHARISMA_ITEM_DISCOUNT, CHARISMA_POTION_DISCOUNT, CRITICAL_HIT_LEVEL_MULTIPLIER,
     HEALTH_INCREASE_PER_VITALITY, JEWELRY_BONUS_BEAST_GOLD_PERCENT, JEWELRY_BONUS_CRITICAL_HIT_PERCENT_PER_GREATNESS,
     JEWELRY_BONUS_NAME_MATCH_PERCENT_PER_GREATNESS, MAX_ADVENTURER_HEALTH, MAX_ADVENTURER_XP, MAX_GOLD,
@@ -11,23 +11,23 @@ use lootsurvivor::constants::adventurer::{
     SILVER_RING_LUCK_BONUS_PER_GREATNESS, STARTING_GOLD, STARTING_HEALTH, TWO_POW_16_NZ, TWO_POW_32, TWO_POW_32_NZ,
     TWO_POW_64_NZ, TWO_POW_8_NZ_U16, VITALITY_INSTANT_HEALTH_BONUS,
 };
-use lootsurvivor::constants::beast::BeastSettings;
-use lootsurvivor::constants::combat::CombatEnums::{Slot, Type};
-use lootsurvivor::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
-use lootsurvivor::constants::loot::ItemSuffix::{
+use death_mountain::constants::beast::BeastSettings;
+use death_mountain::constants::combat::CombatEnums::{Slot, Type};
+use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
+use death_mountain::constants::loot::ItemSuffix::{
     of_Anger, of_Brilliance, of_Detection, of_Enlightenment, of_Fury, of_Giant, of_Perfection, of_Power, of_Protection,
     of_Rage, of_Reflection, of_Skill, of_Titans, of_Vitriol, of_the_Fox, of_the_Twins,
 };
-use lootsurvivor::constants::loot::{ItemId, SUFFIX_UNLOCK_GREATNESS};
-use lootsurvivor::models::adventurer::bag::{Bag, IBag};
-use lootsurvivor::models::adventurer::equipment::{Equipment, IEquipment, ImplEquipment};
-use lootsurvivor::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
-use lootsurvivor::models::adventurer::stats::{IStat, ImplStats, Stats};
-use lootsurvivor::models::beast::{Beast};
-use lootsurvivor::models::combat::{CombatResult, CombatSpec, ImplCombat, SpecialPowers};
-use lootsurvivor::models::loot::{Loot};
-use lootsurvivor::models::obstacle::{ImplObstacle, Obstacle};
-use lootsurvivor::utils::loot::ItemUtils;
+use death_mountain::constants::loot::{ItemId, SUFFIX_UNLOCK_GREATNESS};
+use death_mountain::models::adventurer::bag::{Bag, IBag};
+use death_mountain::models::adventurer::equipment::{Equipment, IEquipment, ImplEquipment};
+use death_mountain::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
+use death_mountain::models::adventurer::stats::{IStat, ImplStats, Stats};
+use death_mountain::models::beast::{Beast};
+use death_mountain::models::combat::{CombatResult, CombatSpec, ImplCombat, SpecialPowers};
+use death_mountain::models::loot::{Loot};
+use death_mountain::models::obstacle::{ImplObstacle, Obstacle};
+use death_mountain::utils::loot::ItemUtils;
 
 
 #[derive(Introspect, Drop, Copy, Serde)]
@@ -720,7 +720,7 @@ pub impl ImplAdventurer of IAdventurer {
         let id = ImplObstacle::get_random_id(id_seed);
         let level = ImplCombat::get_random_level(adventurer_level, level_seed);
 
-        // obstacles do not receive special powers in Loot Survivor
+        // TODO: Add support for obstacle specials
         let specials = SpecialPowers { special1: 0, special2: 0, special3: 0 };
         let combat_spec = CombatSpec {
             tier: ImplObstacle::get_tier(id), item_type: ImplObstacle::get_type(id), level, specials,
@@ -1095,27 +1095,27 @@ const TWO_POW_128_NZ: NonZero<u256> = 0x100000000000000000000000000000000;
 #[cfg(test)]
 mod tests {
     use core::panic_with_felt252;
-    use lootsurvivor::constants::adventurer::{
+    use death_mountain::constants::adventurer::{
         BASE_POTION_PRICE, CHARISMA_ITEM_DISCOUNT, HEALTH_INCREASE_PER_VITALITY, ITEM_MAX_GREATNESS,
         JEWELRY_BONUS_NAME_MATCH_PERCENT_PER_GREATNESS, MAX_ADVENTURER_HEALTH, MAX_ADVENTURER_XP, MAX_GOLD,
         MAX_PACKABLE_ACTION_COUNT, MAX_PACKABLE_BEAST_HEALTH, MAX_PACKABLE_ITEM_SPECIALS_SEED,
         MAX_STAT_UPGRADES_AVAILABLE, MINIMUM_ITEM_PRICE, MINIMUM_POTION_PRICE, NECKLACE_ARMOR_BONUS,
         SILVER_RING_G20_LUCK_BONUS, SILVER_RING_LUCK_BONUS_PER_GREATNESS, STARTING_GOLD, STARTING_HEALTH,
     };
-    use lootsurvivor::constants::beast::{BeastId, BeastSettings};
-    use lootsurvivor::constants::combat::CombatEnums::{Slot, Type};
-    use lootsurvivor::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
-    use lootsurvivor::constants::loot::ItemSuffix::{of_Giant, of_Perfection, of_Power, of_Protection};
-    use lootsurvivor::constants::loot::{ItemId, ItemSuffix};
-    use lootsurvivor::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use lootsurvivor::models::adventurer::bag::{ImplBag};
-    use lootsurvivor::models::adventurer::equipment::{Equipment, ImplEquipment};
-    use lootsurvivor::models::adventurer::item::{Item, MAX_PACKABLE_XP};
-    use lootsurvivor::models::adventurer::stats::{ImplStats, MAX_STAT_VALUE, Stats};
-    use lootsurvivor::models::beast::{ImplBeast};
-    use lootsurvivor::models::combat::SpecialPowers;
-    use lootsurvivor::models::loot::{ImplLoot};
-    use lootsurvivor::utils::loot::ItemUtils;
+    use death_mountain::constants::beast::{BeastId, BeastSettings};
+    use death_mountain::constants::combat::CombatEnums::{Slot, Type};
+    use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
+    use death_mountain::constants::loot::ItemSuffix::{of_Giant, of_Perfection, of_Power, of_Protection};
+    use death_mountain::constants::loot::{ItemId, ItemSuffix};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{ImplBag};
+    use death_mountain::models::adventurer::equipment::{Equipment, ImplEquipment};
+    use death_mountain::models::adventurer::item::{Item, MAX_PACKABLE_XP};
+    use death_mountain::models::adventurer::stats::{ImplStats, MAX_STAT_VALUE, Stats};
+    use death_mountain::models::beast::{ImplBeast};
+    use death_mountain::models::combat::SpecialPowers;
+    use death_mountain::models::loot::{ImplLoot};
+    use death_mountain::utils::loot::ItemUtils;
 
     #[test]
     #[available_gas(30020000)]

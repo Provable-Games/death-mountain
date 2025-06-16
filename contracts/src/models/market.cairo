@@ -1,8 +1,8 @@
 // a randomised deterministic marketplace
 use core::integer::u64_safe_divmod;
-use lootsurvivor::constants::combat::CombatEnums::Tier;
-use lootsurvivor::constants::loot::{NUM_ITEMS, NUM_ITEMS_NZ_MINUS_ONE};
-use lootsurvivor::constants::market::{NUMBER_OF_ITEMS_PER_LEVEL, TIER_PRICE};
+use death_mountain::constants::combat::CombatEnums::Tier;
+use death_mountain::constants::loot::{NUM_ITEMS, NUM_ITEMS_NZ_MINUS_ONE};
+use death_mountain::constants::market::{NUMBER_OF_ITEMS_PER_LEVEL, TIER_PRICE};
 
 #[derive(Introspect, Copy, Drop, Serde)]
 pub struct ItemPurchase {
@@ -213,10 +213,10 @@ pub impl ImplMarket of IMarket {
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::combat::CombatEnums::{Tier};
-    use lootsurvivor::constants::loot::{ItemId, NUM_ITEMS};
-    use lootsurvivor::constants::market::{TIER_PRICE};
-    use lootsurvivor::models::market::ImplMarket;
+    use death_mountain::constants::combat::CombatEnums::{Tier};
+    use death_mountain::constants::loot::{ItemId, NUM_ITEMS};
+    use death_mountain::constants::market::{TIER_PRICE};
+    use death_mountain::models::market::ImplMarket;
     const TEST_MARKET_SEED: u256 = 515;
     const TEST_OFFSET: u8 = 3;
 

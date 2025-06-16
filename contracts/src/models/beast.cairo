@@ -1,11 +1,11 @@
 use core::panic_with_felt252;
-use lootsurvivor::constants::beast::BeastId::{Bear, Fairy, Gnome, MAX_ID, Troll};
-use lootsurvivor::constants::beast::BeastSettings::{
+use death_mountain::constants::beast::BeastId::{Bear, Fairy, Gnome, MAX_ID, Troll};
+use death_mountain::constants::beast::BeastSettings::{
     BEAST_SPECIAL_NAME_LEVEL_UNLOCK, CRITICAL_HIT_AMBUSH_MULTIPLIER, CRITICAL_HIT_LEVEL_MULTIPLIER, GOLD_MULTIPLIER,
     GOLD_REWARD_DIVISOR, MAXIMUM_HEALTH, MAX_SPECIAL2, MAX_SPECIAL3, MINIMUM_XP_REWARD, STARTER_BEAST_HEALTH,
 };
-use lootsurvivor::constants::combat::CombatEnums::{Tier, Type};
-use lootsurvivor::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
+use death_mountain::constants::combat::CombatEnums::{Tier, Type};
+use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
 
 #[derive(Drop, Copy, Serde)]
 pub struct Beast {
@@ -250,14 +250,14 @@ pub impl ImplBeast of IBeast {
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::beast::BeastId::{Bear, Goblin, Juggernaut, MAX_ID, Pegasus, Warlock};
-    use lootsurvivor::constants::beast::BeastSettings::{
+    use death_mountain::constants::beast::BeastId::{Bear, Goblin, Juggernaut, MAX_ID, Pegasus, Warlock};
+    use death_mountain::constants::beast::BeastSettings::{
         CRITICAL_HIT_AMBUSH_MULTIPLIER, CRITICAL_HIT_LEVEL_MULTIPLIER, MAXIMUM_HEALTH,
     };
-    use lootsurvivor::constants::combat::CombatEnums::{Tier, Type};
-    use lootsurvivor::models::adventurer::adventurer::{ImplAdventurer};
-    use lootsurvivor::models::beast::{Beast, IBeast, ImplBeast};
-    use lootsurvivor::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
+    use death_mountain::constants::combat::CombatEnums::{Tier, Type};
+    use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
+    use death_mountain::models::beast::{Beast, IBeast, ImplBeast};
+    use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
 
     #[test]
     #[available_gas(70000)]

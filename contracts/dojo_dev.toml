@@ -1,7 +1,7 @@
 [world]
-name = "Loot Survivor 2"
-description = "Slay The Beasts"
-seed = "pg_test_ls"
+name = "Death Mountain"
+description = "Onchain Dungeon Creator"
+seed = "death_mountain"
 
 [env]
 rpc_url = "http://localhost:5050/"
@@ -9,12 +9,12 @@ account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5c
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
 
 [namespace]
-default = "ls_0_0_1"
+default = "death_mountain"
 
 [writers]
-"ls_0_0_1" = ["ls_0_0_1-game_systems", "ls_0_0_1-game_token_systems"]
+"death_mountain" = ["death_mountain-game_systems", "death_mountain-game_token_systems"]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
+"death_mountain-game_token_systems" = [
     "0x000B39b235b44c53a2E9F0c5D35939D9C8E8dAFDd0a2ba2E695b501Fc1e9fd2f",
 ]

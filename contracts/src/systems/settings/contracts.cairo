@@ -1,6 +1,6 @@
-use lootsurvivor::models::adventurer::adventurer::Adventurer;
-use lootsurvivor::models::adventurer::bag::Bag;
-use lootsurvivor::models::game::GameSettings;
+use death_mountain::models::adventurer::adventurer::Adventurer;
+use death_mountain::models::adventurer::bag::Bag;
+use death_mountain::models::game::GameSettings;
 
 #[starknet::interface]
 pub trait ISettingsSystems<T> {
@@ -20,12 +20,12 @@ pub trait ISettingsSystems<T> {
 
 #[dojo::contract]
 mod settings_systems {
+    use death_mountain::constants::world::{DEFAULT_NS, VERSION};
+    use death_mountain::models::adventurer::adventurer::Adventurer;
+    use death_mountain::models::adventurer::bag::Bag;
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter};
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage};
-    use lootsurvivor::constants::world::{DEFAULT_NS, VERSION};
-    use lootsurvivor::models::adventurer::adventurer::Adventurer;
-    use lootsurvivor::models::adventurer::bag::Bag;
-    use lootsurvivor::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter};
     use super::ISettingsSystems;
     use tournaments::components::models::game::TokenMetadata;
 

@@ -1,9 +1,8 @@
+use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcher};
+use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcher};
+use death_mountain::systems::loot::contracts::{ILootSystemsDispatcher};
+use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcher};
 use dojo::world::{WorldStorage, WorldStorageTrait};
-
-use lootsurvivor::systems::adventurer::contracts::{IAdventurerSystemsDispatcher};
-use lootsurvivor::systems::beast::contracts::{IBeastSystemsDispatcher};
-use lootsurvivor::systems::loot::contracts::{ILootSystemsDispatcher};
-use lootsurvivor::systems::renderer::contracts::{IRendererSystemsDispatcher};
 
 #[derive(Copy, Drop)]
 pub struct GameLibs {

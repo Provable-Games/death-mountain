@@ -3,16 +3,16 @@ pub trait IGameTokenSystems<T> {}
 
 #[dojo::contract]
 mod game_token_systems {
+    use death_mountain::constants::world::{DEFAULT_NS, SCORE_ATTRIBUTE, SCORE_MODEL, SETTINGS_MODEL};
+    use death_mountain::libs::game::ImplGameLibs;
+    use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{ImplBag};
+
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata};
+    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
+    use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage};
-    use lootsurvivor::constants::world::{DEFAULT_NS, SCORE_ATTRIBUTE, SCORE_MODEL, SETTINGS_MODEL};
-    use lootsurvivor::libs::game::ImplGameLibs;
-    use lootsurvivor::models::adventurer::adventurer::{ImplAdventurer};
-    use lootsurvivor::models::adventurer::bag::{ImplBag};
-
-    use lootsurvivor::models::game::{GameSettings, GameSettingsMetadata};
-    use lootsurvivor::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use lootsurvivor::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
 
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_token::erc721::interface::{IERC721Metadata};
@@ -71,17 +71,17 @@ mod game_token_systems {
     fn dojo_init(ref self: ContractState, creator_address: ContractAddress) {
         let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
-        self.erc721.initializer("Loot Survivor", "LSVR", "https://lootsurvivor.io/");
+        self.erc721.initializer("Death Mountain", "DM", "https://deathmountain.gg/");
         self
             .game
             .initializer(
                 creator_address,
-                'Loot Survivor',
-                "Loot Survivor is a fully on-chain arcade dungeon crawler game on Starknet",
+                'Death Mountain',
+                "Death Mountain is an onchain dungeon generator",
                 'Provable Games',
                 'Provable Games',
-                'Arcade / Dungeon Crawler',
-                "https://lootsurvivor.io/favicon-32x32.png",
+                'Dungeon Generator',
+                "https://deathmountain.gg/favicon-32x32.png",
                 DEFAULT_NS(),
                 SCORE_MODEL(),
                 SCORE_ATTRIBUTE(),
@@ -136,12 +136,12 @@ mod game_token_systems {
     impl ERC721Metadata of IERC721Metadata<ContractState> {
         /// Returns the NFT name.
         fn name(self: @ContractState) -> ByteArray {
-            "Loot Survivor"
+            "Death Mountain"
         }
 
         /// Returns the NFT symbol.
         fn symbol(self: @ContractState) -> ByteArray {
-            "LSVR"
+            "DM"
         }
 
         /// Returns the Uniform Resource Identifier (URI) for the `token_id` token.

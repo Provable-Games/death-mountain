@@ -1,12 +1,12 @@
 use alexandria_encoding::base64::Base64Encoder;
+use death_mountain::constants::loot::{ImplItemNaming, ItemSuffix};
+use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
+use death_mountain::models::adventurer::bag::Bag;
+use death_mountain::models::adventurer::equipment::ImplEquipment;
+use death_mountain::models::adventurer::item::{ImplItem, Item};
+use death_mountain::models::loot::ImplLoot;
+use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 use graffiti::json::JsonImpl;
-use lootsurvivor::constants::loot::{ImplItemNaming, ItemSuffix};
-use lootsurvivor::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
-use lootsurvivor::models::adventurer::bag::Bag;
-use lootsurvivor::models::adventurer::equipment::ImplEquipment;
-use lootsurvivor::models::adventurer::item::{ImplItem, Item};
-use lootsurvivor::models::loot::ImplLoot;
-use lootsurvivor::utils::renderer::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 
 // @notice Generates the LS logo svg
 // @return The generated LS logo
@@ -349,10 +349,7 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
 
     let mut metadata = JsonImpl::new()
         .add("name", "Adventurer" + " #" + _adventurer_id)
-        .add(
-            "description",
-            "An NFT representing ownership of a game of Loot Survivor. This NFT also serves as a fully onchain viewer for Adventurer stats. Please be mindful that games of Loot Survivor expire after 10 days and the NFT renderer can be permissionlessly updated by the token owner to change the displayed image. The purpose of this feature is to allow the community to permissionlessly improve the NFT but this feature can be abused by a malicious actor to misrepresent the state of the Adventurer.",
-        )
+        .add("description", "An NFT representing ownership of a game within Death Mountain.")
         .add("image", base64_image);
 
     let name: ByteArray = JsonImpl::new().add("trait", "Name").add("value", _name).build();
@@ -409,13 +406,13 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
 
 #[cfg(test)]
 mod tests {
-    use lootsurvivor::constants::beast::BeastSettings;
-    use lootsurvivor::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
-    use lootsurvivor::models::adventurer::bag::{Bag, ImplBag};
-    use lootsurvivor::models::adventurer::equipment::{Equipment};
-    use lootsurvivor::models::adventurer::item::{ImplItem, Item};
-    use lootsurvivor::models::adventurer::stats::{ImplStats, Stats};
-    use lootsurvivor::utils::renderer::renderer_utils::create_metadata;
+    use death_mountain::constants::beast::BeastSettings;
+    use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
+    use death_mountain::models::adventurer::equipment::{Equipment};
+    use death_mountain::models::adventurer::item::{ImplItem, Item};
+    use death_mountain::models::adventurer::stats::{ImplStats, Stats};
+    use death_mountain::utils::renderer::renderer_utils::create_metadata;
 
 
     #[test]

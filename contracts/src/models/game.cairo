@@ -1,10 +1,10 @@
-use lootsurvivor::constants::combat::CombatEnums::{Slot};
-use lootsurvivor::constants::discovery::DiscoveryEnums::DiscoveryType;
-use lootsurvivor::models::adventurer::adventurer::Adventurer;
-use lootsurvivor::models::adventurer::bag::Bag;
-use lootsurvivor::models::adventurer::stats::Stats;
-use lootsurvivor::models::combat::SpecialPowers;
-use lootsurvivor::models::market::ItemPurchase;
+use death_mountain::constants::combat::CombatEnums::{Slot};
+use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
+use death_mountain::models::adventurer::adventurer::Adventurer;
+use death_mountain::models::adventurer::bag::Bag;
+use death_mountain::models::adventurer::stats::Stats;
+use death_mountain::models::combat::SpecialPowers;
+use death_mountain::models::market::ItemPurchase;
 use starknet::ContractAddress;
 
 // ------------------------------------------ //

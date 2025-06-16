@@ -5,12 +5,12 @@ pub trait IRendererSystems<T> {
 
 #[dojo::contract]
 mod renderer_systems {
-    use lootsurvivor::constants::world::{DEFAULT_NS};
-    use lootsurvivor::libs::game::ImplGameLibs;
-    use lootsurvivor::models::adventurer::adventurer::Adventurer;
-    use lootsurvivor::models::adventurer::bag::Bag;
-    use lootsurvivor::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use lootsurvivor::utils::renderer::renderer_utils::create_metadata;
+    use death_mountain::constants::world::{DEFAULT_NS};
+    use death_mountain::libs::game::ImplGameLibs;
+    use death_mountain::models::adventurer::adventurer::Adventurer;
+    use death_mountain::models::adventurer::bag::Bag;
+    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
+    use death_mountain::utils::renderer::renderer_utils::create_metadata;
     use super::IRendererSystems;
 
     #[abi(embed_v0)]
