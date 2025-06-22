@@ -35,6 +35,7 @@ pub mod models {
     pub mod game;
     pub mod loot;
     pub mod market;
+    pub mod objectives;
     pub mod obstacle;
 }
 
@@ -45,6 +46,8 @@ pub mod utils {
         pub mod renderer_utils;
     }
     pub mod cartridge;
+    #[cfg(test)]
+    pub mod setup_denshokan;
 }
 
 pub mod constants {

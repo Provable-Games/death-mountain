@@ -41,10 +41,9 @@ mod adventurer_systems {
     use death_mountain::models::game::{AdventurerPacked, BagPacked};
     use death_mountain::models::market::ImplMarket;
     use dojo::model::ModelStorage;
-    use dojo::world::WorldStorage;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::IAdventurerSystems;
-
-    use tournaments::components::models::game::TokenMetadata;
+    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
@@ -81,8 +80,10 @@ mod adventurer_systems {
 
         fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.player_name
+            let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IGameTokenSystemsDispatcher{contract_address: game_token_address};
+            let player_name = game_token.player_name(adventurer_id);
+            player_name
         }
 
         fn remove_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {

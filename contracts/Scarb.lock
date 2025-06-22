@@ -53,12 +53,29 @@ name = "death_mountain"
 version = "0.1.0"
 dependencies = [
  "alexandria_encoding",
+ "denshokan",
  "dojo",
  "dojo_cairo_test",
+ "game_components_denshokan",
+ "game_components_metagame",
+ "game_components_minigame",
  "graffiti",
  "openzeppelin_introspection",
  "openzeppelin_token",
- "tournaments",
+]
+
+[[package]]
+name = "denshokan"
+version = "1.5.1"
+source = "git+https://github.com/Provable-Games/denshokan?branch=main#969b7fbec4c0d2556071fa81384826803255c396"
+dependencies = [
+ "alexandria_encoding",
+ "dojo",
+ "game_components_metagame",
+ "game_components_minigame",
+ "game_components_utils",
+ "openzeppelin_introspection",
+ "openzeppelin_token",
 ]
 
 [[package]]
@@ -83,14 +100,57 @@ version = "2.10.1"
 source = "git+https://github.com/dojoengine/dojo?tag=v1.5.1#986c3b0c6d647b23847c70ddceb1d33ddac86ead"
 
 [[package]]
+name = "game_components_denshokan"
+version = "0.0.1"
+source = "git+https://github.com/Provable-Games/game-components?branch=main#9a42370f9b201d5d8a00faa1a57a0ec3815dc909"
+dependencies = [
+ "game_components_minigame",
+]
+
+[[package]]
+name = "game_components_metagame"
+version = "0.0.1"
+source = "git+https://github.com/Provable-Games/game-components?branch=main#9a42370f9b201d5d8a00faa1a57a0ec3815dc909"
+dependencies = [
+ "dojo",
+ "game_components_denshokan",
+ "game_components_utils",
+ "openzeppelin_introspection",
+]
+
+[[package]]
+name = "game_components_minigame"
+version = "0.0.1"
+source = "git+https://github.com/Provable-Games/game-components?branch=main#9a42370f9b201d5d8a00faa1a57a0ec3815dc909"
+dependencies = [
+ "dojo",
+ "game_components_denshokan",
+ "game_components_utils",
+ "openzeppelin_introspection",
+ "openzeppelin_token",
+]
+
+[[package]]
+name = "game_components_utils"
+version = "0.0.1"
+source = "git+https://github.com/Provable-Games/game-components?branch=main#9a42370f9b201d5d8a00faa1a57a0ec3815dc909"
+dependencies = [
+ "alexandria_encoding",
+ "game_components_metagame",
+ "game_components_minigame",
+ "graffiti",
+]
+
+[[package]]
 name = "graffiti"
 version = "0.1.0"
-source = "git+https://github.com/rsodre/graffiti?rev=url#e8b0854798ebbcebde504ea299ed556900564ff2"
+source = "git+https://github.com/ponderingdemocritus/graffiti?rev=bc569531791dbc71c6cd8d9bc154c34eedad31fe#bc569531791dbc71c6cd8d9bc154c34eedad31fe"
 
 [[package]]
 name = "openzeppelin_access"
 version = "1.0.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v1.0.0#755ce1adbf8d89ed23fbb8daa328fcbeab7c6424"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:a39a4ea1582916c637bf7e3aee0832c3fe1ea3a3e39191955e8dc39d08327f9b"
 dependencies = [
  "openzeppelin_introspection",
  "openzeppelin_utils",
@@ -99,7 +159,8 @@ dependencies = [
 [[package]]
 name = "openzeppelin_account"
 version = "1.0.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v1.0.0#755ce1adbf8d89ed23fbb8daa328fcbeab7c6424"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:7e943a2de32ddca4d48e467e52790e380ab1f49c4daddbbbc4634dd930d0243f"
 dependencies = [
  "openzeppelin_introspection",
  "openzeppelin_utils",
@@ -108,12 +169,14 @@ dependencies = [
 [[package]]
 name = "openzeppelin_introspection"
 version = "1.0.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v1.0.0#755ce1adbf8d89ed23fbb8daa328fcbeab7c6424"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:34e088ecf19e0b3012481a29f1fbb20e600540cb9a5db1c3002a97ebb7f5a32a"
 
 [[package]]
 name = "openzeppelin_token"
 version = "1.0.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v1.0.0#755ce1adbf8d89ed23fbb8daa328fcbeab7c6424"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:33fcb84a1a76d2d3fff9302094ff564f78d45b743548fd7568c130b272473f66"
 dependencies = [
  "openzeppelin_access",
  "openzeppelin_account",
@@ -124,14 +187,5 @@ dependencies = [
 [[package]]
 name = "openzeppelin_utils"
 version = "1.0.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v1.0.0#755ce1adbf8d89ed23fbb8daa328fcbeab7c6424"
-
-[[package]]
-name = "tournaments"
-version = "0.0.1"
-source = "git+https://github.com/Provable-Games/tournaments.git#0110dccc3d6262e6619211e637f17571fb6f29b6"
-dependencies = [
- "dojo",
- "openzeppelin_introspection",
- "openzeppelin_token",
-]
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:fd348b31c4a4407add33adc3c2b8f26dca71dbd7431faaf726168f37a91db0c1"
