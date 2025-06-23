@@ -28,6 +28,23 @@ sierra = true
 casm = true
 build-external-contracts = [
     "dojo::world::world_contract::world",
+    "denshokan::models::denshokan::m_GameMetadata",
+    "denshokan::models::denshokan::m_GameRegistry",
+    "denshokan::models::denshokan::m_GameRegistryId",
+    "denshokan::models::denshokan::m_GameCounter",
+    "denshokan::models::denshokan::m_MinterRegistry",
+    "denshokan::models::denshokan::m_MinterRegistryId",
+    "denshokan::models::denshokan::m_MinterCounter",
+    "denshokan::models::denshokan::m_TokenMetadata",
+    "denshokan::models::denshokan::m_TokenCounter",
+    "denshokan::models::denshokan::m_TokenPlayerName",
+    "denshokan::models::denshokan::m_TokenObjective",
+    "denshokan::denshokan::denshokan::e_Owners",
+    "denshokan::denshokan::denshokan::e_ScoreUpdate",
+    "denshokan::denshokan::denshokan::e_ObjectiveData",
+    "denshokan::denshokan::denshokan::e_SettingsData",
+    "denshokan::denshokan::denshokan::e_TokenContextData",
+    "denshokan::denshokan::denshokan",
 ]
 
 [tool.fmt]
