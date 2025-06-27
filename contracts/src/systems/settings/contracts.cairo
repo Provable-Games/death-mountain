@@ -1,7 +1,6 @@
 use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::game::GameSettings;
-use game_components_minigame::models::settings::GameSetting;
 
 #[starknet::interface]
 pub trait ISettingsSystems<T> {
@@ -13,7 +12,7 @@ pub trait ISettingsSystems<T> {
         game_seed: u64,
         game_seed_until_xp: u16,
         in_battle: bool,
-    ) -> (u32, Span<GameSetting>);
+    ) -> u32;
     fn setting_details(self: @T, settings_id: u32) -> GameSettings;
     fn game_settings(self: @T, game_id: u64) -> GameSettings;
     fn settings_count(self: @T) -> u32;
@@ -25,11 +24,70 @@ mod settings_systems {
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter};
-    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
-    use game_components_minigame::models::settings::GameSetting;
+
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame_settings::settings::settings_component;
+    use game_components_minigame_settings::interface::{IMinigameSettings};
+    use game_components_minigame_settings::structs::{GameSetting, GameSettingDetails};
+
+    use openzeppelin_introspection::src5::SRC5Component;
+
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::ISettingsSystems;
+
+    component!(path: settings_component, storage: settings, event: SettingsEvent);
+    component!(path: SRC5Component, storage: src5, event: SRC5Event);
+
+    impl SettingsInternalImpl = settings_component::InternalImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
+
+    #[storage]
+    struct Storage {
+        #[substorage(v0)]
+        settings: settings_component::Storage,
+        #[substorage(v0)]
+        src5: SRC5Component::Storage,
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        SettingsEvent: settings_component::Event,
+        #[flat]
+        SRC5Event: SRC5Component::Event,
+    }
+
+    fn dojo_init(ref self: ContractState) {
+        self.settings.initializer();
+    }
+
+    #[abi(embed_v0)]
+    impl GameSettingsImpl of IMinigameSettings<ContractState> {
+        fn setting_exists(self: @ContractState, settings_id: u32) -> bool {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let settings: GameSettings = world.read_model(settings_id);
+            settings.adventurer.health != 0
+        }
+        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let settings: GameSettings = world.read_model(settings_id);
+            let settings_details: GameSettingsMetadata = world.read_model(settings_id);
+            GameSettingDetails {
+                name: format!("{}", settings_details.name),
+                description: "Add Description Here",
+                settings: array![
+                    GameSetting {
+                        name: "Starting Health",
+                        value: format!("{}", settings.adventurer.health),
+                    },
+                ].span(),
+            }
+        }
+    }
 
     #[abi(embed_v0)]
     impl SettingsSystemsImpl of ISettingsSystems<ContractState> {
@@ -41,7 +99,7 @@ mod settings_systems {
             game_seed: u64,
             game_seed_until_xp: u16,
             in_battle: bool,
-        ) -> (u32, Span<GameSetting>) {
+        ) -> u32 {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             // increment settings counter
             let mut settings_count: SettingsCounter = world.read_model(VERSION);
@@ -71,7 +129,12 @@ mod settings_systems {
                 },
             ].span();
 
-            (settings_count.count, settings)
+            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_systems_address };
+            let minigame_token_address = minigame_dispatcher.minigame_token_address();
+            self.settings.create_settings(settings_count.count, format!("{}", name), "New Setting Description", settings, minigame_token_address);
+
+            settings_count.count
         }
 
         fn setting_details(self: @ContractState, settings_id: u32) -> GameSettings {
@@ -82,9 +145,10 @@ mod settings_systems {
 
         fn game_settings(self: @ContractState, game_id: u64) -> GameSettings {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
-            let game_token = IGameTokenSystemsDispatcher{contract_address: game_token_address};
-            let settings_id = game_token.settings_id(game_id);
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let minigame_token_address = minigame_dispatcher.minigame_token_address();
+            let settings_id = self.settings.get_settings_id(game_id, minigame_token_address);
             let game_settings: GameSettings = world.read_model(settings_id);
             game_settings
         }

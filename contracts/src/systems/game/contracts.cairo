@@ -7,10 +7,10 @@ const VRF_ENABLED: bool = true;
 pub trait IGameSystems<T> {
     // ------ Game Actions ------
     fn start_game(ref self: T, adventurer_id: u64, weapon: u8);
-    fn explore(ref self: T, adventurer_id: u64, till_beast: bool) -> bool;
-    fn attack(ref self: T, adventurer_id: u64, to_the_death: bool) -> bool;
-    fn flee(ref self: T, adventurer_id: u64, to_the_death: bool) -> bool;
-    fn equip(ref self: T, adventurer_id: u64, items: Array<u8>) -> bool;
+    fn explore(ref self: T, adventurer_id: u64, till_beast: bool);
+    fn attack(ref self: T, adventurer_id: u64, to_the_death: bool);
+    fn flee(ref self: T, adventurer_id: u64, to_the_death: bool);
+    fn equip(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn drop(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
     fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
@@ -48,7 +48,7 @@ mod game_systems {
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
-    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
+    use death_mountain::systems::settings::contracts::{ISettingsSystemsDispatcher, ISettingsSystemsDispatcherTrait};
     use death_mountain::utils::cartridge::VRFImpl;
 
     use dojo::event::EventStorage;
@@ -169,7 +169,7 @@ mod game_systems {
         /// @param adventurer_id A u256 representing the ID of the adventurer.
         /// @param till_beast A boolean flag indicating if the exploration continues until
         /// encountering a beast.
-        fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) -> bool {
+        fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
             // get game libaries
@@ -223,7 +223,6 @@ mod game_systems {
 
             // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
-            false
         }
 
         /// @title Attack Function
@@ -233,7 +232,7 @@ mod game_systems {
         /// @param adventurer_id A u256 representing the ID of the adventurer.
         /// @param to_the_death A boolean flag indicating if the attack should continue until either
         /// the adventurer or the beast is defeated.
-        fn attack(ref self: ContractState, adventurer_id: u64, to_the_death: bool) -> bool {
+        fn attack(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
             // get game libaries
@@ -344,7 +343,6 @@ mod game_systems {
 
             // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
-            false
         }
 
         /// @title Flee Function
@@ -354,7 +352,7 @@ mod game_systems {
         /// @param adventurer_id A u256 representing the unique ID of the adventurer.
         /// @param to_the_death A boolean flag indicating if the flee attempt should continue until
         /// either the adventurer escapes or is defeated.
-        fn flee(ref self: ContractState, adventurer_id: u64, to_the_death: bool) -> bool {
+        fn flee(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
             // get game libaries
@@ -445,7 +443,6 @@ mod game_systems {
 
             // save state
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
-            false
         }
 
         /// @title Equip Function
@@ -455,7 +452,7 @@ mod game_systems {
         ///
         /// @param adventurer_id A u256 representing the unique ID of the adventurer.
         /// @param items A u8 array representing the item IDs to equip.
-        fn equip(ref self: ContractState, adventurer_id: u64, items: Array<u8>) -> bool {
+        fn equip(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
             // get game libaries
@@ -521,7 +518,6 @@ mod game_systems {
             }
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
-            false
         }
 
         /// @title Drop Function
@@ -788,11 +784,9 @@ mod game_systems {
     // }
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
-        let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
-        let game_token = IGameTokenSystemsDispatcher{contract_address: game_token_address};
-        let settings_id = game_token.settings_id(game_id);
-        let game_settings: GameSettings = world.read_model(settings_id);
-        game_settings
+        let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
+        let settings_systems = ISettingsSystemsDispatcher{contract_address: settings_systems_address};
+        settings_systems.game_settings(game_id)
     }
 
     /// @title Explore
@@ -1921,10 +1915,11 @@ mod tests {
     use death_mountain::models::market::{ItemPurchase};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
     use death_mountain::systems::beast::contracts::{beast_systems};
-    use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
+    use death_mountain::systems::game::contracts::{game_systems};
     use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait, game_token_systems};
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::{renderer_systems};
+    use death_mountain::systems::settings::contracts::{settings_systems};
     use dojo::model::{ModelStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
@@ -1948,6 +1943,7 @@ mod tests {
                 TestResource::Contract(renderer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(adventurer_systems::TEST_CLASS_HASH),
                 TestResource::Contract(beast_systems::TEST_CLASS_HASH),
+                TestResource::Contract(settings_systems::TEST_CLASS_HASH),
                 TestResource::Contract(game_token_systems::TEST_CLASS_HASH),
                 TestResource::Event(e_GameEvent::TEST_CLASS_HASH.try_into().unwrap()),
             ]
@@ -1970,6 +1966,8 @@ mod tests {
             ContractDefTrait::new(@DEFAULT_NS(), @"adventurer_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"beast_systems")
+                .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
+            ContractDefTrait::new(@DEFAULT_NS(), @"settings_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
             ContractDefTrait::new(@DEFAULT_NS(), @"game_token_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span())

@@ -11,8 +11,10 @@ sierra-replace-ids = true
 dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
 openzeppelin_token = "1.0.0"
 openzeppelin_introspection = "1.0.0"
-game_components_denshokan = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
+game_components_minigame_token = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
 game_components_minigame = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
+game_components_minigame_settings = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
+game_components_minigame_objectives = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
 game_components_metagame = { git = "https://github.com/Provable-Games/game-components", branch = "main" }
 alexandria_encoding = { git = "https://github.com/keep-starknet-strange/alexandria.git", tag = "v0.3.0" }
 graffiti = { git = "https://github.com/ponderingdemocritus/graffiti", rev = "bc569531791dbc71c6cd8d9bc154c34eedad31fe" }

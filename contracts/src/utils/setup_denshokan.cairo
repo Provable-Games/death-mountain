@@ -9,7 +9,7 @@ use dojo_cairo_test::{
 };
 
 use denshokan::constants::DEFAULT_NS;
-use game_components_denshokan::interface::{IDenshokanDispatcher};
+use game_components_minigame_token::interface::{IMinigameTokenDispatcher};
 
 use denshokan::models::denshokan::{
     m_GameMetadata, m_GameRegistry, m_GameRegistryId, m_GameCounter, m_MinterRegistry,
@@ -44,7 +44,7 @@ fn GAME_CREATOR_ADDR() -> ContractAddress {
 #[derive(Drop)]
 pub struct TestContracts {
     pub world: WorldStorage,
-    pub denshokan: IDenshokanDispatcher,
+    pub denshokan: IMinigameTokenDispatcher,
 }
 
 //
@@ -117,7 +117,7 @@ pub fn setup() -> TestContracts {
         Option::None => panic!("Denshokan contract not found in world DNS"),
     };
 
-    let denshokan = IDenshokanDispatcher { contract_address: denshokan_address };
+    let denshokan = IMinigameTokenDispatcher { contract_address: denshokan_address };
 
     TestContracts { world, denshokan }
 }
