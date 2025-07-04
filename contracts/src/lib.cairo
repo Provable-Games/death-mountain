@@ -20,6 +20,10 @@ pub mod systems {
     pub mod settings {
         pub mod contracts;
     }
+    pub mod item_config {
+        pub mod contracts;
+        pub mod genesis_items;
+    }
 }
 
 pub mod models {
@@ -33,6 +37,7 @@ pub mod models {
     pub mod beast;
     pub mod combat;
     pub mod game;
+    pub mod item_registry;
     pub mod loot;
     pub mod market;
     pub mod obstacle;
@@ -61,4 +66,10 @@ pub mod constants {
 
 pub mod libs {
     pub mod game;
+}
+
+pub mod tests {
+    pub mod beast;
+    pub mod loot;
+    pub mod item_config;
 }
