@@ -45,7 +45,7 @@ pub struct GameSettingsMetadata {
     pub created_at: u64,
 }
 
-#[derive(Introspect, Copy, Drop, Serde)]
+#[derive(Introspect, Drop, Serde)]
 #[dojo::model]
 pub struct GameSettings {
     #[key]
@@ -55,6 +55,7 @@ pub struct GameSettings {
     pub game_seed: u64,
     pub game_seed_until_xp: u16,
     pub in_battle: bool,
+    pub item_set: Array<u64>,  // Max 128 item IDs for the game
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]

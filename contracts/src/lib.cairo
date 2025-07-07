@@ -20,10 +20,6 @@ pub mod systems {
     pub mod settings {
         pub mod contracts;
     }
-    pub mod item_config {
-        pub mod contracts;
-        pub mod genesis_items;
-    }
 }
 
 pub mod models {
@@ -50,6 +46,7 @@ pub mod utils {
         pub mod renderer_utils;
     }
     pub mod cartridge;
+    pub mod genesis_items;
 }
 
 pub mod constants {
@@ -70,6 +67,7 @@ pub mod libs {
 
 pub mod tests {
     pub mod beast;
+    pub mod item_registry;
+    pub mod item_set;
     pub mod loot;
-    pub mod item_config;
 }

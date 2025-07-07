@@ -1,5 +1,5 @@
 use death_mountain::models::adventurer::stats::Stats;
-use death_mountain::models::market::ItemPurchase;
+use death_mountain::models::market::{ItemPurchase, ItemPurchaseV2};
 
 const VRF_ENABLED: bool = true;
 
@@ -13,6 +13,7 @@ pub trait IGameSystems<T> {
     fn equip(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn drop(ref self: T, adventurer_id: u64, items: Array<u8>);
     fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
+    fn buy_items_v2(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchaseV2>);
     fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
 }
 
@@ -43,7 +44,7 @@ mod game_systems {
         AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
         GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
     };
-    use death_mountain::models::market::{ImplMarket, ItemPurchase};
+    use death_mountain::models::market::{ImplMarket, ItemPurchase, ItemPurchaseV2};
     use death_mountain::models::obstacle::{IObstacle, ImplObstacle};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
@@ -629,6 +630,87 @@ mod game_systems {
                 adventurer_id,
                 adventurer.action_count,
                 GameEventDetails::buy_items(BuyItemsEvent { potions: potions, items_purchased: items.span() }),
+            );
+
+            _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
+        }
+
+        /// @title Buy Items V2
+        /// @notice Purchases items for the adventurer using item indices from item_set
+        /// @param adventurer_id The unique ID of the adventurer
+        /// @param potions The number of potions to purchase
+        /// @param items An array of ItemPurchaseV2 with indices into the game's item_set
+        fn buy_items_v2(ref self: ContractState, adventurer_id: u64, potions: u8, items: Array<ItemPurchaseV2>) {
+            let mut world: WorldStorage = self.world(@DEFAULT_NS());
+            _assert_token_ownership(world, adventurer_id);
+
+            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
+            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
+
+            // get game libaries
+            let game_libs = ImplGameLibs::new(world);
+
+            // load player assets
+            let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
+            adventurer.increment_action_count();
+
+            // assert action is valid
+            _assert_not_dead(adventurer);
+            _assert_not_in_battle(adventurer);
+            _assert_not_selecting_stat_upgrades(adventurer.stat_upgrades_available);
+
+            // get game settings to access item_set
+            let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
+
+            // if the player is buying items, process purchases
+            let adventurer_entropy = _load_adventurer_entropy(world, adventurer_id);
+            if (items.len() != 0) {
+                _buy_items_v2(
+                    game_settings.item_set.span(),
+                    adventurer_entropy.market_seed, 
+                    ref adventurer, 
+                    ref bag, 
+                    items.clone(), 
+                    game_libs
+                );
+            }
+
+            // if the player is buying potions as part of the upgrade, process purchase
+            // @dev process potion purchase after items in case item purchases changes item stat
+            // boosts
+            if potions != 0 {
+                _buy_potions(ref adventurer, potions);
+            }
+
+            if bag.mutated {
+                _save_bag(ref world, adventurer_id, adventurer.action_count, bag, game_libs);
+            }
+
+            // Convert ItemPurchaseV2 to actual item IDs for event
+            let mut actual_items = ArrayTrait::new();
+            let mut i = 0;
+            loop {
+                if i >= items.len() {
+                    break;
+                }
+                let item_purchase = *items.at(i);
+                match ImplMarket::get_item_id_from_index(game_settings.item_set.span(), item_purchase.item_index) {
+                    Option::Some(item_id) => {
+                        actual_items.append(ItemPurchase { 
+                            item_id: item_id.try_into().expect('Item ID > 127'), 
+                            equip: item_purchase.equip 
+                        });
+                    },
+                    Option::None(_) => panic!("Invalid item index"),
+                };
+                i += 1;
+            };
+
+            _emit_game_event(
+                ref world,
+                adventurer_id,
+                adventurer.action_count,
+                GameEventDetails::buy_items(BuyItemsEvent { potions: potions, items_purchased: actual_items.span() }),
             );
 
             _save_adventurer(ref world, ref adventurer, bag, adventurer_id, game_libs);
@@ -1639,6 +1721,76 @@ mod game_systems {
             } else {
                 // if it's not being equipped, just add it to bag
                 bag = game_libs.adventurer.add_new_item_to_bag(bag, item.item_id);
+            }
+
+            // increment counter
+            item_number += 1;
+        };
+
+        // if we have items to equip as part of the purchase
+        if (items_to_equip.len() != 0) {
+            // equip them and record the items that were unequipped
+            _equip_items(ref adventurer, ref bag, items_to_equip.clone(), true, game_libs);
+        }
+    }
+
+    /// @title Buy Items V2 (Internal)
+    /// @notice Internal function to process item purchases using item indices
+    /// @param item_set The game's item_set
+    /// @param market_seed The market seed for randomization
+    /// @param adventurer A reference to the adventurer
+    /// @param bag A reference to the bag
+    /// @param items_to_purchase Array of ItemPurchaseV2 to purchase
+    /// @param game_libs A reference to the game libraries
+    fn _buy_items_v2(
+        item_set: Span<u64>,
+        market_seed: u64,
+        ref adventurer: Adventurer,
+        ref bag: Bag,
+        items_to_purchase: Array<ItemPurchaseV2>,
+        game_libs: GameLibs,
+    ) {
+        // Get available item indices for this market
+        let market_inventory = ImplMarket::get_available_item_indices(
+            item_set,
+            market_seed,
+            ImplMarket::get_market_size()
+        );
+
+        // mutable array for returning items that need to be equipped as part of this purchase
+        let mut items_to_equip = ArrayTrait::<u8>::new();
+
+        let mut item_number: u32 = 0;
+        loop {
+            if item_number == items_to_purchase.len() {
+                break ();
+            }
+
+            // get the item purchase
+            let item_purchase = *items_to_purchase.at(item_number);
+
+            // get a mutable reference to the inventory
+            let mut inventory = market_inventory.span();
+
+            // assert item index is available on market
+            assert(ImplMarket::is_item_index_available(ref inventory, item_purchase.item_index), messages::ITEM_DOES_NOT_EXIST);
+
+            // convert index to actual item ID
+            let item_id = match ImplMarket::get_item_id_from_index(item_set, item_purchase.item_index) {
+                Option::Some(id) => id.try_into().expect('Item ID > 127'),
+                Option::None(_) => panic!("Invalid item index"),
+            };
+
+            // buy it and store result in our purchases array for event
+            _buy_item(ref adventurer, ref bag, item_id, game_libs);
+
+            // if item is being equipped as part of the purchase
+            if item_purchase.equip {
+                // add it to our array of items to equip
+                items_to_equip.append(item_id);
+            } else {
+                // if it's not being equipped, just add it to bag
+                bag = game_libs.adventurer.add_new_item_to_bag(bag, item_id);
             }
 
             // increment counter

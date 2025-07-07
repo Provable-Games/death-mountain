@@ -88,6 +88,17 @@ mod game_token_systems {
                 SETTINGS_MODEL(),
             );
 
+        // Create default item_set with genesis items 1-101
+        let mut default_item_set = ArrayTrait::new();
+        let mut i: u64 = 1;
+        loop {
+            if i > 101 {
+                break;
+            }
+            default_item_set.append(i);
+            i += 1;
+        };
+
         world
             .write_model(
                 @GameSettings {
@@ -97,6 +108,7 @@ mod game_token_systems {
                     game_seed: 0,
                     game_seed_until_xp: 0,
                     in_battle: false,
+                    item_set: default_item_set,
                 },
             );
 

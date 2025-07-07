@@ -4,9 +4,17 @@ use death_mountain::constants::combat::CombatEnums::Tier;
 use death_mountain::constants::loot::{NUM_ITEMS, NUM_ITEMS_NZ_MINUS_ONE};
 use death_mountain::constants::market::{NUMBER_OF_ITEMS_PER_LEVEL, TIER_PRICE};
 
+// Legacy struct for backward compatibility
 #[derive(Introspect, Copy, Drop, Serde)]
 pub struct ItemPurchase {
     pub item_id: u8,
+    pub equip: bool,
+}
+
+// New struct for index-based purchasing
+#[derive(Introspect, Copy, Drop, Serde)]
+pub struct ItemPurchaseV2 {
+    pub item_index: u8,  // Index into game's item_set (0-127)
     pub equip: bool,
 }
 
@@ -205,5 +213,83 @@ pub impl ImplMarket of IMarket {
     fn get_market_seed_and_offset(seed: u64) -> (u64, u8) {
         let (seed, offset) = u64_safe_divmod(seed, NUM_ITEMS_NZ_MINUS_ONE);
         (seed, 1 + offset.try_into().unwrap())
+    }
+
+    // ============ New index-based functions for item_set support ============
+
+    /// @notice Gets available item indices based on game's item_set
+    /// @param item_set The game's curated list of items
+    /// @param seed The market seed
+    /// @param market_size The size of the market
+    /// @return Array of indices (0-127) that point to positions in item_set
+    fn get_available_item_indices(
+        item_set: Span<u64>, 
+        seed: u64, 
+        market_size: u8
+    ) -> Array<u8> {
+        let item_count = item_set.len();
+        if item_count == 0 {
+            return ArrayTrait::new();
+        }
+        
+        // If market size >= item_set size, return all indices
+        if market_size >= item_count.try_into().unwrap() {
+            let mut all_indices = ArrayTrait::<u8>::new();
+            let mut i: u8 = 0;
+            loop {
+                if i >= item_count.try_into().unwrap() {
+                    break;
+                }
+                all_indices.append(i);
+                i += 1;
+            };
+            return all_indices;
+        }
+
+        // Otherwise, use seed to select random indices
+        let mut indices = ArrayTrait::<u8>::new();
+        let mut i = 0;
+        loop {
+            if i >= market_size {
+                break;
+            }
+            // Use seed + i to get random index
+            let index = ((seed + i.into()) % item_count.into()).try_into().unwrap();
+            indices.append(index);
+            i += 1;
+        };
+        
+        indices
+    }
+    
+    /// @notice Checks if item index is available in current market
+    /// @param inventory Array of available indices
+    /// @param item_index The index to check
+    /// @return true if index is available
+    fn is_item_index_available(ref inventory: Span<u8>, item_index: u8) -> bool {
+        loop {
+            match inventory.pop_front() {
+                Option::Some(index) => {
+                    if *index == item_index {
+                        break true;
+                    }
+                },
+                Option::None(_) => { break false; },
+            };
+        }
+    }
+    
+    /// @notice Gets actual item ID from index and item_set
+    /// @param item_set The game's item_set
+    /// @param item_index The index to convert
+    /// @return Option containing the item ID, or None if index out of bounds
+    fn get_item_id_from_index(
+        item_set: Span<u64>, 
+        item_index: u8
+    ) -> Option<u64> {
+        if item_index >= item_set.len().try_into().unwrap() {
+            return Option::None;
+        }
+        Option::Some(*item_set.at(item_index.into()))
     }
 }

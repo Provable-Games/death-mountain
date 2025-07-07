@@ -1,5 +1,5 @@
 // ---------------------------
-// Item Config Tests
+// Item Registry Tests
 // ---------------------------
 #[cfg(test)]
 mod tests {
@@ -8,14 +8,7 @@ mod tests {
     #[test]
     fn test_item_model_creation() {
         // Test creating an Item model
-        let item = Item {
-            id: 1,
-            name: 'Test Sword',
-            tier: 2,
-            item_type: 4,
-            slot: 1,
-            is_genesis: false,
-        };
+        let item = Item { id: 1, name: 'Test Sword', tier: 2, item_type: 4, slot: 1, is_genesis: false };
 
         assert(item.id == 1, 'Item ID should be 1');
         assert(item.name == 'Test Sword', 'Item name mismatch');
@@ -28,14 +21,7 @@ mod tests {
     #[test]
     fn test_genesis_item_creation() {
         // Test creating a genesis item
-        let genesis_item = Item {
-            id: 1,
-            name: 'Pendant',
-            tier: 3,
-            item_type: 1,
-            slot: 7,
-            is_genesis: true,
-        };
+        let genesis_item = Item { id: 1, name: 'Pendant', tier: 3, item_type: 1, slot: 7, is_genesis: true };
 
         assert(genesis_item.id == 1, 'Genesis item ID should be 1');
         assert(genesis_item.name == 'Pendant', 'Should be Pendant');
@@ -48,11 +34,7 @@ mod tests {
     #[test]
     fn test_item_counter_model() {
         // Test ItemCounter model
-        let counter = ItemCounter {
-            version: 'v1',
-            count: 101,
-            genesis_count: 101,
-        };
+        let counter = ItemCounter { version: 'v1', count: 101, genesis_count: 101 };
 
         assert(counter.version == 'v1', 'Version should be v1');
         assert(counter.count == 101, 'Count should be 101');
@@ -62,15 +44,12 @@ mod tests {
     #[test]
     fn test_item_counter_with_custom_items() {
         // Test ItemCounter with custom items added
-        let counter = ItemCounter {
-            version: 'v1',
-            count: 105,  // 101 genesis + 4 custom
-            genesis_count: 101,
-        };
+        let counter = ItemCounter { version: 'v1', count: 105, // 101 genesis + 4 custom
+        genesis_count: 101 };
 
         assert(counter.count == 105, 'Count should be 105');
         assert(counter.genesis_count == 101, 'Genesis count should remain 101');
-        
+
         // Calculate custom items count
         let custom_items: u64 = counter.count - counter.genesis_count.into();
         assert(custom_items == 4, 'Should have 4 custom items');
@@ -80,11 +59,7 @@ mod tests {
     fn test_item_special_powers_model() {
         // Test ItemSpecialPowers model
         let special_powers = ItemSpecialPowers {
-            id: 1,
-            prefix1_unlock: 15,
-            prefix2_unlock: 20,
-            suffix_unlock: 10,
-            special_power_id: 0,
+            id: 1, prefix1_unlock: 15, prefix2_unlock: 20, suffix_unlock: 10, special_power_id: 0,
         };
 
         assert(special_powers.id == 1, 'ID should be 1');
@@ -98,11 +73,7 @@ mod tests {
     fn test_item_special_powers_with_special() {
         // Test ItemSpecialPowers with special power
         let special_powers = ItemSpecialPowers {
-            id: 102,
-            prefix1_unlock: 25,
-            prefix2_unlock: 30,
-            suffix_unlock: 20,
-            special_power_id: 5,  // Has special power
+            id: 102, prefix1_unlock: 25, prefix2_unlock: 30, suffix_unlock: 20, special_power_id: 5 // Has special power
         };
 
         assert(special_powers.id == 102, 'ID should be 102');
@@ -114,20 +85,14 @@ mod tests {
     fn test_different_item_types() {
         // Test items of different types
         let weapon = Item {
-            id: 102,
-            name: 'Custom Sword',
-            tier: 2,
-            item_type: 4,  // Blade_or_Hide
-            slot: 1,       // Weapon
+            id: 102, name: 'Custom Sword', tier: 2, item_type: 4, // Blade_or_Hide
+            slot: 1, // Weapon
             is_genesis: false,
         };
 
         let armor = Item {
-            id: 103,
-            name: 'Custom Armor',
-            tier: 3,
-            item_type: 2,  // Metal_or_Hide
-            slot: 2,       // Chest
+            id: 103, name: 'Custom Armor', tier: 3, item_type: 2, // Metal_or_Hide
+            slot: 2, // Chest
             is_genesis: false,
         };
 
@@ -135,8 +100,8 @@ mod tests {
             id: 104,
             name: 'Custom Ring',
             tier: 1,
-            item_type: 1,  // Necklace type (used for rings too)
-            slot: 8,       // Ring
+            item_type: 1, // Necklace type (used for rings too)
+            slot: 8, // Ring
             is_genesis: false,
         };
 
@@ -149,12 +114,8 @@ mod tests {
     fn test_high_tier_item() {
         // Test a high-tier (T1) item
         let legendary_item = Item {
-            id: 105,
-            name: 'Legendary Blade',
-            tier: 1,  // T1 is highest tier
-            item_type: 4,
-            slot: 1,
-            is_genesis: false,
+            id: 105, name: 'Legendary Blade', tier: 1, // T1 is highest tier
+            item_type: 4, slot: 1, is_genesis: false,
         };
 
         assert(legendary_item.tier == 1, 'Should be T1 (highest tier)');
@@ -167,8 +128,8 @@ mod tests {
         let common_item = Item {
             id: 106,
             name: 'Common Club',
-            tier: 5,  // T5 is lowest tier
-            item_type: 3,  // Bludgeon
+            tier: 5, // T5 is lowest tier
+            item_type: 3, // Bludgeon
             slot: 1,
             is_genesis: false,
         };
