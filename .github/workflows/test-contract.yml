@@ -41,6 +41,13 @@ jobs:
 
   sozo-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-group: 
+          - "adventurer-core"
+          - "adventurer-gear" 
+          - "game-combat"
+          - "utils-market"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -75,6 +82,23 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       
-      - name: Run Dojo Build and Tests
+      - name: Run Dojo Build
+        run: cd contracts && sozo build
+      
+      - name: Run Tests for ${{ matrix.test-group }}
         run: |
-          cd contracts && sozo build && sozo test
+          cd contracts
+          case "${{ matrix.test-group }}" in
+            "adventurer-core")
+              sozo test --filter "adventurer::"
+              ;;
+            "adventurer-gear")
+              sozo test --filter "equipment::" && sozo test --filter "stats::" && sozo test --filter "bag::" && sozo test --filter "item::"
+              ;;
+            "game-combat")
+              sozo test --filter "game::" && sozo test --filter "combat::" && sozo test --filter "beast::"
+              ;;
+            "utils-market")
+              sozo test --filter "loot::" && sozo test --filter "market::" && sozo test --filter "obstacle::" && sozo test --filter "renderer"
+              ;;
+          esac
