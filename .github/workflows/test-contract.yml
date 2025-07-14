@@ -39,15 +39,10 @@ jobs:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cd contracts && scarb fmt --check
 
-  sozo-test:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        test-group: 
-          - "adventurer-core"
-          - "adventurer-gear" 
-          - "game-integration"
-          - "combat-utils"
+    outputs:
+      cache-key: ${{ steps.cache.outputs.cache-hit }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,6 +62,7 @@ jobs:
           sudo mv sozo /usr/local/bin/
       
       - name: Cache Scarb
+        id: cache
         uses: actions/cache@v3
         with:
           path: |
@@ -84,7 +80,53 @@ jobs:
       
       - name: Run Dojo Build
         run: cd contracts && sozo build
-      
+        
+      - name: Cache build artifacts
+        uses: actions/cache/save@v3
+        with:
+          path: contracts/target
+          key: build-artifacts-${{ github.sha }}
+
+  sozo-test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-group:
+          - "adventurer-core"
+          - "adventurer-gear"
+          - "game-integration"
+          - "combat-utils"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Dojo
+        id: cache-dojo
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/sozo
+          key: dojo-${{ env.DOJO_VERSION }}-linux-amd64
+
+      - name: Download Dojo release artifact
+        if: steps.cache-dojo.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+          tar -xzf dojo-linux-x86_64.tar.gz
+          sudo mv sozo /usr/local/bin/
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+
+      - name: Restore build artifacts
+        uses: actions/cache/restore@v3
+        with:
+          path: contracts/target
+          key: build-artifacts-${{ github.sha }}
+          fail-on-cache-miss: true
+
       - name: Run Tests for ${{ matrix.test-group }}
         run: |
           cd contracts
