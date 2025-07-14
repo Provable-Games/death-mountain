@@ -1,5 +1,5 @@
 name: test-contracts
-# Test caching performance on second run
+# Test larger runners with $20 budget enabled
 
 env:
   SCARB_VERSION: 2.10.1
