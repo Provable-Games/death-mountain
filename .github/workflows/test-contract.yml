@@ -9,7 +9,6 @@ on:
     paths-ignore:
       - "client/**"
       - "**/manifest.json"
-      - ".github/**"
       - "pnpm-lock.yaml"
   push:
     branches:
@@ -21,7 +20,7 @@ concurrency:
 
 jobs:
   scarb-fmt:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Cache Scarb
@@ -40,7 +39,7 @@ jobs:
       - run: cd contracts && scarb fmt --check
 
   sozo-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
