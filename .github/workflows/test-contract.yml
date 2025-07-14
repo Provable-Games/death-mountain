@@ -1,4 +1,5 @@
 name: test-contracts
+# Test caching performance on second run
 
 env:
   SCARB_VERSION: 2.10.1
