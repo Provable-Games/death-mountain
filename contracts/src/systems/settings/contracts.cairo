@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::game::{GameSettings, StatsMode};

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::constants::combat::CombatEnums::{Slot};
 use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
 use death_mountain::models::adventurer::adventurer::Adventurer;

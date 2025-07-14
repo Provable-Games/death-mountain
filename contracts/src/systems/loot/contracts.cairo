@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
 use death_mountain::models::combat::SpecialPowers;
 use death_mountain::models::loot::Loot;

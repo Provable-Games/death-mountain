@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod CombatEnums {
     #[derive(Drop, Copy, PartialEq, Serde)]
     pub enum WeaponEffectiveness {

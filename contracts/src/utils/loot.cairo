@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod NameUtils {
     use death_mountain::constants::loot::{ItemNameSuffix, ItemSuffix};
 

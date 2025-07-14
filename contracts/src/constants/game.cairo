@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub const MINIMUM_DAMAGE_FROM_BEASTS: u8 = 2;
 pub const MAINNET_CHAIN_ID: felt252 = 0x534e5f4d41494e;
 pub const SEPOLIA_CHAIN_ID: felt252 = 0x534e5f5345504f4c4941;

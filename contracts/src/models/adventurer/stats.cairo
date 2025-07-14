@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::integer::u64_safe_divmod;
 use core::panic_with_felt252;
 use core::traits::DivRem;

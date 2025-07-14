@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::models::market::ItemPurchase;
 

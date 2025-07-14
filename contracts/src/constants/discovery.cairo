@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod DiscoveryEnums {
     #[derive(Copy, Drop, Serde, PartialEq)]
     pub enum ExploreResult {

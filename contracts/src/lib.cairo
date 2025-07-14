@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
+
 pub mod systems {
     pub mod game {
         pub mod contracts;

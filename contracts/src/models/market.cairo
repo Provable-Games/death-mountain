@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // a randomised deterministic marketplace
 use core::integer::u64_safe_divmod;
 use death_mountain::constants::combat::CombatEnums::Tier;

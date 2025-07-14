@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use death_mountain::constants::combat::CombatEnums::Type;
 use death_mountain::models::beast::Beast;
 

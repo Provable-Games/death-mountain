@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use starknet::{ContractAddress, contract_address_const, get_caller_address};
 
 #[starknet::interface]

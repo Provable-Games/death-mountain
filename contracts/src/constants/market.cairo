@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // number of items available per stat upgrade
 pub const NUMBER_OF_ITEMS_PER_LEVEL: u8 = 21;
 

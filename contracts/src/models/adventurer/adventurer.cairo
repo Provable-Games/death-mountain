@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::num::traits::OverflowingAdd;
 use core::panic_with_felt252;
 use core::poseidon::poseidon_hash_span;

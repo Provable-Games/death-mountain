@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod ItemId {
     pub const Pendant: u8 = 1;
     pub const Necklace: u8 = 2;

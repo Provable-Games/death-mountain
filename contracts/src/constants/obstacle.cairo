@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod ObstacleSettings {
     // Determines the minimum damage an obstacle can do
     pub const MINIMUM_DAMAGE: u16 = 2;

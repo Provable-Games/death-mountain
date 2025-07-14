@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use alexandria_encoding::base64::Base64Encoder;
 use death_mountain::constants::loot::{ImplItemNaming, ItemSuffix};
 use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};

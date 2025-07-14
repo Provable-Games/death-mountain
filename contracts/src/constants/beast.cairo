@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod BeastSettings {
     pub const STARTER_BEAST_HEALTH: u8 = 3;
     pub const MAXIMUM_HEALTH: u16 = 1023; // 2^10 - 1
