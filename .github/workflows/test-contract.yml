@@ -46,8 +46,8 @@ jobs:
         test-group: 
           - "adventurer-core"
           - "adventurer-gear" 
-          - "game-combat"
-          - "utils-market"
+          - "game-integration"
+          - "combat-utils"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -95,10 +95,10 @@ jobs:
             "adventurer-gear")
               sozo test --filter "equipment::" && sozo test --filter "stats::" && sozo test --filter "bag::" && sozo test --filter "item::"
               ;;
-            "game-combat")
-              sozo test --filter "game::" && sozo test --filter "combat::" && sozo test --filter "beast::"
+            "game-integration")
+              sozo test --filter "game::"
               ;;
-            "utils-market")
-              sozo test --filter "loot::" && sozo test --filter "market::" && sozo test --filter "obstacle::" && sozo test --filter "renderer"
+            "combat-utils")
+              sozo test --filter "combat::" && sozo test --filter "beast::" && sozo test --filter "loot::" && sozo test --filter "market::" && sozo test --filter "obstacle::" && sozo test --filter "renderer"
               ;;
           esac
