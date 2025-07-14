@@ -40,7 +40,7 @@ jobs:
       - run: cd contracts && scarb fmt --check
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-hit }}
     steps:
@@ -89,14 +89,14 @@ jobs:
 
   sozo-test:
     needs: [build]
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        test-group:
-          - "adventurer-core"
-          - "adventurer-gear"
-          - "game-integration"
-          - "combat-utils"
+        include:
+          - test-group: "integration"
+            runner: "ubuntu-latest-4-cores"
+          - test-group: "unit"
+            runner: "ubuntu-latest"
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -131,16 +131,20 @@ jobs:
         run: |
           cd contracts
           case "${{ matrix.test-group }}" in
-            "adventurer-core")
-              sozo test --filter "adventurer::"
-              ;;
-            "adventurer-gear")
-              sozo test --filter "equipment::" && sozo test --filter "stats::" && sozo test --filter "bag::" && sozo test --filter "item::"
-              ;;
-            "game-integration")
+            "integration")
               sozo test --filter "game::"
               ;;
-            "combat-utils")
-              sozo test --filter "combat::" && sozo test --filter "beast::" && sozo test --filter "loot::" && sozo test --filter "market::" && sozo test --filter "obstacle::" && sozo test --filter "renderer"
+            "unit")
+              sozo test --filter "adventurer::" && \
+              sozo test --filter "equipment::" && \
+              sozo test --filter "stats::" && \
+              sozo test --filter "bag::" && \
+              sozo test --filter "item::" && \
+              sozo test --filter "combat::" && \
+              sozo test --filter "beast::" && \
+              sozo test --filter "loot::" && \
+              sozo test --filter "market::" && \
+              sozo test --filter "obstacle::" && \
+              sozo test --filter "renderer"
               ;;
           esac
