@@ -7,7 +7,7 @@ env:
 on:
   pull_request:
     paths-ignore:
-      - "ui/**"
+      - "client/**"
       - "**/manifest.json"
       - ".github/**"
       - "pnpm-lock.yaml"
@@ -20,42 +20,61 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup-environment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-
-  sozo-test:
-    needs: [setup-environment]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Dojo release artifact
-        run: |
-          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
-          tar -xzf dojo-linux-x86_64.tar.gz
-          sudo mv sozo /usr/local/bin/
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup Scarb
-        uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
-      - name: Run Dojo Build
-        run: |
-          cd contracts && sozo build
-      - name: Run Tests
-        run: |
-          cd contracts && sozo test
-
   scarb-fmt:
-    needs: [setup-environment]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Cache Scarb
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: scarb-${{ hashFiles('contracts/Scarb.toml') }}
+          restore-keys: |
+            scarb-
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cd contracts && scarb fmt --check
+
+  sozo-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Cache Dojo
+        id: cache-dojo
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/sozo
+          key: dojo-${{ env.DOJO_VERSION }}-linux-amd64
+      
+      - name: Download Dojo release artifact
+        if: steps.cache-dojo.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+          tar -xzf dojo-linux-x86_64.tar.gz
+          sudo mv sozo /usr/local/bin/
+      
+      - name: Cache Scarb
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: scarb-${{ hashFiles('contracts/Scarb.toml') }}
+          restore-keys: |
+            scarb-
+      
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      
+      - name: Run Dojo Build and Tests
+        run: |
+          cd contracts && sozo build && sozo test
