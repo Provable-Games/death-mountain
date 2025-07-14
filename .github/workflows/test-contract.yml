@@ -40,7 +40,7 @@ jobs:
       - run: cd contracts && scarb fmt --check
 
   build:
-    runs-on: ubuntu-latest-8-cores
+    runs-on: ubuntu-latest-4-cores
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-hit }}
     steps:
