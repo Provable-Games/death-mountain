@@ -20,32 +20,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-runner:
-    runs-on: ubuntu-latest
-    outputs:
-      use-self-hosted: ${{ steps.check.outputs.available }}
-    steps:
-      - name: Check self-hosted runner availability
-        id: check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            try {
-              const { data: runners } = await github.rest.actions.listSelfHostedRunnersForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo
-              });
-              const available = runners.runners.some(r => 
-                r.status === 'online' && 
-                r.labels.some(l => l.name === 'lh')  // Replace with your label
-              );
-              core.setOutput('available', available);
-              console.log(`Self-hosted runner available: ${available}`);
-            } catch (error) {
-              console.log('Could not check runners, defaulting to false');
-              core.setOutput('available', false);
-            }
-
   scarb-fmt:
     runs-on: ubuntu-latest
     steps:
@@ -114,15 +88,15 @@ jobs:
           key: build-artifacts-${{ github.sha }}
 
   sozo-test:
-    needs: [build, check-runner]
+    needs: [build]
     strategy:
       matrix:
         include:
           - test-group: "integration"
-            use-self-hosted: true
+            runner: "ubuntu-latest-4-cores"
           - test-group: "unit"
-            use-self-hosted: false
-    runs-on: ${{ (matrix.use-self-hosted && needs.check-runner.outputs.use-self-hosted == 'true') && fromJSON('["self-hosted", "lh"]') || (matrix.test-group == 'integration' && 'ubuntu-latest-4-cores' || 'ubuntu-latest') }}
+            runner: "ubuntu-latest"
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
