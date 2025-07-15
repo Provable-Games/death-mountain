@@ -36,7 +36,7 @@ jobs:
 
   build:
     needs: [scarb-fmt]
-    runs-on: ubuntu-latest-4
+    runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-hit }}
     steps:
@@ -91,11 +91,11 @@ jobs:
       matrix:
         include:
           - test-group: "integration"
-            runner: "ubuntu-latest-8"
+            runner: "ubuntu-latest"
           - test-group: "unit-adventurer"
-            runner: "ubuntu-latest-8"
+            runner: "ubuntu-latest"
           - test-group: "unit-models"
-            runner: "ubuntu-latest-4"
+            runner: "ubuntu-latest"
           - test-group: "unit-other"
             runner: "ubuntu-latest"
     runs-on: ${{ matrix.runner }}
