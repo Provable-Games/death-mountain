@@ -40,7 +40,7 @@ jobs:
       - run: cd contracts && scarb fmt --check
 
   build:
-    runs-on: ubuntu-latest-4-cores
+    runs-on: self-hosted
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-hit }}
     steps:
@@ -93,9 +93,9 @@ jobs:
       matrix:
         include:
           - test-group: "integration"
-            runner: "ubuntu-latest-4-cores"
+            runner: "self-hosted"
           - test-group: "unit"
-            runner: "ubuntu-latest"
+            runner: "self-hosted"
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout repository
