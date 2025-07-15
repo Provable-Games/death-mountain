@@ -1,10 +1,6 @@
 name: test-contracts
 # Test caching performance on second run
 
-env:
-  SCARB_VERSION: 2.10.1
-  DOJO_VERSION: 1.5.1
-
 on:
   pull_request:
     paths-ignore:
@@ -19,21 +15,20 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  SCARB_VERSION: 2.10.1
+  DOJO_VERSION: 1.5.1
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+
 jobs:
   scarb-fmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache Scarb
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            contracts/target
-          key: scarb-${{ hashFiles('contracts/Scarb.toml') }}
-          restore-keys: |
-            scarb-
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -60,18 +55,18 @@ jobs:
           curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
           tar -xzf dojo-linux-x86_64.tar.gz
           sudo mv sozo /usr/local/bin/
+          rm dojo-linux-x86_64.tar.gz
 
-      - name: Cache Scarb
+      - name: Cache Scarb dependencies
         id: cache
         uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            contracts/target
-          key: scarb-${{ hashFiles('contracts/Scarb.toml') }}
+          key: scarb-deps-${{ hashFiles('contracts/Scarb.lock') }}
           restore-keys: |
-            scarb-
+            scarb-deps-
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
@@ -81,10 +76,12 @@ jobs:
       - name: Run Dojo Build
         run: cd contracts && sozo build
 
-      - name: Cache build artifacts
+      - name: Cache build artifacts and tools
         uses: actions/cache/save@v3
         with:
-          path: contracts/target
+          path: |
+            contracts/target
+            /usr/local/bin/sozo
           key: build-artifacts-${{ github.sha }}
 
   sozo-test:
@@ -94,36 +91,28 @@ jobs:
         include:
           - test-group: "integration"
             runner: "ubuntu-latest-m"
-          - test-group: "unit"
+          - test-group: "unit-adventurer"
+            runner: "ubuntu-latest-m"
+          - test-group: "unit-models"
+            runner: "ubuntu-latest-m"
+          - test-group: "unit-other"
             runner: "ubuntu-latest-m"
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache Dojo
-        id: cache-dojo
-        uses: actions/cache@v3
-        with:
-          path: /usr/local/bin/sozo
-          key: dojo-${{ env.DOJO_VERSION }}-linux-amd64
-
-      - name: Download Dojo release artifact
-        if: steps.cache-dojo.outputs.cache-hit != 'true'
-        run: |
-          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
-          tar -xzf dojo-linux-x86_64.tar.gz
-          sudo mv sozo /usr/local/bin/
-
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
 
-      - name: Restore build artifacts
+      - name: Restore build artifacts and tools
         uses: actions/cache/restore@v3
         with:
-          path: contracts/target
+          path: |
+            contracts/target
+            /usr/local/bin/sozo
           key: build-artifacts-${{ github.sha }}
           fail-on-cache-miss: true
 
@@ -134,17 +123,25 @@ jobs:
             "integration")
               sozo test --filter "game::"
               ;;
-            "unit")
+            "unit-adventurer")
+              # 173 tests total - heaviest group
               sozo test --filter "adventurer::" && \
               sozo test --filter "equipment::" && \
               sozo test --filter "stats::" && \
               sozo test --filter "bag::" && \
-              sozo test --filter "item::" && \
+              sozo test --filter "item::"
+              ;;
+            "unit-models") 
+              # 68 tests total
               sozo test --filter "combat::" && \
               sozo test --filter "beast::" && \
               sozo test --filter "loot::" && \
               sozo test --filter "market::" && \
-              sozo test --filter "obstacle::" && \
-              sozo test --filter "renderer"
+              sozo test --filter "obstacle::"
+              ;;
+            "unit-other")
+              # 9 tests total - lightest group
+              sozo test --filter "renderer" && \
+              sozo test --filter "utils::"
               ;;
           esac
