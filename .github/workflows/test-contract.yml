@@ -1,5 +1,5 @@
 name: test-contracts
-# Test larger runners with $20 budget enabled
+# Test local runner
 
 env:
   SCARB_VERSION: 2.10.1
@@ -46,21 +46,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Cache Dojo
         id: cache-dojo
         uses: actions/cache@v3
         with:
           path: /usr/local/bin/sozo
           key: dojo-${{ env.DOJO_VERSION }}-linux-amd64
-      
+
       - name: Download Dojo release artifact
         if: steps.cache-dojo.outputs.cache-hit != 'true'
         run: |
           curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
           tar -xzf dojo-linux-x86_64.tar.gz
           sudo mv sozo /usr/local/bin/
-      
+
       - name: Cache Scarb
         id: cache
         uses: actions/cache@v3
@@ -72,15 +72,15 @@ jobs:
           key: scarb-${{ hashFiles('contracts/Scarb.toml') }}
           restore-keys: |
             scarb-
-      
+
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      
+
       - name: Run Dojo Build
         run: cd contracts && sozo build
-        
+
       - name: Cache build artifacts
         uses: actions/cache/save@v3
         with:
