@@ -19,17 +19,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-and-format:
+  sozo-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract tool versions
+      - name: Extract dojo version
         run: |
           DOJO_VERSION=$(grep '^dojo ' .tool-versions | awk '{print $2}')
           echo "DOJO_VERSION=$DOJO_VERSION" >> "$GITHUB_ENV"
+
+      - name: Extract scarb version
+        run: |
           SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
           echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
 
@@ -37,17 +40,15 @@ jobs:
         id: cache-dojo
         uses: actions/cache@v4
         with:
-          path: ~/dojo-bin
+          path: /usr/local/bin/sozo
           key: dojo-${{ env.DOJO_VERSION }}-${{ runner.os }}
 
-      - name: Download and install Dojo
+      - name: Download Dojo release artifact
         if: steps.cache-dojo.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ~/dojo-bin
-          curl -L https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz | tar -xz -C ~/dojo-bin
-
-      - name: Add Dojo to PATH
-        run: echo "$HOME/dojo-bin" >> $GITHUB_PATH
+          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+          tar -xzf dojo-linux-x86_64.tar.gz
+          sudo mv sozo /usr/local/bin/
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
@@ -64,14 +65,26 @@ jobs:
           restore-keys: |
             scarb-${{ runner.os }}-
 
-      - name: Check formatting
-        run: |
-          cd contracts && scarb fmt --check
-
       - name: Run Dojo Build
         run: |
           cd contracts && sozo build
-
       - name: Run Tests
         run: |
           cd contracts && sozo test
+
+  scarb-fmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract scarb version
+        run: |
+          SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
+          echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
+
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+
+      - run: cd contracts && scarb fmt --check
