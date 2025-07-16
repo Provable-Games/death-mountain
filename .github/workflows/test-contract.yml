@@ -15,53 +15,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sozo-test:
+  test-and-format:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract dojo version
+      - name: Extract tool versions
         run: |
           DOJO_VERSION=$(grep '^dojo ' .tool-versions | awk '{print $2}')
           echo "DOJO_VERSION=$DOJO_VERSION" >> "$GITHUB_ENV"
-
-      - name: Extract scarb version
-        run: |
           SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
           echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
-
-      - name: Download Dojo release artifact
-        run: |
-          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
-          tar -xzf dojo-linux-x86_64.tar.gz
-          sudo mv sozo /usr/local/bin/
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
+
+      - name: Check formatting
+        run: |
+          cd contracts && scarb fmt --check
+
+      - name: Download and install Dojo
+        run: |
+          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+          tar -xzf dojo-linux-x86_64.tar.gz
+          sudo mv sozo /usr/local/bin/
+
       - name: Run Dojo Build
         run: |
           cd contracts && sozo build
+
       - name: Run Tests
         run: |
           cd contracts && sozo test
-
-  scarb-fmt:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Extract scarb version
-        run: |
-          SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
-          echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
-
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
-
-      - run: cd contracts && scarb fmt --check
