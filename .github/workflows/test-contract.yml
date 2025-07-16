@@ -15,16 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup-environment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-
   sozo-test:
-    needs: [setup-environment]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -58,7 +49,6 @@ jobs:
           cd contracts && sozo test
 
   scarb-fmt:
-    needs: [setup-environment]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
