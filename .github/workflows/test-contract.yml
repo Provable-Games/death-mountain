@@ -33,20 +33,38 @@ jobs:
           SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
           echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
 
+      - name: Cache Dojo binary
+        id: cache-dojo
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/sozo
+          key: dojo-${{ env.DOJO_VERSION }}-${{ runner.os }}
+
+      - name: Download and install Dojo
+        if: steps.cache-dojo.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+          tar -xzf dojo-linux-x86_64.tar.gz
+          sudo mv sozo /usr/local/bin/
+
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
 
+      - name: Cache Scarb packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.scarb
+            contracts/target
+          key: scarb-${{ runner.os }}-${{ hashFiles('contracts/Scarb.lock') }}
+          restore-keys: |
+            scarb-${{ runner.os }}-
+
       - name: Check formatting
         run: |
           cd contracts && scarb fmt --check
-
-      - name: Download and install Dojo
-        run: |
-          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
-          tar -xzf dojo-linux-x86_64.tar.gz
-          sudo mv sozo /usr/local/bin/
 
       - name: Run Dojo Build
         run: |
