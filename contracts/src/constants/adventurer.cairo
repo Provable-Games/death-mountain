@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Starting Setting
+// Starting Settings
 pub const STARTING_GOLD: u8 = 40;
 pub const STARTING_HEALTH: u8 = 100;
 
