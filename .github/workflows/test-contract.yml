@@ -2,45 +2,46 @@ name: test-contracts
 
 on:
   pull_request:
-    paths-ignore:
-      - "ui/**"
-      - "**/manifest.json"
-      - "pnpm-lock.yaml"
+    paths:
+      - "contracts/**"
+      - ".tool-versions"
+      - ".github/workflows/test-contract.yml"
   push:
     branches:
       - main
+    paths:
+      - "contracts/**"
+      - ".tool-versions"
+      - ".github/workflows/test-contract.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  setup-environment:
+  test-and-format:
     runs-on: ubuntu-latest
-    steps:
-      - name: Set up environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-
-  sozo-test:
-    needs: [setup-environment]
-    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Extract dojo version
+      - name: Extract tool versions
         run: |
           DOJO_VERSION=$(grep '^dojo ' .tool-versions | awk '{print $2}')
           echo "DOJO_VERSION=$DOJO_VERSION" >> "$GITHUB_ENV"
-
-      - name: Extract scarb version
-        run: |
           SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
           echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
 
-      - name: Download Dojo release artifact
+      - name: Cache Dojo binary
+        id: cache-dojo
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/sozo
+          key: dojo-${{ env.DOJO_VERSION }}-${{ runner.os }}
+
+      - name: Download and install Dojo
+        if: steps.cache-dojo.outputs.cache-hit != 'true'
         run: |
           curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
           tar -xzf dojo-linux-x86_64.tar.gz
@@ -50,26 +51,25 @@ jobs:
         uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
+
+      - name: Cache Scarb packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.scarb
+            contracts/target
+          key: scarb-${{ runner.os }}-${{ hashFiles('contracts/Scarb.lock') }}
+          restore-keys: |
+            scarb-${{ runner.os }}-
+
+      - name: Check formatting
+        run: |
+          cd contracts && scarb fmt --check
+
       - name: Run Dojo Build
         run: |
           cd contracts && sozo build
+
       - name: Run Tests
         run: |
           cd contracts && sozo test
-
-  scarb-fmt:
-    needs: [setup-environment]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Extract scarb version
-        run: |
-          SCARB_VERSION=$(grep '^scarb ' .tool-versions | awk '{print $2}')
-          echo "SCARB_VERSION=$SCARB_VERSION" >> "$GITHUB_ENV"
-
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
-
-      - run: cd contracts && scarb fmt --check
