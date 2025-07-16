@@ -41,7 +41,7 @@ jobs:
       image: ghcr.io/dojoengine/dojo:v1.6.0-alpha.2
     strategy:
       matrix:
-        test-group: [models, systems, utils]
+        test-group: [integration, adventurer, other]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -67,7 +67,20 @@ jobs:
             BASE_SHA="HEAD~1"
           fi
           
-          if git diff --quiet $BASE_SHA HEAD -- contracts/src/${{ matrix.test-group }}/; then
+          PATHS_TO_CHECK=""
+          case ${{ matrix.test-group }} in
+            integration)
+              PATHS_TO_CHECK="contracts/src/systems/game/"
+              ;;
+            adventurer)
+              PATHS_TO_CHECK="contracts/src/models/adventurer/"
+              ;;
+            other)
+              PATHS_TO_CHECK="contracts/src/models/beast.cairo contracts/src/models/combat.cairo contracts/src/models/loot.cairo contracts/src/models/market.cairo contracts/src/models/obstacle.cairo contracts/src/utils/"
+              ;;
+          esac
+          
+          if git diff --quiet $BASE_SHA HEAD -- $PATHS_TO_CHECK; then
             echo "skip=true" >> $GITHUB_OUTPUT
             echo "No changes in ${{ matrix.test-group }}, skipping tests"
           else
@@ -85,13 +98,16 @@ jobs:
         run: |
           cd contracts
           case ${{ matrix.test-group }} in
-            models)
-              sozo test src/models/
+            integration)
+              echo "Running integration tests (31 tests)..."
+              sozo test src/systems/game/
               ;;
-            systems)
-              sozo test src/systems/
+            adventurer)
+              echo "Running adventurer model tests (175 tests)..."
+              sozo test src/models/adventurer/
               ;;
-            utils)
-              sozo test src/utils/
+            other)
+              echo "Running other model and utility tests (76 tests)..."
+              sozo test src/models/beast.cairo src/models/combat.cairo src/models/loot.cairo src/models/market.cairo src/models/obstacle.cairo src/utils/
               ;;
           esac
