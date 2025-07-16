@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     container:
-      image: ghcr.io/dojoengine/dojo:v1.6.0-alpha.2
+      image: ghcr.io/dojoengine/dojo:v1.6.0-alpha.0
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-      image: ghcr.io/dojoengine/dojo:v1.6.0-alpha.2
+      image: ghcr.io/dojoengine/dojo:v1.6.0-alpha.0
     strategy:
       matrix:
         test-group: [integration, adventurer, other]
