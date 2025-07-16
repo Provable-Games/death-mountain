@@ -37,15 +37,17 @@ jobs:
         id: cache-dojo
         uses: actions/cache@v4
         with:
-          path: /usr/local/bin/sozo
+          path: ~/dojo-bin
           key: dojo-${{ env.DOJO_VERSION }}-${{ runner.os }}
 
       - name: Download and install Dojo
         if: steps.cache-dojo.outputs.cache-hit != 'true'
         run: |
-          curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
-          tar -xzf dojo-linux-x86_64.tar.gz
-          sudo mv sozo /usr/local/bin/
+          mkdir -p ~/dojo-bin
+          curl -L https://github.com/dojoengine/dojo/releases/download/v${{ env.DOJO_VERSION }}/dojo_v${{ env.DOJO_VERSION }}_linux_amd64.tar.gz | tar -xz -C ~/dojo-bin
+
+      - name: Add Dojo to PATH
+        run: echo "$HOME/dojo-bin" >> $GITHUB_PATH
 
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
