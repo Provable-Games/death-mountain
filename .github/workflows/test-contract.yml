@@ -17,6 +17,7 @@ concurrency:
 jobs:
   sozo-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,6 +51,7 @@ jobs:
 
   scarb-fmt:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
