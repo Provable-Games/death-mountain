@@ -10,7 +10,7 @@ pub trait IAdventurerSystems<T> {
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
-    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
     fn get_discovery(
@@ -78,7 +78,7 @@ mod adventurer_systems {
             _load_bag(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
-        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
             let game_token = IGameTokenSystemsDispatcher{contract_address: game_token_address};

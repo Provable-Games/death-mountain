@@ -1976,7 +1976,7 @@ mod tests {
             .span()
     }
 
-    fn deploy_dungeon() -> (dojo::world::WorldStorage, IGameTokenSystemsDispatcher, GameLibs) {
+    fn deploy_dungeon() -> (WorldStorage, IGameTokenSystemsDispatcher, GameLibs) {
         let denshokan_contracts = death_mountain::utils::setup_denshokan::setup();
 
         let ndef = namespace_def();
@@ -2001,8 +2001,8 @@ mod tests {
         let minigame_dispatcher = IMinigameDispatcher { contract_address };
 
         let adventurer_id = minigame_dispatcher
-            .mint(
-                Option::Some('player1'), // player_name
+            .mint_game(
+                Option::Some("player1"), // player_name
                 Option::Some(0), // settings_id
                 Option::None, // start
                 Option::None, // end

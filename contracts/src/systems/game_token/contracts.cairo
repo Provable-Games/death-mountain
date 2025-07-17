@@ -12,7 +12,7 @@ pub trait IGameTokenSystems<T> {
     fn buy_items(ref self: T, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>);
     fn select_stat_upgrades(ref self: T, adventurer_id: u64, stat_upgrades: Stats);
     fn create_objective(ref self: T, score: u32);
-    fn player_name(ref self: T, adventurer_id: u64) -> felt252;
+    fn player_name(ref self: T, adventurer_id: u64) -> ByteArray;
 }
 
 #[dojo::contract]
@@ -34,22 +34,22 @@ mod game_token_systems {
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
 
-    use game_components_minigame::minigame::minigame_component;
-    use game_components_minigame_objectives::objectives::objectives_component;
+    use game_components_minigame::minigame::MinigameComponent;
+    use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
     use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
-    use game_components_minigame_objectives::interface::{IMinigameObjectives};
+    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives};
     use game_components_minigame::structs::{GameDetail};
-    use game_components_minigame_objectives::structs::{GameObjective};
+    use game_components_minigame::extensions::objectives::structs::{GameObjective};
 
     // Components
-    component!(path: minigame_component, storage: minigame, event: MinigameEvent);
-    component!(path: objectives_component, storage: objectives, event: ObjectivesEvent);
+    component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
+    component!(path: ObjectivesComponent, storage: objectives, event: ObjectivesEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
-    impl MinigameImpl = minigame_component::MinigameImpl<ContractState>;
-    impl MinigameInternalImpl = minigame_component::InternalImpl<ContractState>;
-    impl MinigameInternalObjectivesImpl = objectives_component::InternalImpl<ContractState>;
+    impl MinigameImpl = MinigameComponent::MinigameImpl<ContractState>;
+    impl MinigameInternalImpl = MinigameComponent::InternalImpl<ContractState>;
+    impl MinigameInternalObjectivesImpl = ObjectivesComponent::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -57,9 +57,9 @@ mod game_token_systems {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        minigame: minigame_component::Storage,
+        minigame: MinigameComponent::Storage,
         #[substorage(v0)]
-        objectives: objectives_component::Storage,
+        objectives: ObjectivesComponent::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
     }
@@ -68,9 +68,9 @@ mod game_token_systems {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        MinigameEvent: minigame_component::Event,
+        MinigameEvent: MinigameComponent::Event,
         #[flat]
-        ObjectivesEvent: objectives_component::Event,
+        ObjectivesEvent: ObjectivesComponent::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -89,11 +89,11 @@ mod game_token_systems {
             .minigame
             .initializer(
                 creator_address,
-                'Death Mountain',
+                "Death Mountain",
                 "Death Mountain is an onchain dungeon generator",
-                'Provable Games',
-                'Provable Games',
-                'Dungeon Generator',
+                "Provable Games",
+                "Provable Games",
+                "Dungeon Generator",
                 "https://deathmountain.gg/favicon-32x32.png",
                 Option::None, // color
                 Option::None, // client_url
@@ -176,7 +176,7 @@ mod game_token_systems {
         }
         fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let objective_ids = self.objectives.get_objective_ids(token_id, self.minigame_token_address());
+            let objective_ids = self.objectives.get_objective_ids(token_id, self.token_address());
             let mut objective_index = 0;
             let mut objectives = array![];
             loop {
@@ -271,10 +271,10 @@ mod game_token_systems {
         }
 
         fn create_objective(ref self: ContractState, score: u32) {
-            self.objectives.create_objective(0, "Target Score", format!("{}", score), self.minigame_token_address());
+            self.objectives.create_objective(0, "Target Score", format!("{}", score), self.token_address());
         }
 
-        fn player_name(ref self: ContractState, adventurer_id: u64) -> felt252 {
+        fn player_name(ref self: ContractState, adventurer_id: u64) -> ByteArray {
             self.minigame.get_player_name(adventurer_id)
         }
     }

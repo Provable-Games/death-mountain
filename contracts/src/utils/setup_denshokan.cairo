@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 
-use core::option::Option;
-use starknet::{ContractAddress, testing, contract_address_const};
-use dojo::world::{WorldStorage, WorldStorageTrait};
-use dojo_cairo_test::{
-    spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
-    WorldStorageTestTrait,
+use starknet::{ContractAddress, contract_address_const};
+use starknet::syscalls::deploy_syscall;
+use game_components_token::interface::{IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait};
+use game_components_token::examples::{
+    optimized_token_contract::OptimizedTokenContract,
+    minigame_registry_contract::{MinigameRegistryContract, IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait},
 };
-
-use denshokan::constants::DEFAULT_NS;
-use game_components_minigame_token::interface::{IMinigameTokenDispatcher};
-
-use denshokan::models::denshokan::{
-    m_GameMetadata, m_GameRegistry, m_GameRegistryId, m_GameCounter, m_MinterRegistry,
-    m_MinterRegistryId, m_MinterCounter, m_TokenMetadata, m_TokenCounter, m_TokenPlayerName,
-    m_TokenObjective,
-};
+use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher};
+use openzeppelin_introspection::interface::ISRC5Dispatcher;
+use dojo_cairo_test::deploy_contract;
 
 // use denshokan::tests::utils;
 
@@ -43,81 +37,131 @@ fn GAME_CREATOR_ADDR() -> ContractAddress {
 
 #[derive(Drop)]
 pub struct TestContracts {
-    pub world: WorldStorage,
-    pub denshokan: IMinigameTokenDispatcher,
+    pub denshokan: IMinigameTokenMixinDispatcher,
 }
 
 //
 // Setup
 //
 
-fn setup_uninitialized() -> WorldStorage {
-    testing::set_block_number(1);
-    testing::set_block_timestamp(1000);
+pub fn deploy_minigame_registry_contract_with_params(
+    name: ByteArray,
+    symbol: ByteArray,
+    base_uri: ByteArray,
+    event_relayer_address: Option<ContractAddress>,
+) -> IMinigameRegistryDispatcher {
+    let mut constructor_calldata = array![];
+    name.serialize(ref constructor_calldata);
+    symbol.serialize(ref constructor_calldata);
+    base_uri.serialize(ref constructor_calldata);
 
-    let ndef = NamespaceDef {
-        namespace: DEFAULT_NS(),
-        resources: [
-            // Denshokan models
-            TestResource::Model(m_GameMetadata::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_GameRegistry::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_GameRegistryId::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_GameCounter::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_MinterRegistry::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_MinterRegistryId::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_MinterCounter::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_TokenMetadata::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_TokenCounter::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_TokenPlayerName::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_TokenObjective::TEST_CLASS_HASH.try_into().unwrap()),
-            // Events
-            TestResource::Event(
-                denshokan::denshokan::denshokan::e_Owners::TEST_CLASS_HASH.try_into().unwrap(),
-            ),
-            TestResource::Event(
-                denshokan::denshokan::denshokan::e_ScoreUpdate::TEST_CLASS_HASH.try_into().unwrap(),
-            ),
-            TestResource::Event(
-                denshokan::denshokan::denshokan::e_ObjectiveData::TEST_CLASS_HASH
-                    .try_into()
-                    .unwrap(),
-            ),
-            TestResource::Event(
-                denshokan::denshokan::denshokan::e_SettingsData::TEST_CLASS_HASH
-                    .try_into()
-                    .unwrap(),
-            ),
-            TestResource::Event(
-                denshokan::denshokan::denshokan::e_TokenContextData::TEST_CLASS_HASH
-                    .try_into()
-                    .unwrap(),
-            ),
-            // Contracts
-            TestResource::Contract(denshokan::denshokan::denshokan::TEST_CLASS_HASH),
-        ]
-            .span(),
-    };
+    // Serialize event_relayer_address Option
+    match event_relayer_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
 
-    let mut contract_defs: Array<ContractDef> = array![
-        ContractDefTrait::new(@DEFAULT_NS(), @"denshokan")
-            .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
-    ];
+    let contract_address = deploy_contract(MinigameRegistryContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
 
-    let mut world: WorldStorage = spawn_test_world([ndef].span());
-    world.sync_perms_and_inits(contract_defs.span());
-
-    world
+    let minigame_registry_dispatcher = IMinigameRegistryDispatcher { contract_address };
+    minigame_registry_dispatcher
 }
 
-pub fn setup() -> TestContracts {
-    let mut world = setup_uninitialized();
+pub fn deploy_optimized_token_contract(
+    name: Option<ByteArray>,
+    symbol: Option<ByteArray>,
+    base_uri: Option<ByteArray>,
+    game_address: Option<ContractAddress>,
+    game_registry_address: Option<ContractAddress>,
+    event_relayer_address: Option<ContractAddress>,
+) -> (IMinigameTokenMixinDispatcher, ERC721ABIDispatcher, ISRC5Dispatcher, ContractAddress) {
+    let mut constructor_calldata: Array<felt252> = array![];
 
-    let denshokan_address = match world.dns(@"denshokan") {
-        Option::Some((address, _)) => address,
-        Option::None => panic!("Denshokan contract not found in world DNS"),
+    // Set default values if not provided
+    let token_name: ByteArray = match name {
+        Option::Some(n) => n,
+        Option::None => "TestToken",
     };
 
-    let denshokan = IMinigameTokenDispatcher { contract_address: denshokan_address };
+    let token_symbol: ByteArray = match symbol {
+        Option::Some(s) => s,
+        Option::None => "TT",
+    };
 
-    TestContracts { world, denshokan }
+    let token_base_uri: ByteArray = match base_uri {
+        Option::Some(uri) => uri,
+        Option::None => "https://test.com/",
+    };
+
+    // Serialize basic parameters
+    token_name.serialize(ref constructor_calldata);
+    token_symbol.serialize(ref constructor_calldata);
+    token_base_uri.serialize(ref constructor_calldata);
+
+    // Serialize game_address Option
+    match game_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
+
+    // Serialize game_registry_address Option
+    match game_registry_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
+
+    // Serialize event_relayer_address Option
+    match event_relayer_address {
+        Option::Some(addr) => {
+            constructor_calldata.append(0); // Some variant
+            constructor_calldata.append(addr.into());
+        },
+        Option::None => {
+            constructor_calldata.append(1); // None variant
+        },
+    }
+
+    let contract_address = deploy_contract(OptimizedTokenContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
+
+    let token_dispatcher = IMinigameTokenMixinDispatcher { contract_address };
+    let erc721_dispatcher = ERC721ABIDispatcher { contract_address };
+    let src5_dispatcher = ISRC5Dispatcher { contract_address };
+
+    (token_dispatcher, erc721_dispatcher, src5_dispatcher, contract_address)
+}
+
+
+pub fn setup() -> TestContracts {
+    let minigame_registry_dispatcher = deploy_minigame_registry_contract_with_params(
+        "TestGame",
+        "TT",
+        "https://test.com/",
+        Option::None,
+    );
+
+    let (token_dispatcher, _erc721_dispatcher, _src5_dispatcher, _contract_address) = deploy_optimized_token_contract(
+        Option::None,
+        Option::None,
+        Option::None,
+        Option::None,
+        Option::Some(minigame_registry_dispatcher.contract_address),
+        Option::None,
+    );
+
+    TestContracts { denshokan: token_dispatcher }
 }

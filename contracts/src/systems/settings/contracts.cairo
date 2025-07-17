@@ -26,9 +26,9 @@ mod settings_systems {
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter};
 
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
-    use game_components_minigame_settings::settings::settings_component;
-    use game_components_minigame_settings::interface::{IMinigameSettings};
-    use game_components_minigame_settings::structs::{GameSetting, GameSettingDetails};
+    use game_components_minigame::extensions::settings::settings::SettingsComponent;
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
+    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
 
     use openzeppelin_introspection::src5::SRC5Component;
 
@@ -36,10 +36,10 @@ mod settings_systems {
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::ISettingsSystems;
 
-    component!(path: settings_component, storage: settings, event: SettingsEvent);
+    component!(path: SettingsComponent, storage: settings, event: SettingsEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
 
-    impl SettingsInternalImpl = settings_component::InternalImpl<ContractState>;
+    impl SettingsInternalImpl = SettingsComponent::InternalImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
@@ -47,7 +47,7 @@ mod settings_systems {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        settings: settings_component::Storage,
+        settings: SettingsComponent::Storage,
         #[substorage(v0)]
         src5: SRC5Component::Storage,
     }
@@ -56,7 +56,7 @@ mod settings_systems {
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        SettingsEvent: settings_component::Event,
+        SettingsEvent: SettingsComponent::Event,
         #[flat]
         SRC5Event: SRC5Component::Event,
     }
@@ -67,7 +67,7 @@ mod settings_systems {
 
     #[abi(embed_v0)]
     impl GameSettingsImpl of IMinigameSettings<ContractState> {
-        fn setting_exists(self: @ContractState, settings_id: u32) -> bool {
+        fn settings_exist(self: @ContractState, settings_id: u32) -> bool {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let settings: GameSettings = world.read_model(settings_id);
             settings.adventurer.health != 0
@@ -131,7 +131,7 @@ mod settings_systems {
 
             let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_systems_address };
-            let minigame_token_address = minigame_dispatcher.minigame_token_address();
+            let minigame_token_address = minigame_dispatcher.token_address();
             self.settings.create_settings(settings_count.count, format!("{}", name), "New Setting Description", settings, minigame_token_address);
 
             settings_count.count
@@ -147,7 +147,7 @@ mod settings_systems {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
-            let minigame_token_address = minigame_dispatcher.minigame_token_address();
+            let minigame_token_address = minigame_dispatcher.token_address();
             let settings_id = self.settings.get_settings_id(game_id, minigame_token_address);
             let game_settings: GameSettings = world.read_model(settings_id);
             game_settings
