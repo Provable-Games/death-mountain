@@ -70,6 +70,7 @@ mod tests {
     mod unit {
         mod utils {
             mod renderer_utils_test;
+            mod loot_test;
         }
     }
 }
