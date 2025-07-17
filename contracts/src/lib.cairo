@@ -64,3 +64,32 @@ pub mod constants {
 pub mod libs {
     pub mod game;
 }
+
+#[cfg(test)]
+mod tests {
+    mod unit {
+        mod models {
+            mod beast_test;
+            mod combat_test;
+            mod loot_test;
+            mod market_test;
+            mod obstacle_test;
+        }
+        mod utils {
+            mod loot_test;
+            mod renderer_utils_test;
+        }
+        mod adventurer {
+            mod adventurer_test;
+            mod bag_test;
+            mod equipment_test;
+            mod item_test;
+            mod stats_test;
+        }
+    }
+    mod integration {
+        mod game {
+            mod game_test;
+        }
+    }
+}

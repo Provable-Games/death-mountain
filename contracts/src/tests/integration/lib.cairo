@@ -1,0 +1,2 @@
+// Integration tests
+mod game;
