@@ -30,8 +30,16 @@ mod settings_systems {
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
+
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame::extensions::settings::settings::SettingsComponent;
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
+    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
+
+    use openzeppelin_introspection::src5::SRC5Component;
+
     use dojo::model::ModelStorage;
-    use dojo::world::{WorldStorage};
+    use dojo::world::{WorldStorage, WorldStorageTrait};
     use starknet::ContractAddress;
     use super::ISettingsSystems;
 

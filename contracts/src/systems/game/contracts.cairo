@@ -50,6 +50,7 @@ mod game_systems {
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
+    use death_mountain::systems::settings::contracts::{ISettingsSystemsDispatcher, ISettingsSystemsDispatcherTrait};
     use death_mountain::utils::vrf::VRFImpl;
 
     use dojo::event::EventStorage;
@@ -60,19 +61,13 @@ mod game_systems {
     use starknet::ContractAddress;
     use starknet::{get_tx_info};
     use super::VRF_ENABLED;
-    use tournaments::components::libs::lifecycle::{LifecycleAssertionsImpl, LifecycleAssertionsTrait};
-    use tournaments::components::models::game::TokenMetadata;
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //
     // ------------------------------------------ //
 
-    fn _init_game_context(world: WorldStorage, adventurer_id: u64) -> (TokenMetadata, GameLibs) {
-        _assert_token_ownership(world, adventurer_id);
-        let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-        token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
-        let game_libs = ImplGameLibs::new(world);
-        (token_metadata, game_libs)
+    fn _init_game_context(world: WorldStorage) -> GameLibs {
+        ImplGameLibs::new(world)
     }
 
     fn _emit_lvl_events(
@@ -111,10 +106,6 @@ mod game_systems {
         fn start_game(ref self: ContractState, adventurer_id: u64, weapon: u8) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            _assert_token_ownership(world, adventurer_id);
-            _assert_game_not_started(world, adventurer_id);
-            token_metadata.lifecycle.assert_is_playable(adventurer_id, starknet::get_block_timestamp());
             _assert_game_not_started(world, adventurer_id);
 
             let game_libs = ImplGameLibs::new(world);
@@ -202,7 +193,7 @@ mod game_systems {
 
         fn explore(ref self: ContractState, adventurer_id: u64, till_beast: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
             let orig_adv = adventurer.clone();
@@ -239,7 +230,7 @@ mod game_systems {
 
         fn attack(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -315,7 +306,7 @@ mod game_systems {
 
         fn flee(ref self: ContractState, adventurer_id: u64, to_the_death: bool) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -372,7 +363,7 @@ mod game_systems {
 
         fn equip(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -444,7 +435,7 @@ mod game_systems {
 
         fn drop(ref self: ContractState, adventurer_id: u64, items: Array<u8>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -475,7 +466,7 @@ mod game_systems {
 
         fn buy_items(ref self: ContractState, adventurer_id: u64, potions: u8, items: Array<ItemPurchase>) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, mut bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -518,7 +509,7 @@ mod game_systems {
 
         fn select_stat_upgrades(ref self: ContractState, adventurer_id: u64, stat_upgrades: Stats) {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
-            let (_, game_libs) = _init_game_context(world, adventurer_id);
+            let game_libs = _init_game_context(world);
 
             let (mut adventurer, bag) = game_libs.adventurer.load_assets(adventurer_id);
             adventurer.increment_action_count();
@@ -653,9 +644,9 @@ mod game_systems {
     // }
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
-        let token_metadata: TokenMetadata = world.read_model(game_id);
-        let game_settings: GameSettings = world.read_model(token_metadata.settings_id);
-        game_settings
+        let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
+        let settings_systems = ISettingsSystemsDispatcher{contract_address: settings_systems_address};
+        settings_systems.game_settings(game_id)
     }
 
     fn _explore(
