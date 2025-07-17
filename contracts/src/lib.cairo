@@ -68,6 +68,9 @@ pub mod libs {
 #[cfg(test)]
 mod tests {
     mod unit {
+        mod models {
+            mod obstacle_test;
+        }
         mod utils {
             mod renderer_utils_test;
             mod loot_test;
