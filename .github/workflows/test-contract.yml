@@ -95,10 +95,10 @@ jobs:
       - name: Incremental build check
         id: changes
         run: |
-          # Always run tests if workflow files changed
-          if git diff --name-only HEAD~1 HEAD | grep -q ".github/workflows/"; then
+          # Always run tests if workflow files changed or test structure changed
+          if git diff --name-only HEAD~1 HEAD | grep -q ".github/workflows/\|contracts/src/tests/"; then
             echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Workflow changed, running all tests"
+            echo "Workflow or test structure changed, running all tests"
             exit 0
           fi
           
@@ -111,13 +111,13 @@ jobs:
           PATHS_TO_CHECK=""
           case ${{ matrix.test-group }} in
             integration)
-              PATHS_TO_CHECK="contracts/src/systems/game/"
+              PATHS_TO_CHECK="contracts/src/systems/game/ contracts/src/tests/integration/"
               ;;
             adventurer)
-              PATHS_TO_CHECK="contracts/src/models/adventurer/"
+              PATHS_TO_CHECK="contracts/src/models/adventurer/ contracts/src/tests/unit/adventurer/"
               ;;
             other)
-              PATHS_TO_CHECK="contracts/src/models/beast.cairo contracts/src/models/combat.cairo contracts/src/models/loot.cairo contracts/src/models/market.cairo contracts/src/models/obstacle.cairo contracts/src/utils/"
+              PATHS_TO_CHECK="contracts/src/models/beast.cairo contracts/src/models/combat.cairo contracts/src/models/loot.cairo contracts/src/models/market.cairo contracts/src/models/obstacle.cairo contracts/src/utils/ contracts/src/tests/unit/models/ contracts/src/tests/unit/utils/"
               ;;
           esac
           
@@ -141,14 +141,14 @@ jobs:
           case ${{ matrix.test-group }} in
             integration)
               echo "Running integration tests (31 tests)..."
-              sozo test src/systems/game/
+              sozo test src/tests/integration/
               ;;
             adventurer)
               echo "Running adventurer model tests (175 tests)..."
-              sozo test src/models/adventurer/
+              sozo test src/tests/unit/adventurer/
               ;;
             other)
               echo "Running other model and utility tests (76 tests)..."
-              sozo test src/models/beast.cairo src/models/combat.cairo src/models/loot.cairo src/models/market.cairo src/models/obstacle.cairo src/utils/
+              sozo test src/tests/unit/models/ src/tests/unit/utils/
               ;;
           esac
