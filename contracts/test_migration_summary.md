@@ -2,9 +2,9 @@
 
 ## Progress Overview
 - **Total Tests**: 282
-- **Migrated**: 41 (14.54%)
-- **Verified**: 41
-- **Remaining**: 241
+- **Migrated**: 58 (20.57%)
+- **Verified**: 58
+- **Remaining**: 224
 
 ## Completed Migrations
 
@@ -22,7 +22,7 @@
    - `test_get_special2_bonus_set()`
    - `test_get_special2_bonus_no_set()`
 
-### Models Tests (32 tests total)
+### Models Tests (49 tests total)
 3. **obstacle_test.cairo** - 5 tests migrated ✓
    - `test_no_immunity()`
    - `test_partial_immunity()`
@@ -61,6 +61,25 @@
    - `get_critical_hit_chance_mul_overflow()`
    - `get_beast_from_seed()`
 
+6. **loot_test.cairo** - 17 tests migrated ✓
+   - `suffix_assignments()`
+   - `prefix2_assignments()`
+   - `prefix1_assignment()`
+   - `get_item_part1()`
+   - `get_item_part2()`
+   - `get_item_part3()`
+   - `get_item_part4()`
+   - `get_slot()`
+   - `get_tier()`
+   - `get_type()`
+   - `get_item_verify_tier()`
+   - `get_item_verify_type()`
+   - `get_item_verify_slot()`
+   - `get_item_range_check()`
+   - `get_item_zero()`
+   - `get_item_out_of_bounds()`
+   - `get_slot_length()`
+
 ## Next Steps
 The following files still need migration:
 - adventurer/adventurer_test.cairo (94 tests)
@@ -69,11 +88,10 @@ The following files still need migration:
 - adventurer/bag_test.cairo (15 tests)
 - adventurer/item_test.cairo (7 tests)
 - models/combat_test.cairo (18 tests)
-- models/loot_test.cairo (17 tests)
 - integration/game/game_test.cairo (31 tests)
 
 ## Status by Phase
-- **Phase 1** (Unit Tests): In Progress - 5/12 files completed
+- **Phase 1** (Unit Tests): In Progress - 6/12 files completed
 - **Phase 2** (Integration Tests): Not Started
 - **Phase 3** (Workflow Update): Not Started
 - **Phase 4** (Verification): Not Started
