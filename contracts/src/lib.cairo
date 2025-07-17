@@ -79,5 +79,17 @@ mod tests {
             mod renderer_utils_test;
             mod loot_test;
         }
+        mod adventurer {
+            mod item_test;
+            mod bag_test;
+            mod stats_test;
+            mod equipment_test;
+            mod adventurer_test;
+        }
+    }
+    mod integration {
+        mod game {
+            mod game_test;
+        }
     }
 }
