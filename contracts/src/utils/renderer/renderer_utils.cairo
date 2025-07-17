@@ -405,4 +405,3 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
     format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
 }
 
-

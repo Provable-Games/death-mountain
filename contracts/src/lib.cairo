@@ -69,22 +69,22 @@ pub mod libs {
 mod tests {
     mod unit {
         mod models {
-            mod obstacle_test;
-            mod market_test;
             mod beast_test;
-            mod loot_test;
             mod combat_test;
+            mod loot_test;
+            mod market_test;
+            mod obstacle_test;
         }
         mod utils {
-            mod renderer_utils_test;
             mod loot_test;
+            mod renderer_utils_test;
         }
         mod adventurer {
-            mod item_test;
-            mod bag_test;
-            mod stats_test;
-            mod equipment_test;
             mod adventurer_test;
+            mod bag_test;
+            mod equipment_test;
+            mod item_test;
+            mod stats_test;
         }
     }
     mod integration {

@@ -495,7 +495,7 @@ pub impl ImplCombat of ICombat {
         (100 * smooth / SCALE).try_into().unwrap()
     }
 }
-
 // ---------------------------
 // ---------- Tests ----------
 // ---------------------------
+

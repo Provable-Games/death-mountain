@@ -1,3 +1,3 @@
 // Test modules
-mod unit;
 mod integration;
+mod unit;
