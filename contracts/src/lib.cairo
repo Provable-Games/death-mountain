@@ -70,6 +70,7 @@ mod tests {
     mod unit {
         mod models {
             mod obstacle_test;
+            mod market_test;
         }
         mod utils {
             mod renderer_utils_test;

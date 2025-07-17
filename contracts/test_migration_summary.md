@@ -1,0 +1,61 @@
+# Test Migration Summary
+
+## Progress Overview
+- **Total Tests**: 282
+- **Migrated**: 24 (8.51%)
+- **Verified**: 24
+- **Remaining**: 258
+
+## Completed Migrations
+
+### Utils Tests (9 tests total)
+1. **renderer_utils_test.cairo** - 1 test migrated ✓
+   - `test_encode_bytes_16_with_smaller_bytes_size()`
+
+2. **loot_test.cairo** - 8 tests migrated ✓
+   - `test_special1_and_special2_item_ids_exist()`
+   - `test_check_validity_complete_non_necklace_set()`
+   - `test_check_validity_complete_ring_of_lords_set()`
+   - `test_check_validity_neck_and_ring_not_valid()`
+   - `test_get_special1_bonus_set()`
+   - `test_get_special1_bonus_no_set()`
+   - `test_get_special2_bonus_set()`
+   - `test_get_special2_bonus_no_set()`
+
+### Models Tests (15 tests total)
+3. **obstacle_test.cairo** - 5 tests migrated ✓
+   - `test_no_immunity()`
+   - `test_partial_immunity()`
+   - `test_full_immunity()`
+   - `test_avoided_obstacle()`
+   - `test_dodged_obstacle()`
+
+4. **market_test.cairo** - 10 tests migrated ✓
+   - `is_item_available()`
+   - `get_id()`
+   - `get_price()`
+   - `get_available_items_check_duplicates()`
+   - `get_available_items_count()`
+   - `get_available_items_ownership()`
+   - `get_available_items_ownership_multi_level8()`
+   - `get_market_seed_and_offset()`
+   - `get_all_items()`
+   - `unique_market()`
+
+## Next Steps
+The following files still need migration:
+- adventurer/adventurer_test.cairo (94 tests)
+- adventurer/equipment_test.cairo (32 tests)
+- adventurer/stats_test.cairo (27 tests)
+- adventurer/bag_test.cairo (15 tests)
+- adventurer/item_test.cairo (7 tests)
+- models/combat_test.cairo (18 tests)
+- models/loot_test.cairo (17 tests)
+- models/beast_test.cairo (17 tests)
+- integration/game/game_test.cairo (31 tests)
+
+## Status by Phase
+- **Phase 1** (Unit Tests): In Progress - 4/12 files completed
+- **Phase 2** (Integration Tests): Not Started
+- **Phase 3** (Workflow Update): Not Started
+- **Phase 4** (Verification): Not Started
