@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 const MAINNET_CHAIN_ID: felt252 = 0x534e5f4d41494e;
 const SEPOLIA_CHAIN_ID: felt252 = 0x534e5f5345504f4c4941;
 const KATANA_CHAIN_ID: felt252 = 0x4b4154414e41;
@@ -5,7 +7,7 @@ const KATANA_CHAIN_ID: felt252 = 0x4b4154414e41;
 pub const VERSION: felt252 = '0.0.1';
 
 pub fn DEFAULT_NS() -> ByteArray {
-    "dm_v1_0_0"
+    "ls_0_0_2"
 }
 
 pub fn SCORE_MODEL() -> ByteArray {

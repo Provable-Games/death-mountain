@@ -8,10 +8,6 @@ raw = true
 historical = ["ls_0_0_1-GameEvent"]
 
 [indexing]
-blocks_chunk_size = 1024
-max_concurrent_tasks = 40
-transactions = true
-controllers = true
 pending = true
 contracts = [
     "erc721:0x6f261eba018dda4f60bdc1d0874cb7e97bf424979dda63fcbdf8bdcba1fb644"

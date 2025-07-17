@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::num::traits::OverflowingAdd;
 use core::panic_with_felt252;
 use core::poseidon::poseidon_hash_span;
@@ -770,7 +772,7 @@ pub impl ImplAdventurer of IAdventurer {
             .neck
             .jewelry_armor_bonus(armor_details.item_type, combat_result.base_armor);
 
-        // adjust damage for jewelry armor bonus
+        // jewelry armor bonus
         if combat_result.total_damage > (jewelry_armor_bonus + MINIMUM_DAMAGE_FROM_OBSTACLES.into()) {
             combat_result.total_damage -= jewelry_armor_bonus;
         } else {

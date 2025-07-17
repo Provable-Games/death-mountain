@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::integer::u64_safe_divmod;
 use core::panic_with_felt252;
 use core::traits::DivRem;
@@ -353,7 +355,10 @@ pub impl ImplStats of IStat {
         let (entropy, stat6) = u64_safe_divmod(entropy, SIX_NZ);
         let (entropy, stat7) = u64_safe_divmod(entropy, SIX_NZ);
         let (entropy, stat8) = u64_safe_divmod(entropy, SIX_NZ);
-        let (_, stat9) = u64_safe_divmod(entropy, SIX_NZ);
+        let (entropy, stat9) = u64_safe_divmod(entropy, SIX_NZ);
+        let (entropy, stat10) = u64_safe_divmod(entropy, SIX_NZ);
+        let (entropy, stat11) = u64_safe_divmod(entropy, SIX_NZ);
+        let (_, stat12) = u64_safe_divmod(entropy, SIX_NZ);
         let mut stats = Stats {
             strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0,
         };
@@ -366,6 +371,9 @@ pub impl ImplStats of IStat {
         stats.apply_stat(stat7.try_into().unwrap());
         stats.apply_stat(stat8.try_into().unwrap());
         stats.apply_stat(stat9.try_into().unwrap());
+        stats.apply_stat(stat10.try_into().unwrap());
+        stats.apply_stat(stat11.try_into().unwrap());
+        stats.apply_stat(stat12.try_into().unwrap());
         stats
     }
 

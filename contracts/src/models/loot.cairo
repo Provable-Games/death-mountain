@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use core::num::traits::OverflowingAdd;
 use core::panic_with_felt252;
 use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};

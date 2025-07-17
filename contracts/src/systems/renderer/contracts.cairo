@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #[starknet::interface]
 pub trait IRendererSystems<T> {
     fn create_metadata(self: @T, adventurer_id: u64) -> ByteArray;

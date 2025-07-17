@@ -30,27 +30,31 @@ sozo test          # Run contract tests
 ### Frontend Architecture
 - **React + TypeScript** application using Vite as build tool
 - **State Management**: Zustand stores in `client/src/stores/`
-  - `main.ts` - Main game state
-  - `explore.ts` - Exploration state
-  - `combat.ts` - Combat mechanics
-- **Game Screens**: Located in `client/src/pages/`
-  - `Game.tsx` - Main game screen
-  - `Start.tsx` - Game start/character creation
-  - `Watch.tsx` - Spectator mode
-  - `Campaign.tsx` - Campaign mode
+  - `gameStore.ts` - Main game state and player data
+  - `marketStore.ts` - Marketplace and trading state
+  - `uiStore.ts` - UI state management
+- **Platform-Specific UI**:
+  - `client/src/desktop/` - Desktop-optimized components and pages
+  - `client/src/mobile/` - Mobile-optimized components and pages
 - **Dojo Integration**: `client/src/dojo/` contains blockchain interaction code
+- **Generated Code**: `client/src/generated/` - Auto-generated contract bindings
+- **Game Data**: `client/src/constants/` - Static game data (beasts, loot, obstacles)
 - **Components**: Reusable UI components in `client/src/components/`
 - **Containers**: Screen-specific containers in `client/src/containers/`
 
 ### Smart Contract Architecture
 - **Cairo Contracts** in `contracts/src/`
-- **Systems**: Core game logic contracts
-  - `adventurer.cairo` - Player character logic
-  - `beast.cairo` - Enemy logic
-  - `combat.cairo` - Battle mechanics
-  - `loot.cairo` - Item system
-  - `market.cairo` - Trading system
+- **Systems**: Core game logic contracts in `contracts/src/systems/`
+  - `adventurer/` - Player character system
+  - `beast/` - Enemy and combat system
+  - `game/` - Main game loop and state management
+  - `loot/` - Item generation and management
+  - `market/` - Trading and marketplace logic
+  - `settings/` - Game configuration
+  - `renderer/` - NFT metadata rendering
 - **Models**: Data structures in `contracts/src/models/`
+- **Libraries**: Shared code in `contracts/src/libs/`
+- **Constants**: Game constants in `contracts/src/constants/`
 - **Dojo Framework**: Version 1.5.1 for on-chain game state
 
 ### Key Integration Points
@@ -71,6 +75,7 @@ sozo test          # Run contract tests
 - Development: `dojo_dev.toml`
 - Sepolia testnet: `dojo_sepolia.toml`
 - Mainnet: `dojo_mainnet.toml`
+- Slot testnet: `dojo_slot.toml`
 
 ## Development Workflow
 
@@ -88,3 +93,16 @@ sozo test          # Run contract tests
 - Cairo 2.10.1 syntax for smart contracts
 - Component files use `.tsx` extension
 - Utility files use `.ts` extension
+- Cairo formatting: `scarb fmt` with max line length 120
+
+## Additional Commands
+
+### Cairo Formatting
+```bash
+cd contracts
+scarb fmt    # Format Cairo code
+```
+
+### Deployment
+- Frontend deployment configured for Google App Engine (`client/app.yaml`)
+- Contract deployment via Dojo CLI with network-specific profiles

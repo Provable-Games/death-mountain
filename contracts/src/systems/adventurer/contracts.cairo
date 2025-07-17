@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
 use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;

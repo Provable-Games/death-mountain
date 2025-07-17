@@ -1,5 +1,6 @@
 import { ClauseBuilder, ParsedEntity, UnionOfModelData, HistoricalToriiQueryBuilder } from '@dojoengine/sdk';
 import { SchemaType } from '../generated/models.gen.ts';
+import { useDojoConfig } from "../contexts/starknet.tsx";
 
 export interface Item {
   id: number;
@@ -69,6 +70,16 @@ export interface Stats {
   luck: number;
 }
 
+export interface CombatStats {
+  baseDamage: number;
+  protection: number;
+  bestProtection: number;
+  bestItems: Item[];
+  critChance: number;
+  criticalDamage: number;
+  gearScore: number;
+}
+
 export interface ItemPurchase {
   item_id: number;
   equip: boolean;
@@ -112,6 +123,18 @@ export interface Quest {
   targetScore: number;
 }
 
+export interface GameSettingsData {
+  vrf_address: string;
+  name: string;
+  in_battle: boolean;
+  game_seed: number;
+  game_seed_until_xp: number;
+  stats_mode: string;
+  base_damage_reduction: number;
+  adventurer: Adventurer;
+  bag: Item[];
+}
+
 export type GameSchemaType = SchemaType;
 export type GameSchemaModels = GameSchemaType['lootsurvivor'];
 export type GameComponentModels = GameSchemaType['tournaments'];
@@ -123,6 +146,12 @@ export type GameEntity = ParsedEntity<GameSchemaType>;
 export class GameQueryBuilder extends HistoricalToriiQueryBuilder<GameSchemaType> { }
 export class GameClauseBuilder extends ClauseBuilder<GameSchemaType> { }
 
-export const getEntityModel = <M extends GameModelType>(entity: GameEntity, modelName: GameSchemaModelNames | GameComponentModelNames): M => (
-  entity?.models[`${import.meta.env.VITE_PUBLIC_NAMESPACE}`]?.[modelName] as M
-)
+export const useEntityModel = () => {
+  const dojoConfig = useDojoConfig();
+
+  const getEntityModel = <M extends GameModelType>(entity: GameEntity, modelName: GameSchemaModelNames | GameComponentModelNames): M => (
+    entity?.models[`${dojoConfig.namespace}`]?.[modelName] as M
+  );
+
+  return { getEntityModel };
+};

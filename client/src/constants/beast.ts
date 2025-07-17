@@ -4,9 +4,10 @@ export const MAX_SPECIAL2 = BigInt(69);  // Max prefix index
 export const MAX_SPECIAL3 = BigInt(18);  // Max suffix index
 export const MAX_BEAST_ID = BigInt(75);
 
-// Health-related constants
+// Combat-related constants
 export const STARTER_BEAST_HEALTH = BigInt(3);
 export const MAXIMUM_HEALTH = BigInt(1023); // 2^10 - 1
+export const BEAST_MIN_DAMAGE = 2;
 
 // Constants for reward calculations
 export const GOLD_MULTIPLIER = {

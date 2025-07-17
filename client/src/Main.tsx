@@ -8,31 +8,61 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { setupWorld } from "./generated/contracts.gen.ts";
 import type { SchemaType } from "./generated/models.gen.ts";
 
-import { dojoConfig } from "../dojoConfig.ts";
+import { DynamicConnectorProvider, useDynamicConnector } from "@/contexts/starknet.tsx";
+import { createDojoConfig } from "@dojoengine/core";
+import { useEffect, useState } from "react";
 import "./index.css";
-import StarknetProvider from "./contexts/starknet";
 
+function DojoApp() {
+  const { dojoConfig } = useDynamicConnector();
+  const [sdk, setSdk] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function initializeSdk() {
+      try {
+        setLoading(true);
+        const initializedSdk = await init<SchemaType>({
+          client: {
+            toriiUrl: dojoConfig.toriiUrl,
+            worldAddress: dojoConfig.manifest.world.address,
+          },
+          domain: {
+            name: "Loot Survivor",
+            version: "1.0",
+            chainId: dojoConfig.chainId,
+            revision: "1",
+          }
+        });
+        setSdk(initializedSdk);
+      } catch (error) {
+        console.error("Failed to initialize SDK:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (dojoConfig) {
+      initializeSdk();
+    }
+  }, [dojoConfig]);
+
+  if (loading || !sdk) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <DojoSdkProvider sdk={sdk} dojoConfig={createDojoConfig(dojoConfig)} clientFn={setupWorld}>
+      <App />
+    </DojoSdkProvider>
+  );
+}
 
 async function main() {
-  const sdk = await init<SchemaType>({
-    client: {
-      toriiUrl: dojoConfig.toriiUrl,
-      worldAddress: dojoConfig.manifest.world.address,
-    },
-    domain: {
-      name: "Loot Survivor",
-      version: "1.0",
-      chainId: "sepolia",
-      revision: "1",
-    }
-  });
-
   createRoot(document.getElementById("root")!).render(
-    <DojoSdkProvider sdk={sdk} dojoConfig={dojoConfig} clientFn={setupWorld}>
-      <StarknetProvider>
-        <App />
-      </StarknetProvider>
-    </DojoSdkProvider>
+    <DynamicConnectorProvider>
+      <DojoApp />
+    </DynamicConnectorProvider>
   );
 }
 

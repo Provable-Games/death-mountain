@@ -1,23 +1,18 @@
 [world]
-name = "Death Mountain"
-description = "Onchain Dungeon Creator"
-seed = "death_mountain"
-
-[writers]
-"dm_v1_0_0" = ["dm_v1_0_0-game_systems", "dm_v1_0_0-game_token_systems", "dm_v1_0_0-settings_systems"]
-
-[init_call_args]
-"dm_v1_0_0-game_token_systems" = [
-    "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec",
-    "0x06f55060a64c8bcb1ac735fb5b743f75e442716b051b92801f793ae187354f65" # denshokan address
-]
-
-[namespace]
-default = "dm_v1_0_0"
+name = "Provable Games"
+description = "DNC"
+seed = "pg-slot"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/game-components/katana"
-# Default account for katana with seed = 0
-account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
-private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
-# world_address = "0x06171ed98331e849d6084bf2b3e3186a7ddf35574dd68cab4691053ee8ab69d7"
+rpc_url = "https://api.cartridge.gg/x/pg-slot/katana"
+
+[namespace]
+default = "ls_0_0_2"
+
+[writers]
+"ls_0_0_2" = ["ls_0_0_2-game_systems", "ls_0_0_2-game_token_systems", "ls_0_0_2-settings_systems"]
+
+[init_call_args]
+"ls_0_0_2-game_token_systems" = [
+    "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
+]

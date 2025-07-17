@@ -1,4 +1,4 @@
-import { TIER_PRICE } from '../constants/game';
+import { TIER_PRICE } from '@/constants/game';
 import {
   ITEM_NAME_PREFIXES,
   ITEM_NAME_SUFFIXES,
@@ -9,47 +9,33 @@ import {
   NUM_ITEMS,
   PREFIXES_UNLOCK_GREATNESS,
   SUFFIX_UNLOCK_GREATNESS
-} from '../constants/loot';
+} from '@/constants/loot';
 
 // Import icons
-import bladeIcon from '@/assets/types/blade.svg';
-import bludgeonIcon from '@/assets/types/bludgeon.svg';
-import chestIcon from '@/assets/types/chest.svg';
-import clothIcon from '@/assets/types/cloth.svg';
-import footIcon from '@/assets/types/foot.svg';
-import handIcon from '@/assets/types/hand.svg';
-import headIcon from '@/assets/types/head.svg';
-import hideIcon from '@/assets/types/hide.svg';
-import magicIcon from '@/assets/types/magic.svg';
-import metalIcon from '@/assets/types/metal.svg';
-import neckIcon from '@/assets/types/neck.svg';
-import ringIcon from '@/assets/types/ring.svg';
-import waistIcon from '@/assets/types/waist.svg';
-import weaponIcon from '@/assets/types/weapon.svg';
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
 import { Beast, Item, Stats } from '@/types/game';
 import { calculateLevel } from './game';
 
 export const slotIcons = {
-  Weapon: weaponIcon,
-  Head: headIcon,
-  Chest: chestIcon,
-  Waist: waistIcon,
-  Hand: handIcon,
-  Foot: footIcon,
-  Ring: ringIcon,
-  Neck: neckIcon,
+  Weapon: '/images/types/weapon.svg',
+  Head: '/images/types/head.svg',
+  Chest: '/images/types/chest.svg',
+  Waist: '/images/types/waist.svg',
+  Hand: '/images/types/hand.svg',
+  Foot: '/images/types/foot.svg',
+  Ring: '/images/types/ring.svg',
+  Neck: '/images/types/neck.svg',
 };
 
 export const typeIcons = {
-  Cloth: clothIcon,
-  Hide: hideIcon,
-  Metal: metalIcon,
-  Magic: magicIcon,
-  Bludgeon: bludgeonIcon,
-  Blade: bladeIcon,
-  Ring: ringIcon,
-  Necklace: neckIcon,
+  Cloth: '/images/types/cloth.svg',
+  Hide: '/images/types/hide.svg',
+  Metal: '/images/types/metal.svg',
+  Magic: '/images/types/magic.svg',
+  Bludgeon: '/images/types/bludgeon.svg',
+  Blade: '/images/types/blade.svg',
+  Ring: '/images/types/ring.svg',
+  Necklace: '/images/types/neck.svg',
 };
 
 // Create a mapping from ID to name
@@ -255,7 +241,7 @@ export const ItemUtils = {
   },
 
   getItemSuffix: (seed: number) => {
-    return seed % 18 + 1;
+    return seed % 16 + 1;
   },
 
   getItemPrefix1: (seed: number) => {
@@ -279,7 +265,7 @@ export const ItemUtils = {
 
     try {
       const fileName = name.replace(/ /g, "_").toLowerCase();
-      return new URL(`../assets/loot/${fileName}.png`, import.meta.url).href;
+      return `/images/loot/${fileName}.png`;
     } catch (ex) {
       return "";
     }

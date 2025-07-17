@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
+
 // Starting Setting
-pub const STARTING_GOLD: u8 = 35;
+pub const STARTING_GOLD: u8 = 40;
 pub const STARTING_HEALTH: u8 = 100;
 
 // Adventurer Max Values
@@ -41,7 +43,7 @@ pub const VITALITY_INSTANT_HEALTH_BONUS: u8 = 15;
 // Combat Settings
 pub const MINIMUM_DAMAGE_TO_BEASTS: u8 = 4;
 pub const MINIMUM_DAMAGE_FROM_BEASTS: u8 = 2;
-pub const MINIMUM_DAMAGE_FROM_OBSTACLES: u8 = 2;
+pub const MINIMUM_DAMAGE_FROM_OBSTACLES: u8 = 4;
 pub const CRITICAL_HIT_LEVEL_MULTIPLIER: u8 = 1;
 
 // Misc Settings

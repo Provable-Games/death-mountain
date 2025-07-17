@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
+
 pub mod systems {
     pub mod game {
         pub mod contracts;
@@ -45,7 +47,7 @@ pub mod utils {
         pub mod encoding;
         pub mod renderer_utils;
     }
-    pub mod cartridge;
+    pub mod vrf;
     #[cfg(test)]
     pub mod setup_denshokan;
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcher};
 use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcher};
 use death_mountain::systems::loot::contracts::{ILootSystemsDispatcher};

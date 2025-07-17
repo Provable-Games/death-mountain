@@ -1,46 +1,74 @@
-import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
-import { BrowserRouter, Route, Routes, } from "react-router-dom";
 import Box from '@mui/material/Box';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
+import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
-import Header from './components/Header';
-import GameSettingsList from './components/GameSettingsList';
-import GameSettings from './components/GameSettings';
-import { ControllerProvider } from './contexts/controller';
-import { GameDirector } from './contexts/GameDirector';
-import { SoundProvider } from './contexts/Sound';
-import { routes } from './utils/routes';
-import { mainTheme } from './utils/themes';
+import { ControllerProvider } from '@/contexts/controller';
+import { SoundProvider } from '@/contexts/Sound';
+import { GameDirector } from '@/desktop/contexts/GameDirector';
+import { GameDirector as MobileGameDirector } from '@/mobile/contexts/GameDirector';
+import { useUIStore } from '@/stores/uiStore';
+import { isBrowser, isMobile } from 'react-device-detect';
+import GameSettings from './mobile/components/GameSettings';
+import GameSettingsList from './mobile/components/GameSettingsList';
+import Header from './mobile/components/Header';
+import { desktopRoutes, mobileRoutes } from './utils/routes';
+import { desktopTheme, mobileTheme } from './utils/themes';
 
 function App() {
+  const { useMobileClient } = useUIStore();
+  const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+
   return (
     <BrowserRouter>
-      <Box className='bgImage'>
-        <StyledEngineProvider injectFirst>
-          <ThemeProvider theme={mainTheme}>
-            <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
-              <SoundProvider>
-                <ControllerProvider>
+      <StyledEngineProvider injectFirst>
+        <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
+          <ControllerProvider>
+
+            {!shouldShowMobile && (
+              <ThemeProvider theme={desktopTheme}>
+                <SoundProvider>
                   <GameDirector>
                     <Box className='main'>
-                      <Header />
 
                       <Routes>
-                        {routes.map((route, index) => {
+                        {desktopRoutes.map((route, index) => {
                           return <Route key={index} path={route.path} element={route.content} />
                         })}
                       </Routes>
 
-                      <GameSettingsList />
-                      <GameSettings />
                     </Box>
                   </GameDirector>
-                </ControllerProvider>
-              </SoundProvider>
-            </SnackbarProvider>
-          </ThemeProvider>
-        </StyledEngineProvider>
-      </Box>
+                </SoundProvider>
+              </ThemeProvider>
+            )}
+
+            {shouldShowMobile && (
+              <ThemeProvider theme={mobileTheme}>
+                <Box className='bgImage'>
+                  <SoundProvider>
+                    <MobileGameDirector>
+                      <Box className='main'>
+                        <Header />
+
+                        <Routes>
+                          {mobileRoutes.map((route, index) => {
+                            return <Route key={index} path={route.path} element={route.content} />
+                          })}
+                        </Routes>
+
+                        <GameSettingsList />
+                        <GameSettings />
+                      </Box>
+                    </MobileGameDirector>
+                  </SoundProvider>
+                </Box>
+              </ThemeProvider>
+            )}
+
+          </ControllerProvider>
+        </SnackbarProvider>
+      </StyledEngineProvider>
     </BrowserRouter>
   );
 }

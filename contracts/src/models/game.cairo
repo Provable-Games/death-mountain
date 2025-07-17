@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::constants::combat::CombatEnums::{Slot};
 use death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType;
 use death_mountain::models::adventurer::adventurer::Adventurer;
@@ -50,11 +52,20 @@ pub struct GameSettingsMetadata {
 pub struct GameSettings {
     #[key]
     pub settings_id: u32,
+    pub vrf_address: ContractAddress,
     pub adventurer: Adventurer,
     pub bag: Bag,
     pub game_seed: u64,
     pub game_seed_until_xp: u16,
     pub in_battle: bool,
+    pub stats_mode: StatsMode,
+    pub base_damage_reduction: u8,
+}
+
+#[derive(Introspect, Copy, Drop, Serde, PartialEq)]
+pub enum StatsMode {
+    Dodge,
+    Reduction,
 }
 
 #[derive(IntrospectPacked, Copy, Drop, Serde)]

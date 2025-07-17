@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::num::traits::Sqrt;
 use core::traits::DivRem;
 use death_mountain::constants::loot::ItemId;

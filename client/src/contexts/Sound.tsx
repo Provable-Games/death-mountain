@@ -1,6 +1,7 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/stores/gameStore';
 import { calculateLevel } from '@/utils/game';
+import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 
 const tracks: Record<string, string> = {
   Intro: "/audio/Intro.mp3",
@@ -18,6 +19,7 @@ interface SoundContextType {
   setPlaying: (playing: boolean) => void;
   volume: number;
   setVolume: (volume: number) => void;
+  hasInteracted: boolean;
 }
 
 const SoundContext = createContext<SoundContextType>({
@@ -25,15 +27,17 @@ const SoundContext = createContext<SoundContextType>({
   setPlaying: () => { },
   volume: 1,
   setVolume: () => { },
+  hasInteracted: false,
 });
 
 export const SoundProvider = ({ children }: PropsWithChildren) => {
   const audioRef = useRef(new Audio(tracks.Intro));
   audioRef.current.loop = true;
 
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(isMobile ? true : false);
   const [volume, setVolume] = useState(0.5);
   const { gameId, adventurer } = useGameStore();
+  const [hasInteracted, setHasInteracted] = useState(false)
 
   useEffect(() => {
     audioRef.current.volume = volume;
@@ -41,7 +45,8 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     const handleFirstInteraction = () => {
-      audioRef.current.play().catch(() => { });
+      setHasInteracted(true);
+      if (playing) { audioRef.current.play().catch(() => { }); }
       document.removeEventListener('click', handleFirstInteraction);
     };
     document.addEventListener('click', handleFirstInteraction);
@@ -94,6 +99,7 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
       setPlaying,
       volume,
       setVolume,
+      hasInteracted,
     }}>
       {children}
     </SoundContext.Provider>

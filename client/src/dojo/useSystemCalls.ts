@@ -1,38 +1,32 @@
+import { useController } from "@/contexts/controller";
+import { useDojoConfig } from "@/contexts/starknet";
+import { GameSettingsData, ItemPurchase, Stats } from "@/types/game";
 import { getContractByName } from "@dojoengine/core";
-import { useAccount } from "@starknet-react/core";
 import { CallData } from 'starknet';
-import { dojoConfig } from "../../dojoConfig";
-import { ItemPurchase, Stats } from "../types/game";
-import { GameSettingsData } from "@/components/GameSettings";
 
-const namespace = import.meta.env.VITE_PUBLIC_NAMESPACE;
-const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
-const GAME_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_systems")?.address
-const GAME_TOKEN_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_token_systems")?.address
-const SETTINGS_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "settings_systems")?.address
-
-/**
- * Custom hook to handle system calls and state management in the Dojo application.
- * Provides functionality for game actions and managing optimistic updates.
- *
- * @returns An object containing system call functions:
- *   - mintAndStartGame: Function to mint a new game
- *   - startGame: Function to start a new game with a weapon
- *   - explore: Function to explore the world
- *   - attack: Function to attack a beast
- *   - flee: Function to flee from a beast
- *   - equip: Function to equip items
- *   - drop: Function to drop items
- *   - levelUp: Function to level up and purchase items
- */
 export const useSystemCalls = () => {
-  const { account } = useAccount();
+  const { account } = useController();
+  const dojoConfig = useDojoConfig();
+
+  const namespace = dojoConfig.namespace;
+  const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
+  const GAME_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_systems")?.address
+  const GAME_TOKEN_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "game_token_systems")?.address
+  const SETTINGS_ADDRESS = getContractByName(dojoConfig.manifest, namespace, "settings_systems")?.address
 
   /**
-   * Executes a list of calls with optional VRF
-   * @param calls Array of calls to execute
-   * @param includeVRF Whether to include VRF in the transaction
-   * @returns {Promise<any>} The result of the execution
+   * Custom hook to handle system calls and state management in the Dojo application.
+   * Provides functionality for game actions and managing optimistic updates.
+   *
+   * @returns An object containing system call functions:
+   *   - mintAndStartGame: Function to mint a new game
+   *   - startGame: Function to start a new game with a weapon
+   *   - explore: Function to explore the world
+   *   - attack: Function to attack a beast
+   *   - flee: Function to flee from a beast
+   *   - equip: Function to equip items
+   *   - drop: Function to drop items
+   *   - levelUp: Function to level up and purchase items
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
@@ -74,7 +68,13 @@ export const useSystemCalls = () => {
       ], { version: 3 });
 
       const receipt: any = await account!.waitForTransaction(tx.transaction_hash, { retryInterval: 500 })
-      let gameId = parseInt(receipt.events[0].data[3], 16)
+
+      let gameId = 0;
+      if (receipt.events[0].data.length > 0) {
+        gameId = parseInt(receipt.events[0].data[receipt.events[0].data.length - 1], 16)
+      } else {
+        gameId = parseInt(receipt.events[1].data[receipt.events[1].data.length - 1], 16)
+      }
 
       return gameId;
     } catch (error) {
@@ -234,12 +234,15 @@ export const useSystemCalls = () => {
         contractAddress: SETTINGS_ADDRESS,
         entrypoint: 'add_settings',
         calldata: [
+          settings.vrf_address,
           settings.name,
           settings.adventurer,
           bag,
           settings.game_seed,
           settings.game_seed_until_xp,
-          settings.in_battle
+          settings.in_battle,
+          settings.stats_mode === 'Dodge' ? 0 : 1,
+          settings.base_damage_reduction
         ]
       }
     ], () => { });

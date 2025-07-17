@@ -3,10 +3,10 @@ import {
   BEAST_NAME_SUFFIXES,
   BEAST_NAMES,
   BEAST_SPECIAL_NAME_LEVEL_UNLOCK
-} from "../constants/beast";
+} from "@/constants/beast";
 
 import * as starknet from "@scure/starknet";
-import { Beast } from "../types/game";
+import { Beast } from "@/types/game";
 
 const MAX_ID = BigInt(75);
 const TWO_POW_64_NZ = BigInt("18446744073709551616");

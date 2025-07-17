@@ -38,7 +38,7 @@ b {
 }
 
 .bgImage {
-  background-image: url("./assets/images/background.png");
+  background-image: url("/images/mobile/background.png");
 }
 
 .main {
@@ -53,6 +53,40 @@ b {
   border-radius: 5px;
   padding: 10px;
   box-sizing: border-box;
+}
+
+.imageContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #000;
+  z-index: 0;
+}
+
+.videoContainer {
+  padding-top: 0 !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1000;
+  background-color: transparent;
+}
+
+.videoContainer-hidden {
+  position: fixed !important;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
 
 input:autofill {
@@ -73,6 +107,10 @@ input:-webkit-autofill {
 
 .dotLoader.green {
   background: radial-gradient(circle closest-side, #80FF00 90%, #FFF0) 0/calc(100%/3) 100% space;
+}
+
+.dotLoader.yellow {
+  background: radial-gradient(circle closest-side, #d0c98d 90%, #FFF0) 0/calc(100%/3) 100% space;
 }
 
 .dotLoader.white {

@@ -13,12 +13,13 @@
     "dependencies": {
         "@cartridge/connector": "^0.7.13",
         "@cartridge/controller": "^0.7.13",
-        "@dojoengine/create-burner": "^1.5.1",
-        "@dojoengine/predeployed-connector": "^1.5.1",
-        "@dojoengine/sdk": "^1.5.1",
-        "@dojoengine/torii-client": "^1.5.1",
-        "@dojoengine/torii-wasm": "^1.5.1",
-        "@dojoengine/utils": "^1.5.1",
+        "@cloudflare/stream-react": "^1.9.3",
+        "@dojoengine/create-burner": "^1.5.12",
+        "@dojoengine/predeployed-connector": "^1.5.12",
+        "@dojoengine/sdk": "^1.5.12",
+        "@dojoengine/torii-client": "^1.5.12",
+        "@dojoengine/torii-wasm": "^1.5.12",
+        "@dojoengine/utils": "^1.5.12",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.0",
         "@fontsource/roboto": "^5.2.5",
@@ -49,7 +50,7 @@
         "vite-plugin-wasm": "^3.4.1"
     },
     "devDependencies": {
-        "@dojoengine/core": "^1.4.4",
+        "@dojoengine/core": "^1.5.12",
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
         "@types/react-lazy-load-image-component": "^1.6.4",

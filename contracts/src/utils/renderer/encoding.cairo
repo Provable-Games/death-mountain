@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use core::num::traits::Bounded;
 
 #[inline(always)]

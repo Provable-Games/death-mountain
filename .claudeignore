@@ -1,0 +1,104 @@
+# Build artifacts and cache
+target/
+.snfoundry_cache/
+build/
+out/
+
+# Lock files (usually auto-generated)
+Scarb.lock
+*.lock
+
+# Test artifacts
+snfoundry_trace/
+coverage/
+*.coverage
+*.profraw
+*.profdata
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+logs/
+tmp/
+temp/
+
+# Large binary files
+*.bin
+*.dat
+*.db
+*.sqlite
+
+
+# Documentation build outputs
+docs/_build/
+docs/build/
+site/
+
+# Environment files (may contain secrets)
+.env
+.env.*
+!.env.example
+
+# Manifest files in contracts and client directory
+contracts/manifest_*.json
+client/manifest_*.json
+
+# Compiled or minified files
+*.min.js
+*.min.css
+dist/
+
+# Node.js dependencies
+node_modules/
+**/node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Cairo/Starknet compilation artifacts
+*.sierra
+*.sierra.json
+*.casm
+*.casm.json
+
+# Vite dev server
+.vite/
+vite.config.js.timestamp-*
+*.hot-update.json
+*.hot-update.js
+
+# Large asset files
+client/src/assets/*
+client/public/banner.png
+
+# Git internal files
+.git/objects/
+.git/lfs/
+
+# Deployment files
+app.yaml
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
+.vercel/
+
+# Test outputs
+test-results/
+playwright-report/
+htmlcov/
+.coverage/
+*.lcov
+
+# Torii configuration
+torii*.toml

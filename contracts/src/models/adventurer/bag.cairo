@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 use core::panic_with_felt252;
 use core::traits::DivRem;
 use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;

@@ -1,17 +1,23 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::models::adventurer::adventurer::Adventurer;
 use death_mountain::models::adventurer::bag::Bag;
-use death_mountain::models::game::GameSettings;
+use death_mountain::models::game::{GameSettings, StatsMode};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait ISettingsSystems<T> {
     fn add_settings(
         ref self: T,
+        vrf_address: ContractAddress,
         name: felt252,
         adventurer: Adventurer,
         bag: Bag,
         game_seed: u64,
         game_seed_until_xp: u16,
         in_battle: bool,
+        stats_mode: StatsMode,
+        base_damage_reduction: u8,
     ) -> u32;
     fn setting_details(self: @T, settings_id: u32) -> GameSettings;
     fn game_settings(self: @T, game_id: u64) -> GameSettings;
@@ -23,17 +29,10 @@ mod settings_systems {
     use death_mountain::constants::world::{DEFAULT_NS, VERSION};
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
-    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter};
-
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
-    use game_components_minigame::extensions::settings::settings::SettingsComponent;
-    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
-    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
-
-    use openzeppelin_introspection::src5::SRC5Component;
-
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
     use dojo::model::ModelStorage;
-    use dojo::world::{WorldStorage, WorldStorageTrait};
+    use dojo::world::{WorldStorage};
+    use starknet::ContractAddress;
     use super::ISettingsSystems;
 
     component!(path: SettingsComponent, storage: settings, event: SettingsEvent);
@@ -93,12 +92,15 @@ mod settings_systems {
     impl SettingsSystemsImpl of ISettingsSystems<ContractState> {
         fn add_settings(
             ref self: ContractState,
+            vrf_address: ContractAddress,
             name: felt252,
             adventurer: Adventurer,
             bag: Bag,
             game_seed: u64,
             game_seed_until_xp: u16,
             in_battle: bool,
+            stats_mode: StatsMode,
+            base_damage_reduction: u8,
         ) -> u32 {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             // increment settings counter
@@ -108,7 +110,15 @@ mod settings_systems {
             world
                 .write_model(
                     @GameSettings {
-                        settings_id: settings_count.count, adventurer, bag, game_seed, game_seed_until_xp, in_battle,
+                        settings_id: settings_count.count,
+                        vrf_address,
+                        adventurer,
+                        bag,
+                        game_seed,
+                        game_seed_until_xp,
+                        in_battle,
+                        stats_mode,
+                        base_damage_reduction,
                     },
                 );
             world

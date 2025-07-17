@@ -10,6 +10,10 @@ interface UIState {
   isGameSettingsDialogOpen: boolean
   gameSettingsEdit: boolean
   selectedSettingsId: number | null
+  
+  // Client preferences
+  setUseMobileClient: (useMobile: boolean) => void
+  useMobileClient: boolean
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -22,4 +26,19 @@ export const useUIStore = create<UIState>((set) => ({
   isGameSettingsDialogOpen: false,
   gameSettingsEdit: false,
   selectedSettingsId: null,
+  
+  // Client preferences
+  setUseMobileClient: (useMobile) => {
+    // Save to localStorage
+    localStorage.setItem('useMobileClient', useMobile.toString());
+    set({ useMobileClient: useMobile });
+  },
+  useMobileClient: (() => {
+    // Load from localStorage on initialization
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('useMobileClient');
+      return stored ? stored === 'true' : false;
+    }
+    return false;
+  })(),
 }))

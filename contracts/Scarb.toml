@@ -4,6 +4,8 @@ name = "death_mountain"
 version = "0.1.0"
 edition = "2024_07"
 
+[lib]
+
 [cairo]
 sierra-replace-ids = true
 
@@ -21,6 +23,7 @@ graffiti = { git = "https://github.com/ponderingdemocritus/graffiti", rev = "bc5
 
 [dev-dependencies]
 cairo_test = "=2.10.1"
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
 dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
 
 [[target.starknet-contract]]

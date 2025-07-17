@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use death_mountain::constants::combat::CombatEnums::{Tier, Type};
 use death_mountain::constants::obstacle::{ObstacleId, ObstacleSettings};
 use death_mountain::models::combat::{CombatSpec, ImplCombat};

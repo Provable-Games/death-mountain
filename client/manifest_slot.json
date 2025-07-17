@@ -1,0 +1,5254 @@
+{
+  "world": {
+    "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
+    "address": "0x36820d4ae5a7d96fa97a51da8ae27cc74b07e029941f130fa0d7980870a9a4",
+    "seed": "pg-slot",
+    "name": "Provable Games",
+    "entrypoints": [
+      "uuid",
+      "set_metadata",
+      "register_namespace",
+      "register_event",
+      "register_model",
+      "register_contract",
+      "register_library",
+      "init_contract",
+      "upgrade_event",
+      "upgrade_model",
+      "upgrade_contract",
+      "emit_event",
+      "emit_events",
+      "set_entity",
+      "set_entities",
+      "delete_entity",
+      "delete_entities",
+      "grant_owner",
+      "revoke_owner",
+      "grant_writer",
+      "revoke_writer",
+      "upgrade"
+    ],
+    "abi": [
+      {
+        "type": "impl",
+        "name": "World",
+        "interface_name": "dojo::world::iworld::IWorld"
+      },
+      {
+        "type": "struct",
+        "name": "core::byte_array::ByteArray",
+        "members": [
+          {
+            "name": "data",
+            "type": "core::array::Array::<core::bytes_31::bytes31>"
+          },
+          {
+            "name": "pending_word",
+            "type": "core::felt252"
+          },
+          {
+            "name": "pending_word_len",
+            "type": "core::integer::u32"
+          }
+        ]
+      },
+      {
+        "type": "enum",
+        "name": "dojo::world::resource::Resource",
+        "variants": [
+          {
+            "name": "Model",
+            "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+          },
+          {
+            "name": "Event",
+            "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+          },
+          {
+            "name": "Contract",
+            "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+          },
+          {
+            "name": "Namespace",
+            "type": "core::byte_array::ByteArray"
+          },
+          {
+            "name": "World",
+            "type": "()"
+          },
+          {
+            "name": "Unregistered",
+            "type": "()"
+          },
+          {
+            "name": "Library",
+            "type": "(core::starknet::class_hash::ClassHash, core::felt252)"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "dojo::model::metadata::ResourceMetadata",
+        "members": [
+          {
+            "name": "resource_id",
+            "type": "core::felt252"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "core::byte_array::ByteArray"
+          },
+          {
+            "name": "metadata_hash",
+            "type": "core::felt252"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<core::felt252>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<core::felt252>"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<core::array::Span::<core::felt252>>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<core::array::Span::<core::felt252>>"
+          }
+        ]
+      },
+      {
+        "type": "enum",
+        "name": "dojo::model::definition::ModelIndex",
+        "variants": [
+          {
+            "name": "Keys",
+            "type": "core::array::Span::<core::felt252>"
+          },
+          {
+            "name": "Id",
+            "type": "core::felt252"
+          },
+          {
+            "name": "MemberId",
+            "type": "(core::felt252, core::felt252)"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<core::integer::u8>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<core::integer::u8>"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "dojo::meta::layout::FieldLayout",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252"
+          },
+          {
+            "name": "layout",
+            "type": "dojo::meta::layout::Layout"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<dojo::meta::layout::FieldLayout>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<dojo::meta::layout::FieldLayout>"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<dojo::meta::layout::Layout>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<dojo::meta::layout::Layout>"
+          }
+        ]
+      },
+      {
+        "type": "enum",
+        "name": "dojo::meta::layout::Layout",
+        "variants": [
+          {
+            "name": "Fixed",
+            "type": "core::array::Span::<core::integer::u8>"
+          },
+          {
+            "name": "Struct",
+            "type": "core::array::Span::<dojo::meta::layout::FieldLayout>"
+          },
+          {
+            "name": "Tuple",
+            "type": "core::array::Span::<dojo::meta::layout::Layout>"
+          },
+          {
+            "name": "Array",
+            "type": "core::array::Span::<dojo::meta::layout::Layout>"
+          },
+          {
+            "name": "ByteArray",
+            "type": "()"
+          },
+          {
+            "name": "Enum",
+            "type": "core::array::Span::<dojo::meta::layout::FieldLayout>"
+          }
+        ]
+      },
+      {
+        "type": "struct",
+        "name": "core::array::Span::<dojo::model::definition::ModelIndex>",
+        "members": [
+          {
+            "name": "snapshot",
+            "type": "@core::array::Array::<dojo::model::definition::ModelIndex>"
+          }
+        ]
+      },
+      {
+        "type": "enum",
+        "name": "core::bool",
+        "variants": [
+          {
+            "name": "False",
+            "type": "()"
+          },
+          {
+            "name": "True",
+            "type": "()"
+          }
+        ]
+      },
+      {
+        "type": "interface",
+        "name": "dojo::world::iworld::IWorld",
+        "items": [
+          {
+            "type": "function",
+            "name": "resource",
+            "inputs": [
+              {
+                "name": "selector",
+                "type": "core::felt252"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "dojo::world::resource::Resource"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "uuid",
+            "inputs": [],
+            "outputs": [
+              {
+                "type": "core::integer::u32"
+              }
+            ],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "metadata",
+            "inputs": [
+              {
+                "name": "resource_selector",
+                "type": "core::felt252"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "dojo::model::metadata::ResourceMetadata"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "set_metadata",
+            "inputs": [
+              {
+                "name": "metadata",
+                "type": "dojo::model::metadata::ResourceMetadata"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "register_namespace",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "register_event",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "register_model",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "register_contract",
+            "inputs": [
+              {
+                "name": "salt",
+                "type": "core::felt252"
+              },
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "register_library",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              },
+              {
+                "name": "name",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "version",
+                "type": "core::byte_array::ByteArray"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "init_contract",
+            "inputs": [
+              {
+                "name": "selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "init_calldata",
+                "type": "core::array::Span::<core::felt252>"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "upgrade_event",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "upgrade_model",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "upgrade_contract",
+            "inputs": [
+              {
+                "name": "namespace",
+                "type": "core::byte_array::ByteArray"
+              },
+              {
+                "name": "class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "emit_event",
+            "inputs": [
+              {
+                "name": "event_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "keys",
+                "type": "core::array::Span::<core::felt252>"
+              },
+              {
+                "name": "values",
+                "type": "core::array::Span::<core::felt252>"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "emit_events",
+            "inputs": [
+              {
+                "name": "event_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "keys",
+                "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+              },
+              {
+                "name": "values",
+                "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "entity",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "index",
+                "type": "dojo::model::definition::ModelIndex"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::array::Span::<core::felt252>"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "entities",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "indexes",
+                "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "set_entity",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "index",
+                "type": "dojo::model::definition::ModelIndex"
+              },
+              {
+                "name": "values",
+                "type": "core::array::Span::<core::felt252>"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "set_entities",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "indexes",
+                "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+              },
+              {
+                "name": "values",
+                "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "delete_entity",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "index",
+                "type": "dojo::model::definition::ModelIndex"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "delete_entities",
+            "inputs": [
+              {
+                "name": "model_selector",
+                "type": "core::felt252"
+              },
+              {
+                "name": "indexes",
+                "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+              },
+              {
+                "name": "layout",
+                "type": "dojo::meta::layout::Layout"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "is_owner",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "address",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::bool"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "grant_owner",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "address",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "revoke_owner",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "address",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "owners_count",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::integer::u64"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "is_writer",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "contract",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::bool"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "grant_writer",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "contract",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          },
+          {
+            "type": "function",
+            "name": "revoke_writer",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              },
+              {
+                "name": "contract",
+                "type": "core::starknet::contract_address::ContractAddress"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          }
+        ]
+      },
+      {
+        "type": "impl",
+        "name": "UpgradeableWorld",
+        "interface_name": "dojo::world::iworld::IUpgradeableWorld"
+      },
+      {
+        "type": "interface",
+        "name": "dojo::world::iworld::IUpgradeableWorld",
+        "items": [
+          {
+            "type": "function",
+            "name": "upgrade",
+            "inputs": [
+              {
+                "name": "new_class_hash",
+                "type": "core::starknet::class_hash::ClassHash"
+              }
+            ],
+            "outputs": [],
+            "state_mutability": "external"
+          }
+        ]
+      },
+      {
+        "type": "constructor",
+        "name": "constructor",
+        "inputs": [
+          {
+            "name": "world_class_hash",
+            "type": "core::starknet::class_hash::ClassHash"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::WorldSpawned",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "creator",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::WorldUpgraded",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::NamespaceRegistered",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "namespace",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "hash",
+            "type": "core::felt252",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::ModelRegistered",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "name",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "namespace",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          },
+          {
+            "name": "address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::EventRegistered",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "name",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "namespace",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          },
+          {
+            "name": "address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::ContractRegistered",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "name",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "namespace",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          },
+          {
+            "name": "salt",
+            "type": "core::felt252",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::ModelUpgraded",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          },
+          {
+            "name": "address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          },
+          {
+            "name": "prev_address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::EventUpgraded",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          },
+          {
+            "name": "address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          },
+          {
+            "name": "prev_address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::ContractUpgraded",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::ContractInitialized",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "init_calldata",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::LibraryRegistered",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "name",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "namespace",
+            "type": "core::byte_array::ByteArray",
+            "kind": "key"
+          },
+          {
+            "name": "class_hash",
+            "type": "core::starknet::class_hash::ClassHash",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::EventEmitted",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "system_address",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "key"
+          },
+          {
+            "name": "keys",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          },
+          {
+            "name": "values",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::MetadataUpdate",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "resource",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "uri",
+            "type": "core::byte_array::ByteArray",
+            "kind": "data"
+          },
+          {
+            "name": "hash",
+            "type": "core::felt252",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::StoreSetRecord",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "entity_id",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "keys",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          },
+          {
+            "name": "values",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::StoreUpdateRecord",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "entity_id",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "values",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::StoreUpdateMember",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "entity_id",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "member_selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "values",
+            "type": "core::array::Span::<core::felt252>",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::StoreDelRecord",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "selector",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "entity_id",
+            "type": "core::felt252",
+            "kind": "key"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::WriterUpdated",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "resource",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "contract",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "key"
+          },
+          {
+            "name": "value",
+            "type": "core::bool",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::OwnerUpdated",
+        "kind": "struct",
+        "members": [
+          {
+            "name": "resource",
+            "type": "core::felt252",
+            "kind": "key"
+          },
+          {
+            "name": "contract",
+            "type": "core::starknet::contract_address::ContractAddress",
+            "kind": "key"
+          },
+          {
+            "name": "value",
+            "type": "core::bool",
+            "kind": "data"
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "dojo::world::world_contract::world::Event",
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "WorldSpawned",
+            "type": "dojo::world::world_contract::world::WorldSpawned",
+            "kind": "nested"
+          },
+          {
+            "name": "WorldUpgraded",
+            "type": "dojo::world::world_contract::world::WorldUpgraded",
+            "kind": "nested"
+          },
+          {
+            "name": "NamespaceRegistered",
+            "type": "dojo::world::world_contract::world::NamespaceRegistered",
+            "kind": "nested"
+          },
+          {
+            "name": "ModelRegistered",
+            "type": "dojo::world::world_contract::world::ModelRegistered",
+            "kind": "nested"
+          },
+          {
+            "name": "EventRegistered",
+            "type": "dojo::world::world_contract::world::EventRegistered",
+            "kind": "nested"
+          },
+          {
+            "name": "ContractRegistered",
+            "type": "dojo::world::world_contract::world::ContractRegistered",
+            "kind": "nested"
+          },
+          {
+            "name": "ModelUpgraded",
+            "type": "dojo::world::world_contract::world::ModelUpgraded",
+            "kind": "nested"
+          },
+          {
+            "name": "EventUpgraded",
+            "type": "dojo::world::world_contract::world::EventUpgraded",
+            "kind": "nested"
+          },
+          {
+            "name": "ContractUpgraded",
+            "type": "dojo::world::world_contract::world::ContractUpgraded",
+            "kind": "nested"
+          },
+          {
+            "name": "ContractInitialized",
+            "type": "dojo::world::world_contract::world::ContractInitialized",
+            "kind": "nested"
+          },
+          {
+            "name": "LibraryRegistered",
+            "type": "dojo::world::world_contract::world::LibraryRegistered",
+            "kind": "nested"
+          },
+          {
+            "name": "EventEmitted",
+            "type": "dojo::world::world_contract::world::EventEmitted",
+            "kind": "nested"
+          },
+          {
+            "name": "MetadataUpdate",
+            "type": "dojo::world::world_contract::world::MetadataUpdate",
+            "kind": "nested"
+          },
+          {
+            "name": "StoreSetRecord",
+            "type": "dojo::world::world_contract::world::StoreSetRecord",
+            "kind": "nested"
+          },
+          {
+            "name": "StoreUpdateRecord",
+            "type": "dojo::world::world_contract::world::StoreUpdateRecord",
+            "kind": "nested"
+          },
+          {
+            "name": "StoreUpdateMember",
+            "type": "dojo::world::world_contract::world::StoreUpdateMember",
+            "kind": "nested"
+          },
+          {
+            "name": "StoreDelRecord",
+            "type": "dojo::world::world_contract::world::StoreDelRecord",
+            "kind": "nested"
+          },
+          {
+            "name": "WriterUpdated",
+            "type": "dojo::world::world_contract::world::WriterUpdated",
+            "kind": "nested"
+          },
+          {
+            "name": "OwnerUpdated",
+            "type": "dojo::world::world_contract::world::OwnerUpdated",
+            "kind": "nested"
+          }
+        ]
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "address": "0x6655ea5858b8d1cbbe65bf2feb65c8a0c5ffd745cc9535534e90c3bce467829",
+      "class_hash": "0x726e2dd0e55b7628006e5b90906d4ceaa0337e3f36171bb0a58efb3646e03e4",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "adventurer_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "adventurer_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "AdventurerSystemsImpl",
+          "interface_name": "death_mountain::systems::adventurer::contracts::IAdventurerSystems"
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
+          "members": [
+            {
+              "name": "strength",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "dexterity",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "vitality",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "intelligence",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "wisdom",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "charisma",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "luck",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::Item"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
+          "members": [
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::Bag",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "mutated",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType",
+          "variants": [
+            {
+              "name": "Gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "Health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "Loot",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::adventurer::contracts::IAdventurerSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "generate_starting_stats",
+              "inputs": [
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::stats::Stats"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "load_assets",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "(death_mountain::models::adventurer::adventurer::Adventurer, death_mountain::models::adventurer::bag::Bag)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_bag",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_name",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "remove_stat_boosts",
+              "inputs": [
+                {
+                  "name": "adventurer",
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                },
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "pack_adventurer",
+              "inputs": [
+                {
+                  "name": "adventurer",
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_discovery",
+              "inputs": [
+                {
+                  "name": "adventurer_level",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "discovery_type_rnd",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "amount_rnd1",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "amount_rnd2",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::constants::discovery::DiscoveryEnums::DiscoveryType"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "pack_bag",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_bag_item",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::item::Item"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "add_item_to_bag",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "item",
+                  "type": "death_mountain::models::adventurer::item::Item"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "remove_item_from_bag",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "(death_mountain::models::adventurer::bag::Bag, death_mountain::models::adventurer::item::Item)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "add_new_item_to_bag",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "is_bag_full",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "bag_contains",
+              "inputs": [
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "(core::bool, death_mountain::models::adventurer::item::Item)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_randomness",
+              "inputs": [
+                {
+                  "name": "adventurer_xp",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "(core::integer::u32, core::integer::u32, core::integer::u16, core::integer::u16, core::integer::u8, core::integer::u8, core::integer::u8, core::integer::u8)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_battle_randomness",
+              "inputs": [
+                {
+                  "name": "xp",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "action_count",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "(core::integer::u8, core::integer::u8, core::integer::u8, core::integer::u8)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_market",
+              "inputs": [
+                {
+                  "name": "seed",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Array::<core::integer::u8>"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::adventurer::contracts::adventurer_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-adventurer_systems",
+      "selector": "0x78676c3e1c5a96cbf2bcc1daf217b0b551bd72b8c0d25a8aa998b67a160ffd9",
+      "systems": [
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x6c886642d2c7e6d391d543e780fc84a63910c7f1755b131967f10cf8f3d74fa",
+      "class_hash": "0x2799c404e9680943795bf82cd0b3fc71f8089bac659fb05e9da504c798280e8",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "beast_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "beast_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "BeastSystemsImpl",
+          "interface_name": "death_mountain::systems::beast::contracts::IBeastSystems"
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Magic_or_Cloth",
+              "type": "()"
+            },
+            {
+              "name": "Blade_or_Hide",
+              "type": "()"
+            },
+            {
+              "name": "Bludgeon_or_Metal",
+              "type": "()"
+            },
+            {
+              "name": "Necklace",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "T1",
+              "type": "()"
+            },
+            {
+              "name": "T2",
+              "type": "()"
+            },
+            {
+              "name": "T3",
+              "type": "()"
+            },
+            {
+              "name": "T4",
+              "type": "()"
+            },
+            {
+              "name": "T5",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::SpecialPowers",
+          "members": [
+            {
+              "name": "special1",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special2",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special3",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::CombatSpec",
+          "members": [
+            {
+              "name": "tier",
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
+            },
+            {
+              "name": "item_type",
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
+            },
+            {
+              "name": "level",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "specials",
+              "type": "death_mountain::models::combat::SpecialPowers"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::beast::Beast",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "starting_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "combat_spec",
+              "type": "death_mountain::models::combat::CombatSpec"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::beast::contracts::IBeastSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "get_starter_beast",
+              "inputs": [
+                {
+                  "name": "starter_weapon_type",
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::beast::Beast"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_beast",
+              "inputs": [
+                {
+                  "name": "adventurer_level",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "weapon_type",
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u32"
+                },
+                {
+                  "name": "health_rnd",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "level_rnd",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "special2_rnd",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "special3_rnd",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::beast::Beast"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_critical_hit_chance",
+              "inputs": [
+                {
+                  "name": "adventurer_level",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "is_ambush",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "attempt_flee",
+              "inputs": [
+                {
+                  "name": "adventurer_level",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "adventurer_dexterity",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "rnd",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::beast::contracts::beast_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-beast_systems",
+      "selector": "0x2dcd213de01781d68f50f7ef54c43424308fdd2883ae8481226589564c32b2f",
+      "systems": [
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x782009bb46e100a8e3fd5afaa9d98933e7aeff7957dc8f098deabc39bccd02",
+      "class_hash": "0x4f8f7fad51f5ac5fe3e5078474f3c82a79137d8348575a042850fa5ea1cd7fb",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "game_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "game_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameSystemsImpl",
+          "interface_name": "death_mountain::systems::game::contracts::IGameSystems"
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::market::ItemPurchase",
+          "members": [
+            {
+              "name": "item_id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "equip",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
+          "members": [
+            {
+              "name": "strength",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "dexterity",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "vitality",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "intelligence",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "wisdom",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "charisma",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "luck",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::game::contracts::IGameSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "start_game",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "weapon",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "explore",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "till_beast",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "attack",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "to_the_death",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "flee",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "to_the_death",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "equip",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<core::integer::u8>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "drop",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<core::integer::u8>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "buy_items",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "potions",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "items",
+                  "type": "core::array::Array::<death_mountain::models::market::ItemPurchase>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "select_stat_upgrades",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "stat_upgrades",
+                  "type": "death_mountain::models::adventurer::stats::Stats"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::game::contracts::game_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-game_systems",
+      "selector": "0x6928c9e4930c648a0ba21ac0561fb4e05e26827c0c34617e8239ce6dbc903e3",
+      "systems": [
+        "start_game",
+        "explore",
+        "attack",
+        "flee",
+        "equip",
+        "drop",
+        "buy_items",
+        "select_stat_upgrades",
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x6eb031be7523471ed3085041533d19c3a9a9fd2245b4b3104076c7ef0ca73fa",
+      "class_hash": "0x12d95b6bff37c536a3300354b7649324fcce5cb56184585ad413d4da27ff06c",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "game_token_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "game_token_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [
+            {
+              "name": "creator_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "impl",
+          "name": "SettingsImpl",
+          "interface_name": "tournaments::components::interfaces::ISettings"
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "tournaments::components::interfaces::ISettings",
+          "items": [
+            {
+              "type": "function",
+              "name": "setting_exists",
+              "inputs": [
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameDetailsImpl",
+          "interface_name": "tournaments::components::interfaces::IGameDetails"
+        },
+        {
+          "type": "interface",
+          "name": "tournaments::components::interfaces::IGameDetails",
+          "items": [
+            {
+              "type": "function",
+              "name": "score",
+              "inputs": [
+                {
+                  "name": "game_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u32"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "ERC721Metadata",
+          "interface_name": "openzeppelin_token::erc721::interface::IERC721Metadata"
+        },
+        {
+          "type": "struct",
+          "name": "core::integer::u256",
+          "members": [
+            {
+              "name": "low",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "high",
+              "type": "core::integer::u128"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_token::erc721::interface::IERC721Metadata",
+          "items": [
+            {
+              "type": "function",
+              "name": "name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "symbol",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "token_uri",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameImpl",
+          "interface_name": "tournaments::components::interfaces::IGameToken"
+        },
+        {
+          "type": "enum",
+          "name": "core::option::Option::<core::integer::u64>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "None",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "tournaments::components::models::game::GameMetadata",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "creator_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "name",
+              "type": "core::felt252"
+            },
+            {
+              "name": "description",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "developer",
+              "type": "core::felt252"
+            },
+            {
+              "name": "publisher",
+              "type": "core::felt252"
+            },
+            {
+              "name": "genre",
+              "type": "core::felt252"
+            },
+            {
+              "name": "image",
+              "type": "core::byte_array::ByteArray"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "tournaments::components::models::lifecycle::Lifecycle",
+          "members": [
+            {
+              "name": "mint",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "start",
+              "type": "core::option::Option::<core::integer::u64>"
+            },
+            {
+              "name": "end",
+              "type": "core::option::Option::<core::integer::u64>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "tournaments::components::models::game::TokenMetadata",
+          "members": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "minted_by",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "player_name",
+              "type": "core::felt252"
+            },
+            {
+              "name": "settings_id",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "lifecycle",
+              "type": "tournaments::components::models::lifecycle::Lifecycle"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "tournaments::components::interfaces::IGameToken",
+          "items": [
+            {
+              "type": "function",
+              "name": "mint",
+              "inputs": [
+                {
+                  "name": "player_name",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                },
+                {
+                  "name": "start",
+                  "type": "core::option::Option::<core::integer::u64>"
+                },
+                {
+                  "name": "end",
+                  "type": "core::option::Option::<core::integer::u64>"
+                },
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "emit_metadata_update",
+              "inputs": [
+                {
+                  "name": "game_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "game_metadata",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "tournaments::components::models::game::GameMetadata"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "token_metadata",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "tournaments::components::models::game::TokenMetadata"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_count",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "namespace",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "score_model",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "score_attribute",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "settings_model",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "ERC721Impl",
+          "interface_name": "openzeppelin_token::erc721::interface::IERC721"
+        },
+        {
+          "type": "struct",
+          "name": "core::array::Span::<core::felt252>",
+          "members": [
+            {
+              "name": "snapshot",
+              "type": "@core::array::Array::<core::felt252>"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_token::erc721::interface::IERC721",
+          "items": [
+            {
+              "type": "function",
+              "name": "balance_of",
+              "inputs": [
+                {
+                  "name": "account",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u256"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "owner_of",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "safe_transfer_from",
+              "inputs": [
+                {
+                  "name": "from",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                },
+                {
+                  "name": "data",
+                  "type": "core::array::Span::<core::felt252>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "transfer_from",
+              "inputs": [
+                {
+                  "name": "from",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "approve",
+              "inputs": [
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "set_approval_for_all",
+              "inputs": [
+                {
+                  "name": "operator",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "approved",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_approved",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "is_approved_for_all",
+              "inputs": [
+                {
+                  "name": "owner",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "operator",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "ERC721CamelOnlyImpl",
+          "interface_name": "openzeppelin_token::erc721::interface::IERC721CamelOnly"
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_token::erc721::interface::IERC721CamelOnly",
+          "items": [
+            {
+              "type": "function",
+              "name": "balanceOf",
+              "inputs": [
+                {
+                  "name": "account",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u256"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "ownerOf",
+              "inputs": [
+                {
+                  "name": "tokenId",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "safeTransferFrom",
+              "inputs": [
+                {
+                  "name": "from",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "tokenId",
+                  "type": "core::integer::u256"
+                },
+                {
+                  "name": "data",
+                  "type": "core::array::Span::<core::felt252>"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "transferFrom",
+              "inputs": [
+                {
+                  "name": "from",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "to",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "tokenId",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "setApprovalForAll",
+              "inputs": [
+                {
+                  "name": "operator",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "approved",
+                  "type": "core::bool"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "getApproved",
+              "inputs": [
+                {
+                  "name": "tokenId",
+                  "type": "core::integer::u256"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "isApprovedForAll",
+              "inputs": [
+                {
+                  "name": "owner",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "operator",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "SRC5Impl",
+          "interface_name": "openzeppelin_introspection::interface::ISRC5"
+        },
+        {
+          "type": "interface",
+          "name": "openzeppelin_introspection::interface::ISRC5",
+          "items": [
+            {
+              "type": "function",
+              "name": "supports_interface",
+              "inputs": [
+                {
+                  "name": "interface_id",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "tournaments::components::game::game_component::MetadataUpdateEvent",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256",
+              "kind": "key"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "tournaments::components::game::game_component::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "MetadataUpdate",
+              "type": "tournaments::components::game::game_component::MetadataUpdateEvent",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "from",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256",
+              "kind": "key"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "owner",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "approved",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256",
+              "kind": "key"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "owner",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "operator",
+              "type": "core::starknet::contract_address::ContractAddress",
+              "kind": "key"
+            },
+            {
+              "name": "approved",
+              "type": "core::bool",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Transfer",
+              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
+              "kind": "nested"
+            },
+            {
+              "name": "Approval",
+              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
+              "kind": "nested"
+            },
+            {
+              "name": "ApprovalForAll",
+              "type": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "openzeppelin_introspection::src5::SRC5Component::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::game_token::contracts::game_token_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "GameEvent",
+              "type": "tournaments::components::game::game_component::Event",
+              "kind": "flat"
+            },
+            {
+              "name": "ERC721Event",
+              "type": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+              "kind": "flat"
+            },
+            {
+              "name": "SRC5Event",
+              "type": "openzeppelin_introspection::src5::SRC5Component::Event",
+              "kind": "flat"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [
+        "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282"
+      ],
+      "tag": "ls_0_0_2-game_token_systems",
+      "selector": "0x6053cb712681cd0877b74dfc28d8638789eb623714d3d4395e662bdf0d24abb",
+      "systems": [
+        "dojo_init",
+        "upgrade",
+        "mint",
+        "emit_metadata_update",
+        "safe_transfer_from",
+        "transfer_from",
+        "approve",
+        "set_approval_for_all",
+        "safeTransferFrom",
+        "transferFrom",
+        "setApprovalForAll"
+      ]
+    },
+    {
+      "address": "0x1ad29326f3897287b665756dcb66de72400e833dc43f9d437e171eea5a86c96",
+      "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "loot_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "loot_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "LootSystemsImpl",
+          "interface_name": "death_mountain::systems::loot::contracts::ILootSystems"
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Tier",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "T1",
+              "type": "()"
+            },
+            {
+              "name": "T2",
+              "type": "()"
+            },
+            {
+              "name": "T3",
+              "type": "()"
+            },
+            {
+              "name": "T4",
+              "type": "()"
+            },
+            {
+              "name": "T5",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Type",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Magic_or_Cloth",
+              "type": "()"
+            },
+            {
+              "name": "Blade_or_Hide",
+              "type": "()"
+            },
+            {
+              "name": "Bludgeon_or_Metal",
+              "type": "()"
+            },
+            {
+              "name": "Necklace",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::constants::combat::CombatEnums::Slot",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Weapon",
+              "type": "()"
+            },
+            {
+              "name": "Chest",
+              "type": "()"
+            },
+            {
+              "name": "Head",
+              "type": "()"
+            },
+            {
+              "name": "Waist",
+              "type": "()"
+            },
+            {
+              "name": "Foot",
+              "type": "()"
+            },
+            {
+              "name": "Hand",
+              "type": "()"
+            },
+            {
+              "name": "Neck",
+              "type": "()"
+            },
+            {
+              "name": "Ring",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::loot::Loot",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "tier",
+              "type": "death_mountain::constants::combat::CombatEnums::Tier"
+            },
+            {
+              "name": "item_type",
+              "type": "death_mountain::constants::combat::CombatEnums::Type"
+            },
+            {
+              "name": "slot",
+              "type": "death_mountain::constants::combat::CombatEnums::Slot"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::combat::SpecialPowers",
+          "members": [
+            {
+              "name": "special1",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special2",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "special3",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::loot::contracts::ILootSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "get_item",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::loot::Loot"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_specials",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "greatness",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::combat::SpecialPowers"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_suffix",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_prefix1",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_prefix2",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "seed",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_tier",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::constants::combat::CombatEnums::Tier"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_type",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::constants::combat::CombatEnums::Type"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_slot",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::constants::combat::CombatEnums::Slot"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "is_starting_weapon",
+              "inputs": [
+                {
+                  "name": "item_id",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::loot::contracts::loot_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-loot_systems",
+      "selector": "0x1300f15ffeff5bf715821c7ca22f0940d9130e00fd69f7a8c320a7ac5523f85",
+      "systems": [
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x797001a14ca421feb19cc65a0033495c11a11a08af4c90c71ad38826ffc4020",
+      "class_hash": "0x5cfbd48f105d53a05834891ab0848db2e08e9d41d9d0831f79adabd1dc12ee4",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "renderer_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "renderer_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "RendererSystemsImpl",
+          "interface_name": "death_mountain::systems::renderer::contracts::IRendererSystems"
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::renderer::contracts::IRendererSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "create_metadata",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::renderer::contracts::renderer_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-renderer_systems",
+      "selector": "0x19375b7c98884a253f2e6c0b5545d3c7aeffd230e4d6584c395233465137c13",
+      "systems": [
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x196e8eb2d1021a949d88b6c9ed08bdebe5a637d811dc36b2ee1f2bf8eb2c9d1",
+      "class_hash": "0x3e25f9f1c58f4f3df42b3482a97cf3f99f3404dc02d905afffde244b72fd6",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "settings_systems__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "settings_systems__DeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "SettingsSystemsImpl",
+          "interface_name": "death_mountain::systems::settings::contracts::ISettingsSystems"
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::stats::Stats",
+          "members": [
+            {
+              "name": "strength",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "dexterity",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "vitality",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "intelligence",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "wisdom",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "charisma",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "luck",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::item::Item",
+          "members": [
+            {
+              "name": "id",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::equipment::Equipment",
+          "members": [
+            {
+              "name": "weapon",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "chest",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "head",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "waist",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "foot",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "hand",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "neck",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "ring",
+              "type": "death_mountain::models::adventurer::item::Item"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::adventurer::Adventurer",
+          "members": [
+            {
+              "name": "health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "gold",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "beast_health",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "stat_upgrades_available",
+              "type": "core::integer::u8"
+            },
+            {
+              "name": "stats",
+              "type": "death_mountain::models::adventurer::stats::Stats"
+            },
+            {
+              "name": "equipment",
+              "type": "death_mountain::models::adventurer::equipment::Equipment"
+            },
+            {
+              "name": "item_specials_seed",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "action_count",
+              "type": "core::integer::u16"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::adventurer::bag::Bag",
+          "members": [
+            {
+              "name": "item_1",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_2",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_3",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_4",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_5",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_6",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_7",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_8",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_9",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_10",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_11",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_12",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_13",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_14",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "item_15",
+              "type": "death_mountain::models::adventurer::item::Item"
+            },
+            {
+              "name": "mutated",
+              "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "death_mountain::models::game::StatsMode",
+          "variants": [
+            {
+              "name": "Dodge",
+              "type": "()"
+            },
+            {
+              "name": "Reduction",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "death_mountain::models::game::GameSettings",
+          "members": [
+            {
+              "name": "settings_id",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "vrf_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "adventurer",
+              "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+            },
+            {
+              "name": "bag",
+              "type": "death_mountain::models::adventurer::bag::Bag"
+            },
+            {
+              "name": "game_seed",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "game_seed_until_xp",
+              "type": "core::integer::u16"
+            },
+            {
+              "name": "in_battle",
+              "type": "core::bool"
+            },
+            {
+              "name": "stats_mode",
+              "type": "death_mountain::models::game::StatsMode"
+            },
+            {
+              "name": "base_damage_reduction",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "death_mountain::systems::settings::contracts::ISettingsSystems",
+          "items": [
+            {
+              "type": "function",
+              "name": "add_settings",
+              "inputs": [
+                {
+                  "name": "vrf_address",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "name",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "adventurer",
+                  "type": "death_mountain::models::adventurer::adventurer::Adventurer"
+                },
+                {
+                  "name": "bag",
+                  "type": "death_mountain::models::adventurer::bag::Bag"
+                },
+                {
+                  "name": "game_seed",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "game_seed_until_xp",
+                  "type": "core::integer::u16"
+                },
+                {
+                  "name": "in_battle",
+                  "type": "core::bool"
+                },
+                {
+                  "name": "stats_mode",
+                  "type": "death_mountain::models::game::StatsMode"
+                },
+                {
+                  "name": "base_damage_reduction",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u32"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "setting_details",
+              "inputs": [
+                {
+                  "name": "settings_id",
+                  "type": "core::integer::u32"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::GameSettings"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "game_settings",
+              "inputs": [
+                {
+                  "name": "game_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "death_mountain::models::game::GameSettings"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "settings_count",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::integer::u32"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "death_mountain::systems::settings::contracts::settings_systems::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "ls_0_0_2-settings_systems",
+      "selector": "0x406ed5fac2522bf381bcc333b7652182910bf32b419cfe02d18eb0969544fb8",
+      "systems": [
+        "add_settings",
+        "upgrade"
+      ]
+    }
+  ],
+  "libraries": [],
+  "models": [
+    {
+      "members": [],
+      "class_hash": "0x771a18fa631c8bf12e2b85cdf510b9b59959655090027883b18100641a08497",
+      "tag": "ls_0_0_2-AdventurerEntropy",
+      "selector": "0x3c5f1d3ec41bc641155ad1bf644ecc8968f5c30eb08ab521437eaaa7589dfaf"
+    },
+    {
+      "members": [],
+      "class_hash": "0x33b8218ffef53844194e5bc510edfa023441c8284a0254b002742509af88449",
+      "tag": "ls_0_0_2-AdventurerPacked",
+      "selector": "0x47e2b33eea4818020cc52ae74deaf29b8b1f6290e739a09aa291f37f16b75de"
+    },
+    {
+      "members": [],
+      "class_hash": "0x283ab5cc1ee44d8476f367faf47184901b144bfbc36740491a5a96dbb950599",
+      "tag": "ls_0_0_2-BagPacked",
+      "selector": "0x501e1dc2dee32175769bf315565f8b2aa58d22bc20288e933c623d333ea1996"
+    },
+    {
+      "members": [],
+      "class_hash": "0x4c9aa5cf3f03bd208fcfc809bbefd59074e319870fd54e699df593d2df01b4d",
+      "tag": "ls_0_0_2-GameCounter",
+      "selector": "0x15cddd0c1a3236d500aed2ade3cff00c9347fa05e2e5b4da2e694bff61eee6a"
+    },
+    {
+      "members": [],
+      "class_hash": "0x2184a8d33905eed66c3a80bd753a579aadd0b8dd0652f9f513dc7f1949f53c4",
+      "tag": "ls_0_0_2-GameMetadata",
+      "selector": "0x7c590f8cababca27983aabdee50759d581a033b6a83c33048b63c1400486c51"
+    },
+    {
+      "members": [],
+      "class_hash": "0x79210d657508115b5ed81b30ab50889a4fcd56266f646e17733b877cbc1fb36",
+      "tag": "ls_0_0_2-GameSettings",
+      "selector": "0x43fd6b04d2f097bd9a5e8b4fd0d237ef5a2f7321528df96ed159f22723352f1"
+    },
+    {
+      "members": [],
+      "class_hash": "0x4f762e3e1dc573501346dc9b2724e48320502145fc88cb2c01aec92a1641725",
+      "tag": "ls_0_0_2-GameSettingsMetadata",
+      "selector": "0x7926d56d7a62bd990432483289e78d5879dbfab23734095dd7273d9f5f53904"
+    },
+    {
+      "members": [],
+      "class_hash": "0x7538cc093e191e767f1caf8ea3f1c4818e319db41d8f760e48753cb2e420156",
+      "tag": "ls_0_0_2-Score",
+      "selector": "0x7df8567410b875da3eec2dbd4ac144d1673adfa280475b0c773db2db480b18f"
+    },
+    {
+      "members": [],
+      "class_hash": "0x1209baf4f84faefa02c38ae721ddc691755ff4ea5993861fa22d822c913ab5b",
+      "tag": "ls_0_0_2-Settings",
+      "selector": "0xc2e31b4ccaead4e66298044c90b895d88e88efe7ab3feb4247ad40d56696b6"
+    },
+    {
+      "members": [],
+      "class_hash": "0x791787e562ed970a599a13e2f690391968b8f75ea0dcfc38573fc3300c6c942",
+      "tag": "ls_0_0_2-SettingsCounter",
+      "selector": "0x6ed1b69706c0b69fcc6d5b19ad327ee84e6f770d44b1e069b661977964ad68b"
+    },
+    {
+      "members": [],
+      "class_hash": "0x5a1e9671225dd42b4085d3fb27a7543ee87f0cb687514002e7b4d9fa77c78a1",
+      "tag": "ls_0_0_2-SettingsDetails",
+      "selector": "0x23e88460e9ee4f6f13e5ce894b2175b4f2e4b553680ed680b838f4dffab04f1"
+    },
+    {
+      "members": [],
+      "class_hash": "0x336f9d3953c032d579de6675aa25e2903ea50708399ca5ec3312ee3480e7cca",
+      "tag": "ls_0_0_2-TokenMetadata",
+      "selector": "0x40c77c3d1dcc9d461d5cbb38d8ed0ae73c18fedc5ead82841833a071484e028"
+    }
+  ],
+  "events": [
+    {
+      "members": [],
+      "class_hash": "0x5a3ab3a85b1c39cf5678ef7247fbec098103c4baf9f52d41632d22acce4e77d",
+      "tag": "ls_0_0_2-GameEvent",
+      "selector": "0x70e42c1cd3b58b40ffe618b4445d7204e87e6de9661737797541aa6f4deacff"
+    }
+  ],
+  "external_contracts": []
+}

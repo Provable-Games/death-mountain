@@ -1,5 +1,4 @@
-use death_mountain::models::adventurer::{stats::Stats};
-use death_mountain::models::market::ItemPurchase;
+// SPDX-License-Identifier: MIT
 
 #[starknet::interface]
 pub trait IGameTokenSystems<T> {
@@ -22,12 +21,10 @@ mod game_token_systems {
     use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
     use death_mountain::models::adventurer::bag::{ImplBag};
 
-    use death_mountain::models::game::{GameSettings, GameSettingsMetadata};
-    use death_mountain::models::adventurer::{stats::Stats};
-    use death_mountain::models::market::ItemPurchase;
-    use death_mountain::models::objectives::{ScoreObjective};
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait};
+    use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
+    use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
 
@@ -109,11 +106,14 @@ mod game_token_systems {
             .write_model(
                 @GameSettings {
                     settings_id: 0,
+                    vrf_address: VRFImpl::cartridge_vrf_address(),
                     adventurer: ImplAdventurer::new(0),
                     bag: ImplBag::new(),
                     game_seed: 0,
                     game_seed_until_xp: 0,
                     in_battle: false,
+                    stats_mode: StatsMode::Dodge,
+                    base_damage_reduction: 0,
                 },
             );
 
