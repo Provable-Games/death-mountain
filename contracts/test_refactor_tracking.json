@@ -48,7 +48,8 @@
         "utils/renderer_utils_test.cairo",
         "utils/loot_test.cairo",
         "models/obstacle_test.cairo",
-        "models/market_test.cairo"
+        "models/market_test.cairo",
+        "models/beast_test.cairo"
       ],
       "remaining_files": [
         "adventurer/adventurer_test.cairo",
@@ -57,8 +58,7 @@
         "adventurer/bag_test.cairo",
         "adventurer/item_test.cairo",
         "models/combat_test.cairo",
-        "models/loot_test.cairo",
-        "models/beast_test.cairo"
+        "models/loot_test.cairo"
       ]
     },
     "phase_2": {
@@ -78,10 +78,10 @@
     }
   },
   "test_counts": {
-    "migrated": 24,
-    "remaining": 258,
+    "migrated": 41,
+    "remaining": 241,
     "verified": 14
   },
   "created_at": "2025-07-17",
-  "last_updated": "2025-07-17 05:38:30"
+  "last_updated": "2025-07-17 05:41:41"
 }

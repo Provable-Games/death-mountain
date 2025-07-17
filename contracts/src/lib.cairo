@@ -71,6 +71,7 @@ mod tests {
         mod models {
             mod obstacle_test;
             mod market_test;
+            mod beast_test;
         }
         mod utils {
             mod renderer_utils_test;
