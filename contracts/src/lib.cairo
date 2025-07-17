@@ -64,3 +64,12 @@ pub mod constants {
 pub mod libs {
     pub mod game;
 }
+
+#[cfg(test)]
+mod tests {
+    mod unit {
+        mod utils {
+            mod renderer_utils_test;
+        }
+    }
+}

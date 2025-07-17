@@ -1,0 +1,86 @@
+{
+  "refactor_plan": {
+    "total_tests": 282,
+    "unit_tests": 251,
+    "integration_tests": 31,
+    "phases": {
+      "phase_1": "Create directory structure and move unit tests",
+      "phase_2": "Move integration tests",
+      "phase_3": "Update workflow for new structure",
+      "phase_4": "Verify all tests still pass"
+    }
+  },
+  "test_distribution": {
+    "unit_tests": {
+      "adventurer": {
+        "adventurer.cairo": 94,
+        "equipment.cairo": 32,
+        "stats.cairo": 27,
+        "bag.cairo": 15,
+        "item.cairo": 7,
+        "total": 175
+      },
+      "models": {
+        "combat.cairo": 18,
+        "loot.cairo": 17,
+        "beast.cairo": 17,
+        "market.cairo": 10,
+        "obstacle.cairo": 5,
+        "total": 67
+      },
+      "utils": {
+        "loot.cairo": 8,
+        "renderer_utils.cairo": 1,
+        "total": 9
+      }
+    },
+    "integration_tests": {
+      "game": {
+        "contracts.cairo": 31,
+        "total": 31
+      }
+    }
+  },
+  "progress": {
+    "phase_1": {
+      "status": "not_started",
+      "completed_files": [],
+      "remaining_files": [
+        "adventurer/adventurer_test.cairo",
+        "adventurer/equipment_test.cairo",
+        "adventurer/stats_test.cairo",
+        "adventurer/bag_test.cairo",
+        "adventurer/item_test.cairo",
+        "models/combat_test.cairo",
+        "models/loot_test.cairo",
+        "models/beast_test.cairo",
+        "models/market_test.cairo",
+        "models/obstacle_test.cairo",
+        "utils/loot_test.cairo",
+        "utils/renderer_utils_test.cairo"
+      ]
+    },
+    "phase_2": {
+      "status": "not_started",
+      "completed_files": [],
+      "remaining_files": [
+        "integration/game/game_test.cairo"
+      ]
+    },
+    "phase_3": {
+      "status": "not_started",
+      "workflow_updated": false
+    },
+    "phase_4": {
+      "status": "not_started",
+      "tests_passing": false
+    }
+  },
+  "test_counts": {
+    "migrated": 0,
+    "remaining": 282,
+    "verified": 0
+  },
+  "created_at": "2025-07-17",
+  "last_updated": "2025-07-17"
+}
