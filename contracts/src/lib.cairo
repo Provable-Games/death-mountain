@@ -37,6 +37,7 @@ pub mod models {
     pub mod game;
     pub mod loot;
     pub mod market;
+    pub mod objectives;
     pub mod obstacle;
 }
 
@@ -46,6 +47,8 @@ pub mod utils {
         pub mod encoding;
         pub mod renderer_utils;
     }
+    #[cfg(test)]
+    pub mod setup_denshokan;
     pub mod vrf;
 }
 

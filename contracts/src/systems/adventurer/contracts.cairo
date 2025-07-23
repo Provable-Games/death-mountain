@@ -12,7 +12,7 @@ pub trait IAdventurerSystems<T> {
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
-    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
     fn get_discovery(
@@ -42,11 +42,10 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerPacked, BagPacked};
     use death_mountain::models::market::ImplMarket;
+    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
-    use dojo::world::WorldStorage;
+    use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::IAdventurerSystems;
-
-    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
@@ -81,10 +80,12 @@ mod adventurer_systems {
             _load_bag(self.world(@DEFAULT_NS()), adventurer_id)
         }
 
-        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            token_metadata.player_name
+            let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IGameTokenSystemsDispatcher { contract_address: game_token_address };
+            let player_name = game_token.player_name(adventurer_id);
+            player_name
         }
 
         fn remove_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
