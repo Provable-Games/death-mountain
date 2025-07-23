@@ -4,7 +4,7 @@ use starknet::{ContractAddress, contract_address_const};
 use starknet::syscalls::deploy_syscall;
 use game_components_token::interface::{IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait};
 use game_components_token::examples::{
-    optimized_token_contract::OptimizedTokenContract,
+    full_token_contract::FullTokenContract,
     minigame_registry_contract::{MinigameRegistryContract, IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait},
 };
 use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher};
@@ -136,7 +136,7 @@ pub fn deploy_optimized_token_contract(
         },
     }
 
-    let contract_address = deploy_contract(OptimizedTokenContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
+    let contract_address = deploy_contract(FullTokenContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
 
     let token_dispatcher = IMinigameTokenMixinDispatcher { contract_address };
     let erc721_dispatcher = ERC721ABIDispatcher { contract_address };

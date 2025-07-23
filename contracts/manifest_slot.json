@@ -3793,8 +3793,8 @@
         }
       ],
       "init_calldata": [
-        "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x06f55060a64c8bcb1ac735fb5b743f75e442716b051b92801f793ae187354f65"
+        "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec",
+        "0x005b47d5a4a3181f5f5ae64bae500fe183838d9ea5f1b839cdf610c0d54c16ef"
       ],
       "tag": "ls_0_0_2-game_token_systems",
       "selector": "0x6053cb712681cd0877b74dfc28d8638789eb623714d3d4395e662bdf0d24abb",

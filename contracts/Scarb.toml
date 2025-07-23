@@ -30,7 +30,7 @@ sierra = true
 casm = true
 build-external-contracts = [
     "dojo::world::world_contract::world",
-    "game_components_token::examples::optimized_token_contract::OptimizedTokenContract",
+    "game_components_token::examples::full_token_contract::FullTokenContract",
     "game_components_token::examples::minigame_registry_contract::MinigameRegistryContract",
 ]
 

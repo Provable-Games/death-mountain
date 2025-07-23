@@ -88,7 +88,7 @@ source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0-alpha.2#184a4e836826
 [[package]]
 name = "game_components_metagame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#49011d1abf1dfc1587b961e8649b242b34e007d9"
+source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#69197a017ae7b91f171475ffd2388df17de42469"
 dependencies = [
  "game_components_token",
  "game_components_utils",
@@ -98,7 +98,7 @@ dependencies = [
 [[package]]
 name = "game_components_minigame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#49011d1abf1dfc1587b961e8649b242b34e007d9"
+source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#69197a017ae7b91f171475ffd2388df17de42469"
 dependencies = [
  "game_components_metagame",
  "game_components_token",
@@ -110,7 +110,7 @@ dependencies = [
 [[package]]
 name = "game_components_test_starknet"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#49011d1abf1dfc1587b961e8649b242b34e007d9"
+source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#69197a017ae7b91f171475ffd2388df17de42469"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -123,7 +123,7 @@ dependencies = [
 [[package]]
 name = "game_components_token"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#49011d1abf1dfc1587b961e8649b242b34e007d9"
+source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#69197a017ae7b91f171475ffd2388df17de42469"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -136,7 +136,7 @@ dependencies = [
 [[package]]
 name = "game_components_utils"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#49011d1abf1dfc1587b961e8649b242b34e007d9"
+source = "git+https://github.com/Provable-Games/game-components?branch=feat%2Fclaude_architectures#69197a017ae7b91f171475ffd2388df17de42469"
 dependencies = [
  "alexandria_encoding",
  "game_components_metagame",
