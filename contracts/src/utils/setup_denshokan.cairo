@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 
-use starknet::{ContractAddress, contract_address_const};
-use starknet::syscalls::deploy_syscall;
-use game_components_token::interface::{IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait};
+use dojo_cairo_test::deploy_contract;
 use game_components_token::examples::{
     full_token_contract::FullTokenContract,
-    minigame_registry_contract::{MinigameRegistryContract, IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait},
+    minigame_registry_contract::{
+        IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait, MinigameRegistryContract,
+    },
 };
-use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher};
+use game_components_token::interface::{IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait};
 use openzeppelin_introspection::interface::ISRC5Dispatcher;
-use dojo_cairo_test::deploy_contract;
+use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher};
+use starknet::syscalls::deploy_syscall;
+use starknet::{ContractAddress, contract_address_const};
 
 // use denshokan::tests::utils;
 
@@ -45,10 +47,7 @@ pub struct TestContracts {
 //
 
 pub fn deploy_minigame_registry_contract_with_params(
-    name: ByteArray,
-    symbol: ByteArray,
-    base_uri: ByteArray,
-    event_relayer_address: Option<ContractAddress>,
+    name: ByteArray, symbol: ByteArray, base_uri: ByteArray, event_relayer_address: Option<ContractAddress>,
 ) -> IMinigameRegistryDispatcher {
     let mut constructor_calldata = array![];
     name.serialize(ref constructor_calldata);
@@ -66,7 +65,9 @@ pub fn deploy_minigame_registry_contract_with_params(
         },
     }
 
-    let contract_address = deploy_contract(MinigameRegistryContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
+    let contract_address = deploy_contract(
+        MinigameRegistryContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span(),
+    );
 
     let minigame_registry_dispatcher = IMinigameRegistryDispatcher { contract_address };
     minigame_registry_dispatcher
@@ -136,7 +137,9 @@ pub fn deploy_optimized_token_contract(
         },
     }
 
-    let contract_address = deploy_contract(FullTokenContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span());
+    let contract_address = deploy_contract(
+        FullTokenContract::TEST_CLASS_HASH.try_into().unwrap(), constructor_calldata.span(),
+    );
 
     let token_dispatcher = IMinigameTokenMixinDispatcher { contract_address };
     let erc721_dispatcher = ERC721ABIDispatcher { contract_address };
@@ -148,10 +151,7 @@ pub fn deploy_optimized_token_contract(
 
 pub fn setup() -> TestContracts {
     let minigame_registry_dispatcher = deploy_minigame_registry_contract_with_params(
-        "TestGame",
-        "TT",
-        "https://test.com/",
-        Option::None,
+        "TestGame", "TT", "https://test.com/", Option::None,
     );
 
     let (token_dispatcher, _erc721_dispatcher, _src5_dispatcher, _contract_address) = deploy_optimized_token_contract(

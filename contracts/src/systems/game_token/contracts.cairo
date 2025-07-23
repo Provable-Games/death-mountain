@@ -21,27 +21,27 @@ mod game_token_systems {
     use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::ImplGameLibs;
     use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
-    use death_mountain::models::adventurer::stats::Stats;
     use death_mountain::models::adventurer::bag::{ImplBag};
+    use death_mountain::models::adventurer::stats::Stats;
+    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
     use death_mountain::models::market::ItemPurchase;
     use death_mountain::models::objectives::{ScoreObjective};
-    use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait};
     use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
     use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives};
+    use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
+    use game_components_minigame::extensions::objectives::structs::{GameObjective};
+    use game_components_minigame::interface::{IMinigameDetails, IMinigameTokenData};
+
+    use game_components_minigame::minigame::MinigameComponent;
+    use game_components_minigame::structs::{GameDetail};
 
     use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
-
-    use game_components_minigame::minigame::MinigameComponent;
-    use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
-    use game_components_minigame::interface::{IMinigameTokenData, IMinigameDetails};
-    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives};
-    use game_components_minigame::structs::{GameDetail};
-    use game_components_minigame::extensions::objectives::structs::{GameObjective};
 
     // Components
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
@@ -156,12 +156,7 @@ mod game_token_systems {
             format!("Test Token Description for token {}", token_id)
         }
         fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
-            array![
-                GameDetail {
-                    name: "Test Game Detail",
-                    value: format!("Test Value for token {}", token_id),
-                },
-            ].span()
+            array![GameDetail { name: "Test Game Detail", value: format!("Test Value for token {}", token_id) }].span()
         }
     }
 
@@ -190,7 +185,10 @@ mod game_token_systems {
                 }
                 let objective_id = *objective_ids.at(objective_index);
                 let objective_score: ScoreObjective = world.read_model(objective_id);
-                objectives.append(GameObjective { name: "Score Target", value: format!("Score Above {}", objective_score.score) });
+                objectives
+                    .append(
+                        GameObjective { name: "Score Target", value: format!("Score Above {}", objective_score.score) },
+                    );
                 objective_index += 1;
             };
             objectives.span()

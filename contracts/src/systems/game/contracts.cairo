@@ -645,7 +645,7 @@ mod game_systems {
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
         let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
-        let settings_systems = ISettingsSystemsDispatcher{contract_address: settings_systems_address};
+        let settings_systems = ISettingsSystemsDispatcher { contract_address: settings_systems_address };
         settings_systems.game_settings(game_id)
     }
 
@@ -1619,7 +1619,9 @@ mod tests {
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
     use death_mountain::systems::beast::contracts::{beast_systems};
     use death_mountain::systems::game::contracts::{game_systems};
-    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait, game_token_systems};
+    use death_mountain::systems::game_token::contracts::{
+        IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait, game_token_systems,
+    };
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::{renderer_systems};
     use death_mountain::systems::settings::contracts::{settings_systems};
@@ -1628,8 +1630,8 @@ mod tests {
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
-    use starknet::{ContractAddress, contract_address_const};
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use starknet::{ContractAddress, contract_address_const};
 
     fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -1714,7 +1716,7 @@ mod tests {
                 Option::None, // client_url
                 Option::None, // renderer_address
                 contract_address_const::<'player1'>(), // to
-                false, // soulbound
+                false // soulbound
             );
 
         game.start_game(adventurer_id, ItemId::Wand);

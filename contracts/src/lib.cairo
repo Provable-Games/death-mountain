@@ -47,9 +47,9 @@ pub mod utils {
         pub mod encoding;
         pub mod renderer_utils;
     }
-    pub mod vrf;
     #[cfg(test)]
     pub mod setup_denshokan;
+    pub mod vrf;
 }
 
 pub mod constants {

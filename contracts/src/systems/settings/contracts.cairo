@@ -31,15 +31,15 @@ mod settings_systems {
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
 
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
-    use game_components_minigame::extensions::settings::settings::SettingsComponent;
-    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
-    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
-
-    use openzeppelin_introspection::src5::SRC5Component;
-
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
+    use game_components_minigame::extensions::settings::settings::SettingsComponent;
+    use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
+
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+
+    use openzeppelin_introspection::src5::SRC5Component;
     use starknet::ContractAddress;
     use super::ISettingsSystems;
 
@@ -87,11 +87,9 @@ mod settings_systems {
                 name: format!("{}", settings_details.name),
                 description: "Add Description Here",
                 settings: array![
-                    GameSetting {
-                        name: "Starting Health",
-                        value: format!("{}", settings.adventurer.health),
-                    },
-                ].span(),
+                    GameSetting { name: "Starting Health", value: format!("{}", settings.adventurer.health) },
+                ]
+                    .span(),
             }
         }
     }
@@ -141,16 +139,22 @@ mod settings_systems {
             world.write_model(@settings_count);
 
             let settings: Span<GameSetting> = array![
-                GameSetting {
-                    name: "Starting Health",
-                    value: format!("{}", adventurer.health),
-                },
-            ].span();
+                GameSetting { name: "Starting Health", value: format!("{}", adventurer.health) },
+            ]
+                .span();
 
             let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_systems_address };
             let minigame_token_address = minigame_dispatcher.token_address();
-            self.settings.create_settings(settings_count.count, format!("{}", name), "New Setting Description", settings, minigame_token_address);
+            self
+                .settings
+                .create_settings(
+                    settings_count.count,
+                    format!("{}", name),
+                    "New Setting Description",
+                    settings,
+                    minigame_token_address,
+                );
 
             settings_count.count
         }

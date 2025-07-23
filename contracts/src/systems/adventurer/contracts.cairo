@@ -42,10 +42,10 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerPacked, BagPacked};
     use death_mountain::models::market::ImplMarket;
+    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use super::IAdventurerSystems;
-    use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
 
     #[abi(embed_v0)]
     impl AdventurerSystemsImpl of IAdventurerSystems<ContractState> {
@@ -83,7 +83,7 @@ mod adventurer_systems {
         fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
-            let game_token = IGameTokenSystemsDispatcher{contract_address: game_token_address};
+            let game_token = IGameTokenSystemsDispatcher { contract_address: game_token_address };
             let player_name = game_token.player_name(adventurer_id);
             player_name
         }
