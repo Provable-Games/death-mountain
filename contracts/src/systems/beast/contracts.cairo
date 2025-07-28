@@ -49,9 +49,11 @@ mod beast_systems {
     use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_token::core::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
+    use game_components_token::extensions::minter::interface::{IMinigameTokenMinterDispatcher, IMinigameTokenMinterDispatcherTrait};
     use starknet::ContractAddress;
     use super::IBeastSystems;
-    use tournaments::components::models::game::TokenMetadata;
 
     #[abi(embed_v0)]
     impl BeastSystemsImpl of IBeastSystems<ContractState> {
@@ -70,14 +72,18 @@ mod beast_systems {
             let (contract_address, _) = world.dns(@"game_systems").unwrap();
             assert!(contract_address == starknet::get_caller_address(), "Only game_systems can add collectables");
 
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = game_token.token_address();
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }.token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }.get_minter_address(token_metadata.minted_by);
             let entity_hash = ImplBeast::get_beast_hash(entity_id, prefix, suffix);
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
-            let mut collectable_count: CollectableCount = world.read_model((token_metadata.minted_by, entity_hash));
+            let mut collectable_count: CollectableCount = world.read_model((minted_by_address, entity_hash));
 
             world
                 .write_model(
                     @CollectableEntity {
-                        dungeon: token_metadata.minted_by,
+                        dungeon: minted_by_address,
                         entity_hash,
                         index: collectable_count.count,
                         seed,
@@ -100,7 +106,11 @@ mod beast_systems {
             let (contract_address, _) = world.dns(@"game_systems").unwrap();
             assert!(contract_address == starknet::get_caller_address(), "Only game_systems can add kills");
 
-            let token_metadata: TokenMetadata = world.read_model(adventurer_id);
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = game_token.token_address();
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }.token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }.get_minter_address(token_metadata.minted_by);
             let mut entity_stats: EntityStats = world.read_model((token_metadata.minted_by, entity_hash));
 
             entity_stats.adventurers_killed += 1;
@@ -108,7 +118,7 @@ mod beast_systems {
             world
                 .write_model(
                     @AdventurerKilled {
-                        dungeon: token_metadata.minted_by,
+                        dungeon: minted_by_address,
                         entity_hash,
                         kill_index: entity_stats.adventurers_killed,
                         adventurer_id,

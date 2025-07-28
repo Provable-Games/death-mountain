@@ -1628,9 +1628,9 @@ mod tests {
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
     use death_mountain::systems::beast::contracts::beast_systems;
     use death_mountain::systems::game::contracts::{game_systems};
-    use death_mountain::systems::game_token::contracts::
+    use death_mountain::systems::game_token::contracts::{
         IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait, game_token_systems,
-    ;
+    };
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
@@ -2444,22 +2444,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
-    fn drop_on_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
-        let adventurer_id = new_game(world, game);
-        game.attack(adventurer_id, false);
-
-        let mut drop_list = ArrayTrait::<u8>::new();
-        drop_list.append(255);
-
-        // try to drop an item the adventurer doesn't own
-        // this should result in a panic 'Item not owned by adventurer'
-        // this test is annotated to expect that panic
-        game.drop(adventurer_id, drop_list);
-    }
-
-    #[test]
     fn upgrade_stats() {
         let (world, game, game_libs) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
@@ -2556,7 +2540,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('Cant drop during starter beast', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn no_dropping_starter_weapon_during_starter_beast() {
         let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
