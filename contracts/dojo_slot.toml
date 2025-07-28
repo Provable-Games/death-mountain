@@ -19,5 +19,5 @@ default = "ls_0_0_2"
 [init_call_args]
 "ls_0_0_2-game_token_systems" = [
     "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec",
-    "0x005b47d5a4a3181f5f5ae64bae500fe183838d9ea5f1b839cdf610c0d54c16ef"
+    "0x005b47d5a4a3181f5f5ae64bae500fe183838d9ea5f1b839cdf610c0d54c16ef" // denshokan_address
 ]
