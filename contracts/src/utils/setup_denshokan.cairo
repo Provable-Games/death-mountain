@@ -3,14 +3,11 @@
 use dojo_cairo_test::deploy_contract;
 use game_components_token::examples::{
     full_token_contract::FullTokenContract,
-    minigame_registry_contract::{
-        IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait, MinigameRegistryContract,
-    },
+    minigame_registry_contract::{IMinigameRegistryDispatcher, MinigameRegistryContract},
 };
-use game_components_token::interface::{IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait};
+use game_components_token::interface::{IMinigameTokenMixinDispatcher};
 use openzeppelin_introspection::interface::ISRC5Dispatcher;
 use openzeppelin_token::erc721::interface::{ERC721ABIDispatcher};
-use starknet::syscalls::deploy_syscall;
 use starknet::{ContractAddress, contract_address_const};
 
 // use denshokan::tests::utils;

@@ -51,7 +51,9 @@ mod beast_systems {
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_token::core::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
-    use game_components_token::extensions::minter::interface::{IMinigameTokenMinterDispatcher, IMinigameTokenMinterDispatcherTrait};
+    use game_components_token::extensions::minter::interface::{
+        IMinigameTokenMinterDispatcher, IMinigameTokenMinterDispatcherTrait,
+    };
     use starknet::ContractAddress;
     use super::IBeastSystems;
 
@@ -75,8 +77,10 @@ mod beast_systems {
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
             let token_address = game_token.token_address();
-            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }.token_metadata(adventurer_id);
-            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }.get_minter_address(token_metadata.minted_by);
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }
+                .token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
+                .get_minter_address(token_metadata.minted_by);
             let entity_hash = ImplBeast::get_beast_hash(entity_id, prefix, suffix);
             let mut collectable_count: CollectableCount = world.read_model((minted_by_address, entity_hash));
 
@@ -109,8 +113,10 @@ mod beast_systems {
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
             let token_address = game_token.token_address();
-            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }.token_metadata(adventurer_id);
-            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }.get_minter_address(token_metadata.minted_by);
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }
+                .token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
+                .get_minter_address(token_metadata.minted_by);
             let mut entity_stats: EntityStats = world.read_model((token_metadata.minted_by, entity_hash));
 
             entity_stats.adventurers_killed += 1;
