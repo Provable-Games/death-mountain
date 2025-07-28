@@ -30,7 +30,7 @@ export const useSystemCalls = () => {
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
     try {
-      let tx = await account!.execute(calls, { version: 3 });
+      let tx = await account!.execute(calls);
       let receipt: any = await account!.waitForTransaction(tx.transaction_hash, { retryInterval: 500 })
 
       if (receipt.execution_status === "REVERTED") {
@@ -65,7 +65,7 @@ export const useSystemCalls = () => {
             account!.address
           ]
         }
-      ], { version: 3 });
+      ]);
 
       const receipt: any = await account!.waitForTransaction(tx.transaction_hash, { retryInterval: 500 })
 

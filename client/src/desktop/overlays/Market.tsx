@@ -189,7 +189,10 @@ export default function MarketOverlay() {
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: 24, right: 24, zIndex: 100 }}>
-        <Box sx={styles.buttonWrapper} onClick={handleOpen}>
+        <Box sx={{
+          ...styles.buttonWrapper,
+          ...(newMarket && styles.buttonWrapperHighlighted)
+        }} onClick={handleOpen}>
           <img src={'/images/market.png'} alt="Market" style={{ width: '90%', height: '90%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(50deg) brightness(0.93) saturate(1.05)' }} />
           {newMarket && (
             <Box sx={styles.newIndicator}>!</Box>
@@ -488,9 +491,25 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'background 0.2s',
+    transition: 'all 0.3s ease-in-out',
     '&:hover': {
       background: 'rgba(34, 50, 34, 0.85)',
+    },
+  },
+  buttonWrapperHighlighted: {
+    border: '2px solid #d7c529',
+    boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+    animation: 'marketPulse 2s ease-in-out infinite',
+    '@keyframes marketPulse': {
+      '0%': {
+        boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+      },
+      '50%': {
+        boxShadow: '0 0 20px rgba(215, 197, 41, 0.6), 0 0 8px #000a',
+      },
+      '100%': {
+        boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+      },
     },
   },
   marketLabel: {

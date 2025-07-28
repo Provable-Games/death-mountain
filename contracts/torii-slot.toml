@@ -5,10 +5,11 @@ rpc = "https://api.cartridge.gg/x/pg-slot/katana"
 raw = true
 
 [sql]
-historical = ["ls_0_0_2-GameEvent"]
+historical = ["ls_0_0_3-GameEvent"]
 
 [indexing]
+namespaces = ["ls_0_0_3"]
 pending = true
 contracts = [
-    "erc721:0x6eb031be7523471ed3085041533d19c3a9a9fd2245b4b3104076c7ef0ca73fa"
+    "erc721:0x70800dc433a8763ceb9f57547a205e69f0eb92aedf3f36e249f027a0307ae21",
 ]

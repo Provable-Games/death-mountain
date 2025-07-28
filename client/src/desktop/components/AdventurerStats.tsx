@@ -215,6 +215,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
           </Box>
         </Box>
       ))}
+      
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
         {adventurer?.stat_upgrades_available! > 0 &&
           <Typography color="secondary" >{pointsRemaining} remaining</Typography>
@@ -289,24 +290,34 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
 
   return (
     <>
-      <Box sx={styles.statsPanel}>
+      <Box sx={{
+        ...styles.statsPanel,
+        ...(adventurer?.stat_upgrades_available! > 0 && pointsRemaining > 0 && styles.statsPanelHighlighted),
+        ...(adventurer?.stat_upgrades_available! > 0 && pointsRemaining === 0 && styles.statsPanelBorderOnly)
+      }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <FormControl size="small" sx={styles.dropdown}>
-            <Select
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value as ViewMode)}
-              sx={styles.select}
-              fullWidth
-              MenuProps={{
-                PaperProps: {
-                  sx: styles.menuPaper
-                }
-              }}
-            >
-              <MenuItem value="stats">Stats</MenuItem>
-              <MenuItem value="combat">Combat</MenuItem>
-            </Select>
-          </FormControl>
+          {adventurer?.stat_upgrades_available! > 0 ? (
+            <Typography sx={styles.selectStatsText}>
+              Select Stats
+            </Typography>
+          ) : (
+            <FormControl size="small" sx={styles.dropdown}>
+              <Select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value as ViewMode)}
+                sx={styles.select}
+                fullWidth
+                MenuProps={{
+                  PaperProps: {
+                    sx: styles.menuPaper
+                  }
+                }}
+              >
+                <MenuItem value="stats">Stats</MenuItem>
+                <MenuItem value="combat">Combat</MenuItem>
+              </Select>
+            </FormControl>
+          )}
         </Box>
         {viewMode === 'stats' ? renderStatsView() : renderCombatView()}
       </Box>
@@ -327,10 +338,41 @@ const styles = {
     flexDirection: 'column',
     gap: 1,
     boxShadow: '0 0 8px #000a',
+    transition: 'all 0.3s ease-in-out',
+  },
+  statsPanelHighlighted: {
+    border: '1px solid #d7c529',
+    boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+    background: 'rgba(24, 40, 24, 0.98)',
+    animation: 'containerPulse 2s ease-in-out infinite',
+    '@keyframes containerPulse': {
+      '0%': {
+        boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+      },
+      '50%': {
+        boxShadow: '0 0 20px rgba(215, 197, 41, 0.6), 0 0 8px #000a',
+      },
+      '100%': {
+        boxShadow: '0 0 12px rgba(215, 197, 41, 0.4), 0 0 8px #000a',
+      },
+    },
+  },
+  statsPanelBorderOnly: {
+    border: '1px solid #d7c529',
+    boxShadow: '0 0 8px #000a',
+    background: 'rgba(24, 40, 24, 0.98)',
   },
   dropdown: {
     minWidth: '120px',
   },
+  selectStatsText: {
+    color: '#d7c529',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: '100%',
+  },
+
   select: {
     color: '#d0c98d',
     fontSize: '14px',
@@ -448,17 +490,27 @@ const styles = {
     minWidth: '20px',
     height: '20px',
     padding: '0',
-    background: 'rgba(0, 0, 0, 0.2)',
-    color: 'rgba(255, 255, 255, 0.8)',
+    background: 'rgba(215, 197, 41, 0.2)',
+    color: '#d7c529',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '1rem',
-    fontWeight: '300',
-    borderRadius: '2px',
+    fontWeight: 'bold',
+    borderRadius: '3px',
+    border: '1px solid rgba(215, 197, 41, 0.4)',
+    transition: 'all 0.2s ease-in-out',
+    '&:hover': {
+      background: 'rgba(215, 197, 41, 0.3)',
+      border: '1px solid rgba(215, 197, 41, 0.6)',
+      transform: 'scale(1.05)',
+    },
     '&:disabled': {
       background: 'rgba(0, 0, 0, 0.1)',
       color: 'rgba(255, 255, 255, 0.3)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      transform: 'none',
     },
   },
+
 }; 

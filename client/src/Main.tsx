@@ -16,12 +16,10 @@ import "./index.css";
 function DojoApp() {
   const { dojoConfig } = useDynamicConnector();
   const [sdk, setSdk] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function initializeSdk() {
       try {
-        setLoading(true);
         const initializedSdk = await init<SchemaType>({
           client: {
             toriiUrl: dojoConfig.toriiUrl,
@@ -37,8 +35,6 @@ function DojoApp() {
         setSdk(initializedSdk);
       } catch (error) {
         console.error("Failed to initialize SDK:", error);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -46,10 +42,6 @@ function DojoApp() {
       initializeSdk();
     }
   }, [dojoConfig]);
-
-  if (loading || !sdk) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <DojoSdkProvider sdk={sdk} dojoConfig={createDojoConfig(dojoConfig)} clientFn={setupWorld}>

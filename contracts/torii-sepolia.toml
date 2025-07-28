@@ -10,5 +10,6 @@ historical = ["ls_0_0_1-GameEvent"]
 [indexing]
 pending = true
 contracts = [
-    "erc721:0x6f261eba018dda4f60bdc1d0874cb7e97bf424979dda63fcbdf8bdcba1fb644"
+    "erc721:0x6f261eba018dda4f60bdc1d0874cb7e97bf424979dda63fcbdf8bdcba1fb644",
+    "erc721:0x6023d97ec32567c8576337cfb1a8a9257d1791c5a375dece0717f7b4661b720"
 ]

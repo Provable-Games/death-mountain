@@ -26,40 +26,37 @@ mod game_systems {
         ITEM_MAX_GREATNESS, ITEM_XP_MULTIPLIER_BEASTS, ITEM_XP_MULTIPLIER_OBSTACLES, MAX_GREATNESS_STAT_BONUS,
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
     };
+    use death_mountain::constants::beast::BeastSettings::BEAST_SPECIAL_NAME_LEVEL_UNLOCK;
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
-    use death_mountain::constants::loot::{SUFFIX_UNLOCK_GREATNESS};
-    use death_mountain::constants::world::{DEFAULT_NS};
-
+    use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
+    use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::bag::{Bag};
-    use death_mountain::models::adventurer::equipment::{ImplEquipment};
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
+    use death_mountain::models::adventurer::equipment::ImplEquipment;
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
-    use death_mountain::models::beast::{Beast, IBeast};
+    use death_mountain::models::beast::{Beast, IBeast, ImplBeast};
     use death_mountain::models::combat::{CombatSpec, ImplCombat, SpecialPowers};
-    use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked, GameSettings, StatsMode};
     use death_mountain::models::game::{
-        AttackEvent, BeastEvent, BuyItemsEvent, DefeatedBeastEvent, DiscoveryEvent, FledBeastEvent, GameEvent,
-        GameEventDetails, ItemEvent, LevelUpEvent, MarketItemsEvent, ObstacleEvent, StatUpgradeEvent,
+        AdventurerEntropy, AdventurerPacked, AttackEvent, BagPacked, BeastEvent, BuyItemsEvent, DefeatedBeastEvent,
+        DiscoveryEvent, FledBeastEvent, GameEvent, GameEventDetails, GameSettings, ItemEvent, LevelUpEvent,
+        MarketItemsEvent, ObstacleEvent, StatUpgradeEvent, StatsMode,
     };
     use death_mountain::models::market::{ImplMarket, ItemPurchase};
     use death_mountain::models::obstacle::{IObstacle, ImplObstacle};
-    use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::systems::beast::contracts::{IBeastSystemsDispatcherTrait};
-    use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait};
+    use death_mountain::systems::adventurer::contracts::IAdventurerSystemsDispatcherTrait;
+    use death_mountain::systems::beast::contracts::IBeastSystemsDispatcherTrait;
+    use death_mountain::systems::loot::contracts::ILootSystemsDispatcherTrait;
     use death_mountain::systems::settings::contracts::{ISettingsSystemsDispatcher, ISettingsSystemsDispatcherTrait};
     use death_mountain::utils::vrf::VRFImpl;
-
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-
     use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
-    use starknet::ContractAddress;
-    use starknet::{get_tx_info};
+    use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
 
     // ------------------------------------------ //
@@ -290,6 +287,7 @@ mod game_systems {
                 beast_level_rnd,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
@@ -347,6 +345,7 @@ mod game_systems {
                 to_the_death,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             _emit_events(ref world, adventurer_id, adventurer.action_count, game_events);
@@ -408,6 +407,7 @@ mod game_systems {
                     false,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
 
                 _emit_game_event(
@@ -443,11 +443,12 @@ mod game_systems {
             // assert action is valid (ownership of item is handled in internal function when we
             // iterate over items)
             _assert_not_dead(adventurer);
+            _assert_not_in_battle(adventurer);
             assert(items.len() != 0, messages::NO_ITEMS);
             _assert_not_starter_beast(adventurer, messages::CANT_DROP_DURING_STARTER_BEAST);
 
             // drop items
-            _drop(ref adventurer, ref bag, items.clone(), game_libs);
+            _drop(ref adventurer, ref bag, items.clone(), game_libs, adventurer_id);
 
             _emit_game_event(
                 ref world,
@@ -578,12 +579,10 @@ mod game_systems {
         ref adventurer: Adventurer,
         ref game_events: Array<GameEventDetails>,
         beast: Beast,
-        beast_seed: u32,
-        damage_dealt: u16,
-        critical_hit: bool,
         item_specials_rnd: u16,
         level_seed: u64,
         game_libs: GameLibs,
+        adventurer_id: u64,
     ) {
         // zero out beast health
         adventurer.beast_health = 0;
@@ -615,33 +614,23 @@ mod game_systems {
                     },
                 ),
             );
-        // // if beast beast level is above collectible threshold
-    // if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() && _network_supports_vrf() {
-    //     // mint beast to owner of the adventurer or controller delegate if set
-    //     _mint_beast(@self, beast, get_caller_address());
-    // }
+
+        // if beast beast level is above collectible threshold
+        if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
+            let adventurer_entropy: AdventurerEntropy = game_libs.adventurer.get_adventurer_entropy(adventurer_id);
+            game_libs
+                .beast
+                .add_collectable(
+                    adventurer_entropy.beast_seed,
+                    beast.id,
+                    beast.combat_spec.level,
+                    beast.starting_health,
+                    beast.combat_spec.specials.special2,
+                    beast.combat_spec.specials.special3,
+                    adventurer_id,
+                );
+        }
     }
-
-    // fn _mint_beast(self: @ContractState, beast: Beast, to_address: ContractAddress) {
-    //     let beasts_dispatcher = self._beasts_dispatcher.read();
-
-    //     let is_beast_minted = beasts_dispatcher
-    //         .isMinted(beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3);
-
-    //     let beasts_minter = beasts_dispatcher.getMinter();
-
-    //     if !is_beast_minted && beasts_minter == starknet::get_contract_address() {
-    //         beasts_dispatcher
-    //             .mint(
-    //                 to_address,
-    //                 beast.id,
-    //                 beast.combat_spec.specials.special2,
-    //                 beast.combat_spec.specials.special3,
-    //                 beast.combat_spec.level,
-    //                 beast.starting_health,
-    //             );
-    //     }
-    // }
 
     fn _get_game_settings(world: WorldStorage, game_id: u64) -> GameSettings {
         let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
@@ -669,6 +658,7 @@ mod game_systems {
             ExploreResult::Beast(()) => {
                 let (beast, ambush_event) = _beast_encounter(
                     ref adventurer,
+                    adventurer_id,
                     seed: rnd1_u32,
                     health_rnd: rnd3_u16,
                     level_rnd: rnd4_u16,
@@ -781,7 +771,7 @@ mod game_systems {
                 let slot_free = adventurer.equipment.is_slot_free_item_id(item_id, slot);
 
                 // if the bag is full and the slot is not free
-                let inventory_full = game_libs.adventurer.is_bag_full(bag) && slot_free == false;
+                let inventory_full = ImplBag::is_full(bag) && slot_free == false;
 
                 // if item is in adventurers bag, is equipped or inventory is full
                 if item_in_bag || adventurer.equipment.is_equipped(item_id) || inventory_full {
@@ -816,6 +806,7 @@ mod game_systems {
 
     fn _beast_encounter(
         ref adventurer: Adventurer,
+        adventurer_id: u64,
         seed: u32,
         health_rnd: u16,
         level_rnd: u16,
@@ -858,7 +849,15 @@ mod game_systems {
             // process beast attack
             beast_attack_details =
                 _beast_attack(
-                    ref adventurer, beast, seed, crit_hit_rnd, dmg_location_rnd, is_ambush, game_libs, game_settings,
+                    ref adventurer,
+                    beast,
+                    seed,
+                    crit_hit_rnd,
+                    dmg_location_rnd,
+                    is_ambush,
+                    game_libs,
+                    game_settings,
+                    adventurer_id,
                 );
         }
 
@@ -1061,6 +1060,7 @@ mod game_systems {
         item_specials_seed: u16,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1088,15 +1088,7 @@ mod game_systems {
         if (combat_result.total_damage >= adventurer.beast_health) {
             // process beast death
             _process_beast_death(
-                ref adventurer,
-                ref game_events,
-                beast,
-                beast_seed,
-                combat_result.total_damage,
-                is_critical_hit,
-                item_specials_seed,
-                level_seed,
-                game_libs,
+                ref adventurer, ref game_events, beast, item_specials_seed, level_seed, game_libs, adventurer_id,
             );
         } else {
             // if beast survived the attack, deduct damage dealt
@@ -1112,6 +1104,7 @@ mod game_systems {
                 false,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             game_events.append(GameEventDetails::beast_attack(_beast_attack_details));
@@ -1136,6 +1129,7 @@ mod game_systems {
                     item_specials_seed,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
             }
         }
@@ -1150,6 +1144,7 @@ mod game_systems {
         is_ambush: bool,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) -> AttackEvent {
         // beasts attack random location on adventurer
         let attack_location = ImplAdventurer::get_attack_location(attack_location_rnd);
@@ -1164,7 +1159,7 @@ mod game_systems {
         let armor_details = game_libs.loot.get_item(armor.id);
 
         // get critical hit chance
-        let critical_hit_chance = game_libs.beast.get_critical_hit_chance(adventurer.get_level(), is_ambush);
+        let critical_hit_chance = ImplBeast::get_critical_hit_chance(adventurer.get_level(), is_ambush);
 
         // process beast attack
         let (combat_result, _jewlery_armor_bonus) = adventurer
@@ -1186,6 +1181,17 @@ mod game_systems {
         // deduct damage taken from adventurer's health
         adventurer.decrease_health(damage_taken);
 
+        if adventurer.health == 0 {
+            game_libs
+                .beast
+                .add_kill(
+                    ImplBeast::get_beast_hash(
+                        beast.id, beast.combat_spec.specials.special2, beast.combat_spec.specials.special3,
+                    ),
+                    adventurer_id,
+                );
+        }
+
         AttackEvent {
             damage: damage_taken, location: attack_location, critical_hit: combat_result.critical_hit_bonus > 0,
         }
@@ -1201,6 +1207,7 @@ mod game_systems {
         flee_to_the_death: bool,
         game_libs: GameLibs,
         game_settings: GameSettings,
+        adventurer_id: u64,
     ) {
         battle_count = ImplAdventurer::increment_battle_action_count(battle_count);
 
@@ -1210,7 +1217,7 @@ mod game_systems {
             .get_battle_randomness(adventurer.xp, battle_count, flee_seed);
 
         // attempt to flee
-        let fled = game_libs.beast.attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
+        let fled = ImplBeast::attempt_flee(adventurer.get_level(), adventurer.stats.dexterity, flee_rnd);
 
         // if adventurer fled
         if (fled) {
@@ -1234,6 +1241,7 @@ mod game_systems {
                 false,
                 game_libs,
                 game_settings,
+                adventurer_id,
             );
 
             // Save battle events
@@ -1253,6 +1261,7 @@ mod game_systems {
                     true,
                     game_libs,
                     game_settings,
+                    adventurer_id,
                 );
             }
         }
@@ -1330,7 +1339,7 @@ mod game_systems {
         };
     }
 
-    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs) {
+    fn _drop(ref adventurer: Adventurer, ref bag: Bag, items: Array<u8>, game_libs: GameLibs, adventurer_id: u64) {
         // for each item
         let mut i: u32 = 0;
         loop {
@@ -1369,7 +1378,7 @@ mod game_systems {
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
                     // get item from the bag
-                    item = game_libs.adventurer.get_bag_item(bag, item_id);
+                    item = ImplBag::get_item(bag, item_id);
 
                     // remove item from the bag (sets mutated to true)
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
@@ -1378,6 +1387,8 @@ mod game_systems {
                     panic_with_felt252('Item not owned by adventurer');
                 }
             }
+
+            game_libs.adventurer.record_item_drop(adventurer_id, item);
 
             i += 1;
         };
@@ -1603,29 +1614,27 @@ mod tests {
     use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
     use death_mountain::constants::beast::BeastSettings;
     use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
-    use death_mountain::constants::loot::{ItemId};
-
+    use death_mountain::constants::loot::ItemId;
     use death_mountain::constants::world::DEFAULT_NS;
-
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
     use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
     use death_mountain::models::adventurer::stats::{IStat, Stats};
-    use death_mountain::models::game::{AdventurerEntropy};
     use death_mountain::models::game::{
-        e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings, m_GameSettingsMetadata,
-        m_SettingsCounter,
+        AdventurerEntropy, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
+        m_GameSettingsMetadata, m_SettingsCounter,
     };
-    use death_mountain::models::market::{ItemPurchase};
+    use death_mountain::models::game_data::m_DroppedItem;
+    use death_mountain::models::market::ItemPurchase;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait, adventurer_systems};
-    use death_mountain::systems::beast::contracts::{beast_systems};
+    use death_mountain::systems::beast::contracts::beast_systems;
     use death_mountain::systems::game::contracts::{game_systems};
-    use death_mountain::systems::game_token::contracts::{
+    use death_mountain::systems::game_token::contracts::
         IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait, game_token_systems,
-    };
+    ;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
-    use death_mountain::systems::renderer::contracts::{renderer_systems};
-    use death_mountain::systems::settings::contracts::{settings_systems};
-    use dojo::model::{ModelStorage};
+    use death_mountain::systems::renderer::contracts::renderer_systems;
+    use death_mountain::systems::settings::contracts::settings_systems;
+    use dojo::model::ModelStorage;
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
@@ -1643,6 +1652,7 @@ mod tests {
                 TestResource::Model(m_SettingsCounter::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettings::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Model(m_GameSettingsMetadata::TEST_CLASS_HASH.try_into().unwrap()),
+                TestResource::Model(m_DroppedItem::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Contract(game_systems::TEST_CLASS_HASH),
                 TestResource::Contract(loot_systems::TEST_CLASS_HASH),
                 TestResource::Contract(renderer_systems::TEST_CLASS_HASH),
@@ -2438,6 +2448,7 @@ mod tests {
     fn drop_on_starter_beast() {
         let (world, game, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
+        game.attack(adventurer_id, false);
 
         let mut drop_list = ArrayTrait::<u8>::new();
         drop_list.append(255);

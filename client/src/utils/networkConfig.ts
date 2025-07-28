@@ -1,6 +1,7 @@
 import { getContractByName } from "@dojoengine/core";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
+import { Tokens } from "@cartridge/controller";
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -17,9 +18,7 @@ export interface NetworkConfig {
   chains: Array<{
     rpcUrl: string;
   }>;
-  tokens?: {
-    erc20: Array<string>;
-  };
+  tokens: Tokens;
 }
 
 export enum ChainId {
@@ -61,7 +60,7 @@ export const NETWORKS = {
     chainId: ChainId.WP_PG_SLOT,
     name: 'Katana',
     status: 'online',
-    namespace: 'ls_0_0_2',
+    namespace: 'ls_0_0_3',
     slot: 'pg-slot',
     rpcUrl: 'https://api.cartridge.gg/x/pg-slot/katana',
     torii: 'https://api.cartridge.gg/x/pg-slot/torii',
@@ -74,9 +73,9 @@ export const NETWORKS = {
 }
 
 
-export function getNetworkConfig(networkKey: ChainId): NetworkConfig | null {
+export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
-  if (!network) return null;
+  if (!network) throw new Error(`Network ${networkKey} not found`);
 
   const namespace = network.namespace;
   const manifest = network.manifest;

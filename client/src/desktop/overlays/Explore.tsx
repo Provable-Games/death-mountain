@@ -167,7 +167,10 @@ export default function ExploreOverlay() {
           <Button
             variant="contained"
             onClick={handleSelectStats}
-            sx={styles.exploreButton}
+            sx={{
+              ...styles.exploreButton,
+              ...(Object.values(selectedStats).reduce((a, b) => a + b, 0) === adventurer?.stat_upgrades_available && styles.selectStatsButtonHighlighted)
+            }}
             disabled={isSelectingStats || Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
           >
             {isSelectingStats
@@ -297,5 +300,19 @@ const styles = {
   encounterDetails: {
     flex: 1,
     textAlign: 'center',
+  },
+  selectStatsButtonHighlighted: {
+    animation: 'buttonPulse 2s ease-in-out infinite',
+    '@keyframes buttonPulse': {
+      '0%': {
+        boxShadow: '0 0 0 rgba(215, 197, 41, 0)',
+      },
+      '50%': {
+        boxShadow: '0 0 10px rgba(215, 197, 41, 0.6)',
+      },
+      '100%': {
+        boxShadow: '0 0 0 rgba(215, 197, 41, 0)',
+      },
+    },
   },
 };

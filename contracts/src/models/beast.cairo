@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 use core::panic_with_felt252;
+use core::poseidon::poseidon_hash_span;
 use death_mountain::constants::beast::BeastId::{Bear, Fairy, Gnome, MAX_ID, Troll};
 use death_mountain::constants::beast::BeastSettings::{
     BEAST_SPECIAL_NAME_LEVEL_UNLOCK, CRITICAL_HIT_AMBUSH_MULTIPLIER, CRITICAL_HIT_LEVEL_MULTIPLIER, GOLD_MULTIPLIER,
@@ -18,6 +19,14 @@ pub struct Beast {
 
 #[generate_trait]
 pub impl ImplBeast of IBeast {
+    fn get_beast_hash(id: u8, prefix: u8, suffix: u8) -> felt252 {
+        let mut hash_span = ArrayTrait::<felt252>::new();
+        hash_span.append(id.into());
+        hash_span.append(prefix.into());
+        hash_span.append(suffix.into());
+        poseidon_hash_span(hash_span.span()).into()
+    }
+
     /// @notice gets the starter beast
     /// @param starter_weapon_type: the type of weapon the adventurer starts with
     /// @param seed: the random seed

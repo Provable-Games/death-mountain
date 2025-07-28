@@ -1,6 +1,6 @@
-import { getContractByName } from "@dojoengine/core";
-import { Adventurer } from "@/types/game";
 import { useDojoConfig } from "@/contexts/starknet";
+import { Adventurer } from "@/types/game";
+import { getContractByName } from "@dojoengine/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
@@ -92,6 +92,10 @@ export const useStarknetApi = () => {
     return null;
   };
 
+  const isBeastCollectable = (beastId: number): boolean => {
+    return false;
+  }
+
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
     const publicKey = ec.starkCurve.getStarkKey(privateKey);
@@ -106,14 +110,12 @@ export const useStarknetApi = () => {
       0
     );
 
-    const account = new Account(rpcProvider, contractAddress, privateKey, "1");
+    const account = new Account(rpcProvider, contractAddress, privateKey);
     const { transaction_hash } = await account.deployAccount({
       classHash: accountClassHash,
       constructorCalldata: constructorCalldata,
       addressSalt: publicKey,
     }, {
-      version: "3",
-      nonce: num.toHex(0),
       maxFee: num.toHex(0),
     });
 
@@ -121,10 +123,10 @@ export const useStarknetApi = () => {
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "1")
+      localStorage.setItem('burner_version', "2")
       return account
     }
   };
 
-  return { getAdventurer, createBurnerAccount };
+  return { getAdventurer, createBurnerAccount, isBeastCollectable };
 };

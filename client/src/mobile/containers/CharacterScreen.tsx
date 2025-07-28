@@ -37,8 +37,6 @@ const ItemSlot = memo(({
   const metadata = item ? ItemUtils.getMetadata(item.id) : null;
   const level = item ? calculateLevel(item.xp) : null;
   const xpProgress = item ? Math.min((item.xp / 400) * 100, 100) : 0;
-  const hasSpecials = level ? level >= 15 : false;
-  const hasGoldSpecials = level ? level >= 20 : false;
 
   return (
     <Tooltip
@@ -110,11 +108,6 @@ const ItemSlot = memo(({
                   ...styles.itemImage,
                 }}
               />
-              {hasSpecials && (
-                <Box sx={[styles.starOverlay, hasGoldSpecials ? styles.goldStarOverlay : styles.silverStarOverlay]}>
-                  <Star sx={[styles.starIcon, hasGoldSpecials ? styles.goldStarIcon : styles.silverStarIcon]} />
-                </Box>
-              )}
             </Box>
             <Box sx={styles.itemTypeContainer}>
               <Box sx={styles.xpBarContainer}>

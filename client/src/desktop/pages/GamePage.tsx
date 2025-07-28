@@ -1,5 +1,5 @@
+import { useDojoConfig } from '@/contexts/starknet';
 import { useController } from '@/contexts/controller';
-import { useDynamicConnector } from '@/contexts/starknet';
 import VideoPlayer from '@/desktop/components/VideoPlayer';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import CombatOverlay from '@/desktop/overlays/Combat';
@@ -37,19 +37,18 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 export default function GamePage() {
   const navigate = useNavigate();
   const { sdk } = useDojoSDK();
+  const dojoConfig = useDojoConfig();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending } = useController();
-  const { currentNetworkConfig, switchToNetwork } = useDynamicConnector();
+  const { account, address, playerName, login, isPending, startPractice, endPractice } = useController();
   const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
-
   const [padding, setPadding] = useState(getMenuLeftOffset());
   const [update, forceUpdate] = useReducer(x => x + 1, 0);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
   const settings_id = Number(searchParams.get('settingsId'));
-  const guest = searchParams.get('guest');
+  const mode = searchParams.get('mode');
 
   useEffect(() => {
     setShowOverlay(true);
@@ -73,10 +72,10 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address && guest !== 'true') return login();
+    if (!address && mode !== 'practice') return login();
 
-    if (guest === 'true' && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      switchToNetwork(ChainId.WP_PG_SLOT);
+    if (mode === 'practice' && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
+      startPractice();
       return;
     }
 
@@ -90,7 +89,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, address, isPending, sdk, update, currentNetworkConfig.chainId]);
+  }, [game_id, address, isPending, sdk, update, dojoConfig.chainId]);
 
   useEffect(() => {
     return () => {
@@ -100,6 +99,7 @@ export default function GamePage() {
         } catch (error) { }
       }
 
+      endPractice();
       exitGame();
     };
   }, []);
@@ -107,7 +107,7 @@ export default function GamePage() {
   async function mint() {
     setVideoQueue([streamIds.start]);
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/survivor/play?id=${tokenId}${guest === 'true' ? '&guest=true' : ''}`, { replace: true });
+    navigate(`/survivor/play?id=${tokenId}${mode === 'practice' ? '&mode=practice' : ''}`, { replace: true });
     setShowOverlay(false);
   }
 

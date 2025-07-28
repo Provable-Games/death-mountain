@@ -14,6 +14,7 @@ import GameSettingsList from './mobile/components/GameSettingsList';
 import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
+import { StatisticsProvider } from './contexts/Statistics';
 
 function App() {
   const { useMobileClient } = useUIStore();
@@ -24,48 +25,50 @@ function App() {
       <StyledEngineProvider injectFirst>
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
+            <StatisticsProvider>
 
-            {!shouldShowMobile && (
-              <ThemeProvider theme={desktopTheme}>
-                <SoundProvider>
-                  <GameDirector>
-                    <Box className='main'>
-
-                      <Routes>
-                        {desktopRoutes.map((route, index) => {
-                          return <Route key={index} path={route.path} element={route.content} />
-                        })}
-                      </Routes>
-
-                    </Box>
-                  </GameDirector>
-                </SoundProvider>
-              </ThemeProvider>
-            )}
-
-            {shouldShowMobile && (
-              <ThemeProvider theme={mobileTheme}>
-                <Box className='bgImage'>
+              {!shouldShowMobile && (
+                <ThemeProvider theme={desktopTheme}>
                   <SoundProvider>
-                    <MobileGameDirector>
+                    <GameDirector>
                       <Box className='main'>
-                        <Header />
 
                         <Routes>
-                          {mobileRoutes.map((route, index) => {
+                          {desktopRoutes.map((route, index) => {
                             return <Route key={index} path={route.path} element={route.content} />
                           })}
                         </Routes>
 
-                        <GameSettingsList />
-                        <GameSettings />
                       </Box>
-                    </MobileGameDirector>
+                    </GameDirector>
                   </SoundProvider>
-                </Box>
-              </ThemeProvider>
-            )}
+                </ThemeProvider>
+              )}
 
+              {shouldShowMobile && (
+                <ThemeProvider theme={mobileTheme}>
+                  <Box className='bgImage'>
+                    <SoundProvider>
+                      <MobileGameDirector>
+                        <Box className='main'>
+                          <Header />
+
+                          <Routes>
+                            {mobileRoutes.map((route, index) => {
+                              return <Route key={index} path={route.path} element={route.content} />
+                            })}
+                          </Routes>
+
+                          <GameSettingsList />
+                          <GameSettings />
+                        </Box>
+                      </MobileGameDirector>
+                    </SoundProvider>
+                  </Box>
+                </ThemeProvider>
+              )}
+
+            </StatisticsProvider>
           </ControllerProvider>
         </SnackbarProvider>
       </StyledEngineProvider>

@@ -4,10 +4,10 @@ import { screenVariants } from '@/utils/animations';
 import { calculateLevel, calculateNextLevelXP, calculateProgress } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
@@ -20,7 +20,7 @@ const itemVariants = {
   })
 };
 
-const numberVariants = {
+const numberVariants: Variants = {
   hidden: { scale: 0.5, opacity: 0 },
   visible: {
     scale: 1,
@@ -32,7 +32,7 @@ const numberVariants = {
   }
 };
 
-const progressVariants = {
+const progressVariants: Variants = {
   hidden: { width: 0 },
   visible: {
     width: "100%",
@@ -44,7 +44,7 @@ const progressVariants = {
   }
 };
 
-const xpBarVariants = {
+const xpBarVariants: Variants = {
   hidden: { width: 0 },
   visible: (width: number) => ({
     width: `${width}%`,

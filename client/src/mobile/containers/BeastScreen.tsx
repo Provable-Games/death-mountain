@@ -14,12 +14,14 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
+import { useStarknetApi } from '@/api/starknet';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
+  const { isBeastCollectable } = useStarknetApi();
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, adventurerState, beast, battleEvent, bag, gameSettings,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
@@ -149,6 +151,7 @@ export default function BeastScreen() {
 
   const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
   const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
+  const collectable = beast ? isBeastCollectable(beast!.id) : false;
 
   return (
     <motion.div
@@ -165,7 +168,12 @@ export default function BeastScreen() {
             <Box sx={styles.beastHeader}>
               <Typography
                 variant={beast!.name.length > 28 ? "h5" : "h4"}
-                sx={styles.beastName}
+                sx={[
+                  styles.beastName,
+                  collectable && {
+                    animation: `${pulseTextGlow} 2s infinite`,
+                  }
+                ]}
               >
                 {beast!.name}
               </Typography>
@@ -195,9 +203,14 @@ export default function BeastScreen() {
                 value={(beastHealth / beast!.health) * 100}
                 sx={styles.healthBar}
               />
+              {collectable && (
+                <Typography sx={styles.collectableText}>
+                  This beast can be collected
+                </Typography>
+              )}
             </Box>
           </Box>
-          <Box sx={styles.beastImageContainer}>
+          <Box sx={collectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
             <img
               src={getBeastImageById(beast!.id)}
               alt={beast!.name}
@@ -559,6 +572,30 @@ const pulseGreen = keyframes`
   }
 `;
 
+const pulseTextGlow = keyframes`
+  0% {
+    text-shadow: 0 0 15px rgba(128, 255, 0, 0.6), 0 0 30px rgba(128, 255, 0, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(128, 255, 0, 0.8), 0 0 40px rgba(128, 255, 0, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(128, 255, 0, 0.6), 0 0 30px rgba(128, 255, 0, 0.3);
+  }
+`;
+
+const pulseGold = keyframes`
+  0% {
+    box-shadow: 0 0 12px rgba(237, 207, 51, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(237, 207, 51, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(237, 207, 51, 0.6);
+  }
+`;
+
 const styles = {
   container: {
     width: '100%',
@@ -721,10 +758,29 @@ const styles = {
     alignItems: 'center',
     position: 'relative',
   },
+  collectableBeastContainer: {
+    width: '160px',
+    height: '160px',
+    maxWidth: '35vw',
+    maxHeight: '35vw',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
   beastImage: {
     maxWidth: '100%',
     maxHeight: '100%',
     objectFit: 'contain' as const,
+  },
+  collectableText: {
+    color: '#EDCF33',
+    fontSize: '0.8rem',
+    fontFamily: 'VT323, monospace',
+    textAlign: 'center',
+    marginTop: '4px',
+    textShadow: '0 0 8px rgba(237, 207, 51, 0.5)',
+    fontWeight: 'bold',
   },
   middleSection: {
     display: 'flex',
