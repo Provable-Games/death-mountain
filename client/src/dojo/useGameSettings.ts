@@ -22,9 +22,10 @@ export const useGameSettings = () => {
 
   const getRecommendedSettings = async (): Promise<Settings[]> => {
     try {
+      // TODO: Replace with dynamic relayer namespace
       let url = `${dojoConfig.toriiUrl}/sql?query=
           SELECT settings_id, COUNT(*) as usage_count
-          FROM "${dojoConfig.namespace}-TokenMetadata"
+          FROM "relayer_0_0_1-TokenMetadataUpdate"
           GROUP BY settings_id
           ORDER BY usage_count DESC, settings_id ASC
           LIMIT 50`;
@@ -32,14 +33,17 @@ export const useGameSettings = () => {
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
       // Filter out settings_id 0 if it exists and add it to the beginning
       const filteredData = data.filter((item: any) => item.settings_id !== 0);
-      const topSettingsIds = [0, ...filteredData.map((item: any) => item.settings_id)];
+      const topSettingsIds = [
+        0,
+        ...filteredData.map((item: any) => item.settings_id),
+      ];
 
       return await getSettingsList(null, topSettingsIds);
     } catch (error) {
@@ -48,7 +52,10 @@ export const useGameSettings = () => {
     }
   };
 
-  const getSettingsList = async (address: string | null, ids: number[] | null): Promise<Settings[]> => {
+  const getSettingsList = async (
+    address: string | null,
+    ids: number[] | null
+  ): Promise<Settings[]> => {
     let whereClause: string[] = [];
 
     if (address) {
@@ -56,13 +63,12 @@ export const useGameSettings = () => {
     }
 
     if (!address && ids && ids.length > 0) {
-      const idsFormatted = ids.join(',');
+      const idsFormatted = ids.join(",");
       whereClause.push(`settings.settings_id IN (${idsFormatted})`);
     }
 
-    const whereStatement = whereClause.length > 0
-      ? `WHERE ${whereClause.join(' AND ')}`
-      : '';
+    const whereStatement =
+      whereClause.length > 0 ? `WHERE ${whereClause.join(" AND ")}` : "";
 
     let url = `${dojoConfig.toriiUrl}/sql?query=
         SELECT *
@@ -80,28 +86,31 @@ export const useGameSettings = () => {
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
       let results: Settings[] = data.map((item: any) => ({
         settings_id: item.settings_id,
-        name: hexToAscii(item.name).replace(/^\0+/, ''),
+        name: hexToAscii(item.name).replace(/^\0+/, ""),
         created_by: item.created_by,
-        vrf_address: item.vrf_address || '',
+        vrf_address: item.vrf_address || "",
         adventurer: formatAdventurer(item),
         bag: formatBag(item),
         in_battle: item.in_battle,
         game_seed: parseInt(item.game_seed, 16),
         game_seed_until_xp: item.game_seed_until_xp,
         stats_mode: item.stats_mode,
-        base_damage_reduction: item.base_damage_reduction || 0
+        base_damage_reduction: item.base_damage_reduction || 0,
       }));
 
       // Sort by the order of input IDs if provided
       if (ids && ids.length > 0) {
-        results.sort((a: any, b: any) => ids.indexOf(a.settings_id) - ids.indexOf(b.settings_id));
+        results.sort(
+          (a: any, b: any) =>
+            ids.indexOf(a.settings_id) - ids.indexOf(b.settings_id)
+        );
       }
 
       return results;
@@ -115,37 +124,37 @@ export const useGameSettings = () => {
     let equipment: Equipment = {
       weapon: {
         id: data["adventurer.equipment.weapon.id"],
-        xp: data["adventurer.equipment.weapon.xp"]
+        xp: data["adventurer.equipment.weapon.xp"],
       },
       chest: {
         id: data["adventurer.equipment.chest.id"],
-        xp: data["adventurer.equipment.chest.xp"]
+        xp: data["adventurer.equipment.chest.xp"],
       },
       head: {
         id: data["adventurer.equipment.head.id"],
-        xp: data["adventurer.equipment.head.xp"]
+        xp: data["adventurer.equipment.head.xp"],
       },
       waist: {
         id: data["adventurer.equipment.waist.id"],
-        xp: data["adventurer.equipment.waist.xp"]
+        xp: data["adventurer.equipment.waist.xp"],
       },
       foot: {
         id: data["adventurer.equipment.foot.id"],
-        xp: data["adventurer.equipment.foot.xp"]
+        xp: data["adventurer.equipment.foot.xp"],
       },
       hand: {
         id: data["adventurer.equipment.hand.id"],
-        xp: data["adventurer.equipment.hand.xp"]
+        xp: data["adventurer.equipment.hand.xp"],
       },
       neck: {
         id: data["adventurer.equipment.neck.id"],
-        xp: data["adventurer.equipment.neck.xp"]
+        xp: data["adventurer.equipment.neck.xp"],
       },
       ring: {
         id: data["adventurer.equipment.ring.id"],
-        xp: data["adventurer.equipment.ring.xp"]
-      }
-    }
+        xp: data["adventurer.equipment.ring.xp"],
+      },
+    };
 
     let stats: Stats = {
       strength: data["adventurer.stats.strength"],
@@ -154,8 +163,8 @@ export const useGameSettings = () => {
       intelligence: data["adventurer.stats.intelligence"],
       wisdom: data["adventurer.stats.wisdom"],
       charisma: data["adventurer.stats.charisma"],
-      luck: data["adventurer.stats.luck"]
-    }
+      luck: data["adventurer.stats.luck"],
+    };
 
     const adventurer: Adventurer = {
       health: data["adventurer.health"],
@@ -166,8 +175,8 @@ export const useGameSettings = () => {
       stats: stats,
       equipment: equipment,
       item_specials_seed: data["adventurer.item_specials_seed"],
-      action_count: data["adventurer.action_count"]
-    }
+      action_count: data["adventurer.action_count"],
+    };
 
     return adventurer;
   };
@@ -180,7 +189,7 @@ export const useGameSettings = () => {
 
       bag.push({
         id: data[`bag.item_${bagIndex}.id`],
-        xp: data[`bag.item_${bagIndex}.xp`]
+        xp: data[`bag.item_${bagIndex}.xp`],
       });
     }
 
@@ -191,6 +200,6 @@ export const useGameSettings = () => {
     getRecommendedSettings,
     getSettingsList,
     formatAdventurer,
-    formatBag
+    formatBag,
   };
 };

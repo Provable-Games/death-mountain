@@ -137,13 +137,18 @@ mod settings_systems {
 
             let settings: Span<GameSetting> = generate_settings_array(game_settings);
 
-            let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
-            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_systems_address };
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
             let minigame_token_address = minigame_dispatcher.token_address();
             self
                 .settings
                 .create_settings(
-                    settings_count.count, format!("{}", name), description.clone(), settings, minigame_token_address,
+                    game_token_systems_address,
+                    settings_count.count,
+                    format!("{}", name),
+                    description.clone(),
+                    settings,
+                    minigame_token_address,
                 );
 
             settings_count.count
