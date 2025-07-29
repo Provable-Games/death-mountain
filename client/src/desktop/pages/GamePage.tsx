@@ -1,21 +1,21 @@
-import { useDojoConfig } from '@/contexts/starknet';
-import { useController } from '@/contexts/controller';
-import VideoPlayer from '@/desktop/components/VideoPlayer';
-import { useGameDirector } from '@/desktop/contexts/GameDirector';
-import CombatOverlay from '@/desktop/overlays/Combat';
-import DeathOverlay from '@/desktop/overlays/Death';
-import ExploreOverlay from '@/desktop/overlays/Explore';
-import LoadingOverlay from '@/desktop/overlays/Loading';
-import { useSystemCalls } from '@/dojo/useSystemCalls';
-import { useGameStore } from '@/stores/gameStore';
-import { streamIds } from '@/utils/cloudflare';
-import { ChainId } from '@/utils/networkConfig';
-import { getMenuLeftOffset } from '@/utils/utils';
-import { useDojoSDK } from '@dojoengine/sdk/react';
-import { Box } from '@mui/material';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useReducer, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDojoConfig } from "@/contexts/starknet";
+import { useController } from "@/contexts/controller";
+import VideoPlayer from "@/desktop/components/VideoPlayer";
+import { useGameDirector } from "@/desktop/contexts/GameDirector";
+import CombatOverlay from "@/desktop/overlays/Combat";
+import DeathOverlay from "@/desktop/overlays/Death";
+import ExploreOverlay from "@/desktop/overlays/Explore";
+import LoadingOverlay from "@/desktop/overlays/Loading";
+import { useSystemCalls } from "@/dojo/useSystemCalls";
+import { useGameStore } from "@/stores/gameStore";
+import { streamIds } from "@/utils/cloudflare";
+import { ChainId } from "@/utils/networkConfig";
+import { getMenuLeftOffset } from "@/utils/utils";
+import { useDojoSDK } from "@dojoengine/sdk/react";
+import { Box } from "@mui/material";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useReducer, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface AnimatedOverlayProps {
   children: React.ReactNode;
@@ -39,16 +39,32 @@ export default function GamePage() {
   const { sdk } = useDojoSDK();
   const dojoConfig = useDojoConfig();
   const { mintGame } = useSystemCalls();
-  const { account, address, playerName, login, isPending, startPractice, endPractice } = useController();
-  const { gameId, adventurer, exitGame, setGameId, beast, showOverlay, setShowOverlay } = useGameStore();
+  const {
+    account,
+    address,
+    playerName,
+    login,
+    isPending,
+    startPractice,
+    endPractice,
+  } = useController();
+  const {
+    gameId,
+    adventurer,
+    exitGame,
+    setGameId,
+    beast,
+    showOverlay,
+    setShowOverlay,
+  } = useGameStore();
   const { subscription, setVideoQueue, actionFailed } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
-  const [update, forceUpdate] = useReducer(x => x + 1, 0);
+  const [update, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const [searchParams] = useSearchParams();
-  const game_id = Number(searchParams.get('id'));
-  const settings_id = Number(searchParams.get('settingsId'));
-  const mode = searchParams.get('mode');
+  const game_id = Number(searchParams.get("id"));
+  const settings_id = Number(searchParams.get("settingsId"));
+  const mode = searchParams.get("mode");
 
   useEffect(() => {
     setShowOverlay(true);
@@ -59,29 +75,29 @@ export default function GamePage() {
     function handleResize() {
       setPadding(getMenuLeftOffset());
     }
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
     if (!account && gameId && adventurer) {
-      navigate('/survivor');
+      navigate("/survivor");
     }
   }, [account]);
 
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (!address && mode !== 'practice') return login();
+    if (!address && mode !== "practice") return login();
 
-    if (mode === 'practice' && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
+    if (mode === "practice" && dojoConfig.chainId !== ChainId.WP_PG_SLOT) {
       startPractice();
       return;
     }
 
     if (!account) {
-      forceUpdate()
-      return
+      forceUpdate();
+      return;
     }
 
     if (game_id) {
@@ -96,7 +112,7 @@ export default function GamePage() {
       if (subscription) {
         try {
           subscription.cancel();
-        } catch (error) { }
+        } catch (error) {}
       }
 
       endPractice();
@@ -107,14 +123,25 @@ export default function GamePage() {
   async function mint() {
     setVideoQueue([streamIds.start]);
     let tokenId = await mintGame(account, playerName, settings_id);
-    navigate(`/survivor/play?id=${tokenId}${mode === 'practice' ? '&mode=practice' : ''}`, { replace: true });
+    navigate(
+      `/survivor/play?id=${tokenId}${
+        mode === "practice" ? "&mode=practice" : ""
+      }`,
+      { replace: true }
+    );
     setShowOverlay(false);
   }
 
   const isLoading = !gameId || !adventurer;
+
   return (
     <Box sx={styles.container}>
-      {!showOverlay && <Box className="imageContainer" sx={{ backgroundImage: `url('/images/game.png')`, zIndex: 0 }} />}
+      {!showOverlay && (
+        <Box
+          className="imageContainer"
+          sx={{ backgroundImage: `url('/images/game.png')`, zIndex: 0 }}
+        />
+      )}
 
       <VideoPlayer />
 
@@ -129,16 +156,21 @@ export default function GamePage() {
                   <DeathOverlay />
                 </AnimatedOverlay>
               )}
-              {adventurer && adventurer.health > 0 && adventurer.beast_health > 0 && beast && (
-                <AnimatedOverlay overlayKey="combat">
-                  <CombatOverlay />
-                </AnimatedOverlay>
-              )}
-              {adventurer && adventurer.health > 0 && adventurer.beast_health === 0 && (
-                <AnimatedOverlay overlayKey="explore">
-                  <ExploreOverlay />
-                </AnimatedOverlay>
-              )}
+              {adventurer &&
+                adventurer.health > 0 &&
+                adventurer.beast_health > 0 &&
+                beast && (
+                  <AnimatedOverlay overlayKey="combat">
+                    <CombatOverlay />
+                  </AnimatedOverlay>
+                )}
+              {adventurer &&
+                adventurer.health > 0 &&
+                adventurer.beast_health === 0 && (
+                  <AnimatedOverlay overlayKey="explore">
+                    <ExploreOverlay />
+                  </AnimatedOverlay>
+                )}
             </AnimatePresence>
           )}
         </Box>
@@ -149,28 +181,28 @@ export default function GamePage() {
 
 const styles = {
   container: {
-    position: 'fixed',
+    position: "fixed",
     top: 0,
     left: 0,
-    width: '100dvw',
-    height: '100dvh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxSizing: 'border-box',
+    width: "100dvw",
+    height: "100dvh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    boxSizing: "border-box",
     margin: 0,
     gap: 2,
-    overflow: 'hidden',
-    backgroundColor: '#000000',
+    overflow: "hidden",
+    backgroundColor: "#000000",
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
-    width: '100dvw',
-    height: '100dvh',
+    width: "100dvw",
+    height: "100dvh",
     zIndex: 99,
-    boxSizing: 'border-box',
+    boxSizing: "border-box",
   },
 };

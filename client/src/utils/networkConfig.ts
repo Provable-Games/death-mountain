@@ -30,48 +30,47 @@ export enum ChainId {
 export const NETWORKS = {
   SN_MAIN: {
     chainId: ChainId.SN_MAIN,
-    name: 'Mainnet',
-    status: 'offline',
-    namespace: 'ls_0_0_1',
-    slot: 'pg-mainnet',
-    rpcUrl: 'https://api.cartridge.gg/x/starknet/mainnet',
-    torii: 'https://api.cartridge.gg/x/pg-mainnet/torii',
+    name: "Mainnet",
+    status: "offline",
+    namespace: "ls_0_0_1",
+    slot: "pg-mainnet",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
+    torii: "https://api.cartridge.gg/x/pg-mainnet/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_sepolia,
-    vrf: true
+    vrf: true,
   },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
-    name: 'Sepolia',
-    status: 'offline',
-    namespace: 'ls_0_0_1',
-    slot: 'pg-sepolia',
-    rpcUrl: 'https://api.cartridge.gg/x/starknet/sepolia',
-    torii: 'https://api.cartridge.gg/x/pg-sepolia/torii',
+    name: "Sepolia",
+    status: "offline",
+    namespace: "ls_0_0_1",
+    slot: "pg-sepolia",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
+    torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_sepolia,
-    vrf: true
+    vrf: true,
   },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
-    name: 'Katana',
-    status: 'online',
-    namespace: 'ls_0_0_3',
-    slot: 'pg-slot',
-    rpcUrl: 'https://api.cartridge.gg/x/pg-slot/katana',
-    torii: 'https://api.cartridge.gg/x/pg-slot/torii',
+    name: "Katana",
+    status: "online",
+    namespace: "ls_0_0_3",
+    slot: "pg-slot",
+    rpcUrl: "https://api.cartridge.gg/x/pg-slot/katana",
+    torii: "https://api.cartridge.gg/x/pg-slot-2/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_slot,
-    vrf: false
-  }
-}
-
+    vrf: false,
+  },
+};
 
 export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
@@ -81,8 +80,16 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const manifest = network.manifest;
 
   // Get contract addresses from manifest
-  const game_systems = getContractByName(manifest, namespace, "game_systems")?.address;
-  const game_token_systems = getContractByName(manifest, namespace, "game_token_systems")?.address;
+  const game_systems = getContractByName(
+    manifest,
+    namespace,
+    "game_systems"
+  )?.address;
+  const game_token_systems = getContractByName(
+    manifest,
+    namespace,
+    "game_token_systems"
+  )?.address;
   const vrf_provider = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
 
   // Base policies that are common across networks
@@ -126,7 +133,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     {
       target: vrf_provider,
       method: "request_random",
-    }
+    },
   ];
 
   return {
@@ -135,7 +142,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     status: network.status,
     namespace: network.namespace,
     slot: network.slot,
-    preset: 'loot-survivor',
+    preset: "loot-survivor",
     vrf: network.vrf,
     policies,
     chains: [{ rpcUrl: network.rpcUrl }],
@@ -146,11 +153,11 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
 export function translateName(network: string): ChainId | null {
   network = network.toLowerCase();
 
-  if (network === 'mainnet') {
+  if (network === "mainnet") {
     return ChainId.SN_MAIN;
-  } else if (network === 'sepolia') {
+  } else if (network === "sepolia") {
     return ChainId.SN_SEPOLIA;
-  } else if (network === 'katana') {
+  } else if (network === "katana") {
     return ChainId.WP_PG_SLOT;
   }
 

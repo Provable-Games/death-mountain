@@ -8,9 +8,13 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { setupWorld } from "./generated/contracts.gen.ts";
 import type { SchemaType } from "./generated/models.gen.ts";
 
-import { DynamicConnectorProvider, useDynamicConnector } from "@/contexts/starknet.tsx";
+import {
+  DynamicConnectorProvider,
+  useDynamicConnector,
+} from "@/contexts/starknet.tsx";
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
+import { MetagameProvider } from "@/contexts/metagame.tsx";
 import "./index.css";
 
 function DojoApp() {
@@ -30,7 +34,7 @@ function DojoApp() {
             version: "1.0",
             chainId: dojoConfig.chainId,
             revision: "1",
-          }
+          },
         });
         setSdk(initializedSdk);
       } catch (error) {
@@ -44,8 +48,14 @@ function DojoApp() {
   }, [dojoConfig]);
 
   return (
-    <DojoSdkProvider sdk={sdk} dojoConfig={createDojoConfig(dojoConfig)} clientFn={setupWorld}>
-      <App />
+    <DojoSdkProvider
+      sdk={sdk}
+      dojoConfig={createDojoConfig(dojoConfig)}
+      clientFn={setupWorld}
+    >
+      <MetagameProvider>
+        <App />
+      </MetagameProvider>
     </DojoSdkProvider>
   );
 }
