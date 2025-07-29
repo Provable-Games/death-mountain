@@ -90,8 +90,8 @@ importers:
         specifier: ^2.4.1
         version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       metagame-sdk:
-        specifier: 0.1.7
-        version: 0.1.7(@dojoengine/sdk@1.6.0-beta.7(@tanstack/react-query@5.83.0(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@7.6.4)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76))(typescript@5.8.3)(zustand@4.5.7(@types/react@18.3.23)(immer@10.1.1)(react@18.3.1))
+        specifier: 0.1.9
+        version: 0.1.9(@dojoengine/sdk@1.6.0-beta.7(@tanstack/react-query@5.83.0(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@7.6.4)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76))(typescript@5.8.3)(zustand@4.5.7(@types/react@18.3.23)(immer@10.1.1)(react@18.3.1))
       notistack:
         specifier: ^3.0.2
         version: 3.0.2(csstype@3.1.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3525,8 +3525,8 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
-  metagame-sdk@0.1.7:
-    resolution: {integrity: sha512-5TP90DCO/tF6bL+gnti9TdR5CZ4dKq00GoICOTUvsQkXHGMP1BQ0TOPCAIxWQ+RoQ6nEGR4aPCLxR1rW4P0Hvg==}
+  metagame-sdk@0.1.9:
+    resolution: {integrity: sha512-m1fwa6d36nOETWQX5/Rolu71YBzpBbSCnK2kCaaavrMtCKiZuXQrnqd0phGXhFCgpjmU82CBzhKmcIbmhiJyXw==}
     peerDependencies:
       '@dojoengine/sdk': ^1.5.5
       typescript: ^5.0.0
@@ -9470,7 +9470,7 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  metagame-sdk@0.1.7(@dojoengine/sdk@1.6.0-beta.7(@tanstack/react-query@5.83.0(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@7.6.4)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76))(typescript@5.8.3)(zustand@4.5.7(@types/react@18.3.23)(immer@10.1.1)(react@18.3.1)):
+  metagame-sdk@0.1.9(@dojoengine/sdk@1.6.0-beta.7(@tanstack/react-query@5.83.0(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@7.6.4)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76))(typescript@5.8.3)(zustand@4.5.7(@types/react@18.3.23)(immer@10.1.1)(react@18.3.1)):
     dependencies:
       '@dojoengine/sdk': 1.6.0-beta.7(@tanstack/react-query@5.83.0(react@18.3.1))(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(bufferutil@4.0.9)(get-starknet-core@4.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(starknet@7.6.4)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       typescript: 5.8.3

@@ -230,7 +230,7 @@ export const useGameTokens = () => {
             event.adventurer_id ===
             addAddressPadding(game.token_id.toString(16))
         );
-        console.log("adventurerData", adventurerData);
+
         let adventurer = adventurerData?.details?.adventurer || {};
 
         let tokenId = parseInt(game.token_id, 16);
@@ -241,7 +241,7 @@ export const useGameTokens = () => {
           ...adventurer,
           adventurer_id: tokenId,
           player_name: game.player_name,
-          settings_id: 0, // Settings ID is not available in game data
+          settings_id: game.settings_id,
           minted_by: game.minted_by,
           expires_at,
           available_at,
