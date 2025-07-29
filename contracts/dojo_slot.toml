@@ -1,10 +1,10 @@
 [world]
 name = "Provable Games"
 description = "DNC"
-seed = "pg-slot"
+seed = "pg-slot-2"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/game-components/katana"
+rpc_url = "https://api.cartridge.gg/x/pg-slot/katana"
 # Default account for katana with seed = 0
 account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
@@ -25,5 +25,5 @@ default = "ls_0_0_3"
 [init_call_args]
 "ls_0_0_3-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x005b47d5a4a3181f5f5ae64bae500fe183838d9ea5f1b839cdf610c0d54c16ef" // denshokan_address
+    "0x0111c1e7aa9fe2d4a057ec1555aa1711d53ccf27519dc2bfc2f4a69157d9be78" # denshokan_address
 ]
