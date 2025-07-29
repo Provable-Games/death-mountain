@@ -11,6 +11,7 @@ pub trait ISettingsSystems<T> {
         ref self: T,
         vrf_address: ContractAddress,
         name: felt252,
+        description: ByteArray,
         adventurer: Adventurer,
         bag: Bag,
         game_seed: u64,
@@ -27,6 +28,7 @@ pub trait ISettingsSystems<T> {
 #[dojo::contract]
 mod settings_systems {
     use death_mountain::constants::world::{DEFAULT_NS, VERSION};
+    use death_mountain::libs::settings::generate_settings_array;
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
@@ -83,13 +85,9 @@ mod settings_systems {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let settings: GameSettings = world.read_model(settings_id);
             let settings_details: GameSettingsMetadata = world.read_model(settings_id);
+            let settings: Span<GameSetting> = generate_settings_array(settings);
             GameSettingDetails {
-                name: format!("{}", settings_details.name),
-                description: "Add Description Here",
-                settings: array![
-                    GameSetting { name: "Starting Health", value: format!("{}", settings.adventurer.health) },
-                ]
-                    .span(),
+                name: format!("{}", settings_details.name), description: settings_details.description, settings,
             }
         }
     }
@@ -100,6 +98,7 @@ mod settings_systems {
             ref self: ContractState,
             vrf_address: ContractAddress,
             name: felt252,
+            description: ByteArray,
             adventurer: Adventurer,
             bag: Bag,
             game_seed: u64,
@@ -112,36 +111,31 @@ mod settings_systems {
             // increment settings counter
             let mut settings_count: SettingsCounter = world.read_model(VERSION);
             settings_count.count += 1;
-
-            world
-                .write_model(
-                    @GameSettings {
-                        settings_id: settings_count.count,
-                        vrf_address,
-                        adventurer,
-                        bag,
-                        game_seed,
-                        game_seed_until_xp,
-                        in_battle,
-                        stats_mode,
-                        base_damage_reduction,
-                    },
-                );
+            let game_settings = GameSettings {
+                settings_id: settings_count.count,
+                vrf_address,
+                adventurer,
+                bag,
+                game_seed,
+                game_seed_until_xp,
+                in_battle,
+                stats_mode,
+                base_damage_reduction,
+            };
+            world.write_model(@game_settings);
             world
                 .write_model(
                     @GameSettingsMetadata {
                         settings_id: settings_count.count,
                         name,
+                        description: description.clone(),
                         created_by: starknet::get_caller_address(),
                         created_at: starknet::get_block_timestamp(),
                     },
                 );
             world.write_model(@settings_count);
 
-            let settings: Span<GameSetting> = array![
-                GameSetting { name: "Starting Health", value: format!("{}", adventurer.health) },
-            ]
-                .span();
+            let settings: Span<GameSetting> = generate_settings_array(game_settings);
 
             let (game_systems_address, _) = world.dns(@"game_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_systems_address };
@@ -149,11 +143,7 @@ mod settings_systems {
             self
                 .settings
                 .create_settings(
-                    settings_count.count,
-                    format!("{}", name),
-                    "New Setting Description",
-                    settings,
-                    minigame_token_address,
+                    settings_count.count, format!("{}", name), description.clone(), settings, minigame_token_address,
                 );
 
             settings_count.count

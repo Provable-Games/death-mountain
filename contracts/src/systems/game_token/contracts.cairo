@@ -126,6 +126,7 @@ mod game_token_systems {
                 @GameSettingsMetadata {
                     settings_id: 0,
                     name: 'Default',
+                    description: "Default Game Settings",
                     created_by: starknet::get_caller_address(),
                     created_at: starknet::get_block_timestamp(),
                 },
@@ -186,7 +187,7 @@ mod game_token_systems {
                 let objective_score: ScoreObjective = world.read_model(objective_id);
                 objectives
                     .append(
-                        GameObjective { name: "Score Target", value: format!("Score Above {}", objective_score.score) },
+                        GameObjective { name: "Target Score", value: format!("Score Above {}", objective_score.score) },
                     );
                 objective_index += 1;
             };
@@ -278,7 +279,9 @@ mod game_token_systems {
             let objective_count = objective_count_model.count;
             self
                 .objectives
-                .create_objective(objective_count + 1, "Target Score", format!("{}", score), self.token_address());
+                .create_objective(
+                    objective_count + 1, "Target Score", format!("Score Above {}", score), self.token_address(),
+                );
             world.write_model(@ScoreObjectiveCount { key: VERSION, count: objective_count + 1 })
         }
 

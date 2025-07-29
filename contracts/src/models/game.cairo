@@ -43,6 +43,7 @@ pub struct GameSettingsMetadata {
     #[key]
     pub settings_id: u32,
     pub name: felt252,
+    pub description: ByteArray,
     pub created_by: ContractAddress,
     pub created_at: u64,
 }
