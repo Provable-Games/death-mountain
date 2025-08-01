@@ -11,5 +11,5 @@ historical = ["ls_0_0_3-GameEvent"]
 namespaces = ["ls_0_0_3"]
 pending = true
 contracts = [
-    "erc721:0x0590a7080125891a172bdac73323aa4a54cac5c5e6076b8777e6be68a6c52093",
+    "erc721:0x05fd8c777900c8a2ab4a63a014167437d80fe40eb935da33463ac5150c0fbdc8",
 ]

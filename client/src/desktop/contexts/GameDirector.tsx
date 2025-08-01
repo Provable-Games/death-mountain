@@ -115,6 +115,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameAddresses: [
       addAddressPadding(GAME_TOKEN_ADDRESS), // adding pad address to sdk
     ],
+    tokenIds: [gameId ? gameId.toString() : "0"],
   });
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);

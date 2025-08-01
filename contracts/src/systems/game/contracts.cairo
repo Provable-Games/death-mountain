@@ -1617,10 +1617,13 @@ mod tests {
     use death_mountain::constants::loot::ItemId;
     use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
-    use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
-    use death_mountain::models::adventurer::stats::{IStat, Stats};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, IAdventurer, ImplAdventurer};
+    use death_mountain::models::adventurer::bag::{Bag, ImplBag};
+    use death_mountain::models::adventurer::equipment::{Equipment};
+    use death_mountain::models::adventurer::item::{Item};
+    use death_mountain::models::adventurer::stats::{IStat, Stats, ImplStats};
     use death_mountain::models::game::{
-        AdventurerEntropy, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
+        AdventurerEntropy, AdventurerPacked, BagPacked, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
         m_GameSettingsMetadata, m_SettingsCounter,
     };
     use death_mountain::models::game_data::m_DroppedItem;
@@ -1634,13 +1637,15 @@ mod tests {
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
-    use dojo::model::ModelStorage;
+    use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_token::interface::{IMinigameTokenMixinDispatcher};
     use starknet::{ContractAddress, contract_address_const};
+    use openzeppelin_token::erc721::interface::{IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
 
     fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -1691,7 +1696,7 @@ mod tests {
             .span()
     }
 
-    fn deploy_dungeon() -> (WorldStorage, IGameTokenSystemsDispatcher, GameLibs) {
+    fn deploy_dungeon() -> (WorldStorage, IGameTokenSystemsDispatcher, GameLibs, IMinigameTokenMixinDispatcher) {
         let denshokan_contracts = death_mountain::utils::setup_denshokan::setup();
 
         let ndef = namespace_def();
@@ -1708,7 +1713,7 @@ mod tests {
         let game_systems_dispatcher = IGameTokenSystemsDispatcher { contract_address: contract_address };
 
         let game_libs = ImplGameLibs::new(world);
-        (world, game_systems_dispatcher, game_libs)
+        (world, game_systems_dispatcher, game_libs, denshokan_contracts.denshokan)
     }
 
     fn new_game(world: WorldStorage, game: IGameTokenSystemsDispatcher) -> u64 {
@@ -1736,7 +1741,7 @@ mod tests {
 
     #[test]
     fn test_new_game() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // load player assets
@@ -1750,7 +1755,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn no_explore_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to explore before defeating start beast
@@ -1759,7 +1764,7 @@ mod tests {
 
     #[test]
     fn defeat_starter_beast() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack beast
@@ -1776,7 +1781,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Cant flee starter beast', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // immediately attempt to flee starter beast
@@ -1787,7 +1792,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn cant_attack_outside_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, true);
@@ -1798,7 +1803,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Not in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn cant_flee_outside_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);
@@ -1807,7 +1812,7 @@ mod tests {
 
     #[test]
     fn game_flow() { // adventurer_id 1 with simple entropy
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attack starter beast
@@ -1846,7 +1851,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Stat upgrade available', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn explore_not_allowed_with_avail_stat_upgrade() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -1867,7 +1872,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_items_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let mut shopping_cart = ArrayTrait::<ItemPurchase>::new();
@@ -1878,7 +1883,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_items_with_stat_upgrades() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -1900,7 +1905,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_equipped() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -1929,7 +1934,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item already owned', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_duplicate_item_bagged() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -1959,7 +1964,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market item does not exist', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_item_not_on_market() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -1980,7 +1985,7 @@ mod tests {
 
     #[test]
     fn buy_and_bag_item() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2007,7 +2012,7 @@ mod tests {
 
     #[test]
     fn buy_items() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
@@ -2101,7 +2106,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Item not in bag', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn equip_not_in_bag() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of items to equip that contains an item not in bag
@@ -2117,7 +2122,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Too many items', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn equip_too_many_items() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // initialize an array of 9 items (too many to equip)
@@ -2140,7 +2145,7 @@ mod tests {
 
     #[test]
     fn equip() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2256,7 +2261,7 @@ mod tests {
 
     #[test]
     fn buy_potions() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2297,7 +2302,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Health already full', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn buy_potions_exceed_max_health() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2330,7 +2335,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market is closed', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_with_stat_upgrade() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2345,7 +2350,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn cant_buy_potion_during_battle() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // attempt to immediately buy health before clearing starter beast
@@ -2358,7 +2363,7 @@ mod tests {
 
     #[test]
     fn get_potion_price_underflow() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         let adventurer = game_libs.adventurer.get_adventurer(adventurer_id);
@@ -2390,7 +2395,7 @@ mod tests {
 
     #[test]
     fn drop_item() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2445,7 +2450,7 @@ mod tests {
 
     #[test]
     fn upgrade_stats() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2475,7 +2480,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('insufficient stat upgrades', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn upgrade_stats_not_enough_points() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2491,7 +2496,7 @@ mod tests {
 
     #[test]
     fn upgrade_adventurer() {
-        let (world, game, game_libs) = deploy_dungeon();
+        let (world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast to get access to market
@@ -2542,7 +2547,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Action not allowed in battle', 'ENTRYPOINT_FAILED', 'ENTRYPOINT_FAILED'))]
     fn no_dropping_starter_weapon_during_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // try to drop starter weapon during starter beast battle
@@ -2552,7 +2557,7 @@ mod tests {
 
     #[test]
     fn drop_starter_item_after_starter_beast() {
-        let (world, game, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // defeat starter beast
@@ -2565,7 +2570,7 @@ mod tests {
 
     #[test]
     fn item_level_up() {
-        let (mut world, game, game_libs) = deploy_dungeon();
+        let (mut world, game, game_libs, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         game.attack(adventurer_id, false);
@@ -2574,5 +2579,64 @@ mod tests {
 
         assert(adventurer.equipment.weapon.xp == 8, 'xp not set correctly');
         assert(adventurer.stat_upgrades_available == 1, 'wrong stats available');
+    }
+
+    #[test]
+    fn denshokan_token_uri() {
+        let (mut world, game, game_libs, denshokan) = deploy_dungeon();
+        let adventurer_id = new_game(world, game);
+        let denshokan_erc721_dispatcher = IERC721MetadataDispatcher { contract_address: denshokan.contract_address };
+        let adventurer = Adventurer {
+                health: 72,
+                xp: 100,
+                stats: Stats {
+                    strength: 3,
+                    dexterity: 2,
+                    vitality: 0,
+                    intelligence: 1,
+                    wisdom: 5,
+                    charisma: 3,
+                    luck: 2,
+                },
+                gold: 40,
+                equipment: Equipment {
+                    weapon: Item { id: 13, xp: 0 },
+                    chest: Item { id: 0, xp: 0 },
+                    head: Item { id: 0, xp: 0 },
+                    waist: Item { id: 61, xp: 0 },
+                    foot: Item { id: 0, xp: 0 },
+                    hand: Item { id: 0, xp: 0 },
+                    neck: Item { id: 0, xp: 0 },
+                    ring: Item { id: 0, xp: 0 },
+                },
+                beast_health: 0,
+                stat_upgrades_available: 0,
+                item_specials_seed: 0,
+                action_count: 0,
+            };
+        let packed_adventurer = game_libs.adventurer.pack_adventurer(adventurer);
+        world.write_model_test(@AdventurerPacked { adventurer_id, packed: packed_adventurer });
+        let bag = Bag {
+            item_1: Item { id: 91, xp: 0 },
+            item_2: Item { id: 31, xp: 0 },
+            item_3: Item { id: 76, xp: 0 },
+            item_4: Item { id: 0, xp: 0 },
+            item_5: Item { id: 0, xp: 0 },
+            item_6: Item { id: 0, xp: 0 },
+            item_7: Item { id: 0, xp: 0 },
+            item_8: Item { id: 0, xp: 0 },
+            item_9: Item { id: 0, xp: 0 },
+            item_10: Item { id: 0, xp: 0 },
+            item_11: Item { id: 0, xp: 0 },
+            item_12: Item { id: 0, xp: 0 },
+            item_13: Item { id: 0, xp: 0 },
+            item_14: Item { id: 0, xp: 0 },
+            item_15: Item { id: 0, xp: 0 },
+            mutated: false
+        };
+        let packed_bag = game_libs.adventurer.pack_bag(bag);
+        world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
+        let token_uri = denshokan_erc721_dispatcher.token_uri(1);
+        println!("Token URI: {}", token_uri);
     }
 }

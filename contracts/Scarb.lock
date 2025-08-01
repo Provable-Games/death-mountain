@@ -88,7 +88,7 @@ source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0-alpha.2#184a4e836826
 [[package]]
 name = "game_components_metagame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.3#99e1aefbf56f742b586667f3a90a3799961a6bde"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.5#9bd2d1caea60eabc39d54f8ebfa0008a803246ae"
 dependencies = [
  "game_components_minigame",
  "game_components_token",
@@ -99,7 +99,7 @@ dependencies = [
 [[package]]
 name = "game_components_minigame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.3#99e1aefbf56f742b586667f3a90a3799961a6bde"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.5#9bd2d1caea60eabc39d54f8ebfa0008a803246ae"
 dependencies = [
  "game_components_metagame",
  "game_components_token",
@@ -111,7 +111,7 @@ dependencies = [
 [[package]]
 name = "game_components_test_starknet"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.3#99e1aefbf56f742b586667f3a90a3799961a6bde"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.5#9bd2d1caea60eabc39d54f8ebfa0008a803246ae"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -124,7 +124,7 @@ dependencies = [
 [[package]]
 name = "game_components_token"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.3#99e1aefbf56f742b586667f3a90a3799961a6bde"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.5#9bd2d1caea60eabc39d54f8ebfa0008a803246ae"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -137,7 +137,7 @@ dependencies = [
 [[package]]
 name = "game_components_utils"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.3#99e1aefbf56f742b586667f3a90a3799961a6bde"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.5#9bd2d1caea60eabc39d54f8ebfa0008a803246ae"
 dependencies = [
  "alexandria_encoding",
  "game_components_metagame",

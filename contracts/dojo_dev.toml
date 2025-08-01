@@ -1,20 +1,29 @@
 [world]
-name = "Death Mountain"
-description = "Onchain Dungeon Creator"
-seed = "death_mountain"
+name = "Provable Games"
+description = "DNC"
+seed = "pg-slot"
 
 [env]
 rpc_url = "http://localhost:5050/"
+# Default account for katana with seed = 0
 account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
+world_address = "0x00fd0a00b11cbba2deeb5a978b7f9f5629e3cd00bbe1ea1963b442239d4e32d5"
 
 [namespace]
-default = "death_mountain"
+default = "ls_0_0_3"
 
 [writers]
-"death_mountain" = ["death_mountain-game_systems", "death_mountain-game_token_systems"]
+"ls_0_0_3" = [
+    "ls_0_0_3-game_systems",
+    "ls_0_0_3-game_token_systems",
+    "ls_0_0_3-settings_systems",
+    "ls_0_0_3-beast_systems",
+    "ls_0_0_3-adventurer_systems"
+]
 
 [init_call_args]
-"death_mountain-game_token_systems" = [
-    "0x000B39b235b44c53a2E9F0c5D35939D9C8E8dAFDd0a2ba2E695b501Fc1e9fd2f",
+"ls_0_0_3-game_token_systems" = [
+    "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
+    "0x06d5bea08fb001c609e0285ae21cbc9c0e3e76def5950401b9b33c97bf03a4c2" # denshokan_address
 ]

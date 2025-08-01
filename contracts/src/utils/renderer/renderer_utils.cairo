@@ -10,6 +10,8 @@ use death_mountain::models::loot::ImplLoot;
 use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 use graffiti::json::JsonImpl;
 
+use game_components_minigame::structs::GameDetail;
+
 // @notice Generates the LS logo svg
 // @return The generated LS logo
 fn logo() -> ByteArray {
@@ -404,6 +406,283 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
     format!("data:application/json;base64,{}", bytes_base64_encode(metadata))
 }
 
+// @notice Generates adventurer SVG for the denshokan token uri
+// @param adventurer_id The adventurer's ID
+// @param adventurer The adventurer
+// @param adventurer_name The adventurer's name
+// @param bag The adventurer's bag
+// @return The generated adventurer SVG
+pub fn generate_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: ByteArray, bag: Bag) -> ByteArray {
+    let rect = create_rect();
+
+    let logo_element = generate_logo();
+
+    let _name = format!("{}", adventurer_name);
+
+    let _adventurer_id = format!("{}", adventurer_id);
+    let _xp = format!("{}", adventurer.xp);
+    let _level = format!("{}", adventurer.get_level());
+
+    let _health = format!("{}", adventurer.health);
+
+    let _max_health = format!("{}", adventurer.stats.get_max_health());
+
+    let _gold = format!("{}", adventurer.gold);
+    let _str = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.strength)
+    };
+    let _dex = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.dexterity)
+    };
+    let _int = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.intelligence)
+    };
+    let _vit = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.vitality)
+    };
+    let _wis = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.wisdom)
+    };
+    let _cha = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.charisma)
+    };
+    let _luck = format!("{}", adventurer.stats.luck);
+
+    let item_specials_seed = adventurer.item_specials_seed;
+    // Equipped items
+    let _equiped_weapon = generate_item(adventurer.equipment.weapon, false, item_specials_seed);
+    let _equiped_chest = generate_item(adventurer.equipment.chest, false, item_specials_seed);
+    let _equiped_head = generate_item(adventurer.equipment.head, false, item_specials_seed);
+    let _equiped_waist = generate_item(adventurer.equipment.waist, false, item_specials_seed);
+    let _equiped_foot = generate_item(adventurer.equipment.foot, false, item_specials_seed);
+    let _equiped_hand = generate_item(adventurer.equipment.hand, false, item_specials_seed);
+    let _equiped_neck = generate_item(adventurer.equipment.neck, false, item_specials_seed);
+    let _equiped_ring = generate_item(adventurer.equipment.ring, false, item_specials_seed);
+
+    // Bag items
+    let _bag_item_1 = generate_item(bag.item_1, true, item_specials_seed);
+    let _bag_item_2 = generate_item(bag.item_2, true, item_specials_seed);
+    let _bag_item_3 = generate_item(bag.item_3, true, item_specials_seed);
+    let _bag_item_4 = generate_item(bag.item_4, true, item_specials_seed);
+    let _bag_item_5 = generate_item(bag.item_5, true, item_specials_seed);
+    let _bag_item_6 = generate_item(bag.item_6, true, item_specials_seed);
+    let _bag_item_7 = generate_item(bag.item_7, true, item_specials_seed);
+    let _bag_item_8 = generate_item(bag.item_8, true, item_specials_seed);
+    let _bag_item_9 = generate_item(bag.item_9, true, item_specials_seed);
+    let _bag_item_10 = generate_item(bag.item_10, true, item_specials_seed);
+    let _bag_item_11 = generate_item(bag.item_11, true, item_specials_seed);
+    let _bag_item_12 = generate_item(bag.item_12, true, item_specials_seed);
+    let _bag_item_13 = generate_item(bag.item_13, true, item_specials_seed);
+    let _bag_item_14 = generate_item(bag.item_14, true, item_specials_seed);
+    let _bag_item_15 = generate_item(bag.item_15, true, item_specials_seed);
+
+    // Combine all elements
+    let mut elements = array![
+        rect,
+        logo_element,
+        create_text(_name.clone(), "30", "117", "20", "middle", "left"),
+        create_text("#" + _adventurer_id.clone(), "123", "61", "24", "middle", "left"),
+        create_text("XP: " + _xp.clone(), "30", "150", "20", "middle", "left"),
+        create_text("LVL: " + _level.clone(), "300", "150", "20", "middle", "end"),
+        create_text(_health.clone() + " / " + _max_health.clone() + " HP", "570", "58", "20", "right", "end"),
+        create_text(_gold.clone() + " GOLD", "570", "93", "20", "right", "end"),
+        create_text(_str.clone() + " STR", "570", "128", "20", "right", "end"),
+        create_text(_dex.clone() + " DEX", "570", "163", "20", "right", "end"),
+        create_text(_int.clone() + " INT", "570", "198", "20", "right", "end"),
+        create_text(_vit.clone() + " VIT", "570", "233", "20", "right", "end"),
+        create_text(_wis.clone() + " WIS", "570", "268", "20", "right", "end"),
+        create_text(_cha.clone() + " CHA", "570", "303", "20", "right", "end"),
+        create_text(_luck.clone() + " LUCK", "570", "338", "20", "right", "end"),
+        create_text("Equipped", "30", "200", "32", "middle", "right"),
+        create_text("Bag", "30", "580", "32", "middle", "right"),
+        create_item_element("25", "240", weapon()),
+        create_text(_equiped_weapon.clone(), "60", "253", "16", "middle", "start"),
+        create_item_element("24", "280", chest()),
+        create_text(_equiped_chest.clone(), "60", "292", "16", "middle", "left"),
+        create_item_element("25", "320", head()),
+        create_text(_equiped_head.clone(), "60", "331", "16", "middle", "left"),
+        create_item_element("25", "360", waist()),
+        create_text(_equiped_waist.clone(), "60", "370", "16", "middle", "left"),
+        create_item_element("25", "400", foot()),
+        create_text(_equiped_foot.clone(), "60", "409", "16", "middle", "left"),
+        create_item_element("27", "435", hand()),
+        create_text(_equiped_hand.clone(), "60", "448", "16", "middle", "left"),
+        create_item_element("25", "475", neck()),
+        create_text(_equiped_neck.clone(), "60", "487", "16", "middle", "left"),
+        create_item_element("25", "515", ring()),
+        create_text(_equiped_ring.clone(), "60", "526", "16", "middle", "left"),
+        create_text("1. " + _bag_item_1.clone(), "30", "624", "16", "middle", "left"),
+        create_text("2. " + _bag_item_2.clone(), "30", "658", "16", "middle", "left"),
+        create_text("3. " + _bag_item_3.clone(), "30", "692", "16", "middle", "left"),
+        create_text("4. " + _bag_item_4.clone(), "30", "726", "16", "middle", "left"),
+        create_text("5. " + _bag_item_5.clone(), "30", "760", "16", "middle", "left"),
+        create_text("6. " + _bag_item_6.clone(), "30", "794", "16", "middle", "left"),
+        create_text("7. " + _bag_item_7.clone(), "30", "828", "16", "middle", "left"),
+        create_text("8. " + _bag_item_8.clone(), "30", "862", "16", "middle", "left"),
+        create_text("9. " + _bag_item_9.clone(), "321", "624", "16", "middle", "left"),
+        create_text("10. " + _bag_item_10.clone(), "311", "658", "16", "middle", "left"),
+        create_text("11. " + _bag_item_11.clone(), "311", "692", "16", "middle", "left"),
+        create_text("12. " + _bag_item_12.clone(), "311", "726", "16", "middle", "left"),
+        create_text("13. " + _bag_item_13.clone(), "311", "760", "16", "middle", "left"),
+        create_text("14. " + _bag_item_14.clone(), "311", "794", "16", "middle", "left"),
+        create_text("15. " + _bag_item_15.clone(), "311", "828", "16", "middle", "left"),
+    ]
+        .span();
+
+    let image = create_svg(combine_elements(ref elements));
+
+    format!("data:image/svg+xml;base64,{}", bytes_base64_encode(image))
+}
+
+// @notice Generates adventurer details for the adventurer token uri
+// @param adventurer_id The adventurer's ID
+// @param adventurer The adventurer
+// @param adventurer_name The adventurer's name
+// @param bag The adventurer's bag
+// @return The generated adventurer details
+pub fn generate_details(adventurer: Adventurer) -> Span<GameDetail> {
+    let xp = format!("{}", adventurer.xp);
+    let level = format!("{}", adventurer.get_level());
+
+    let health = format!("{}", adventurer.health);
+
+    let gold = format!("{}", adventurer.gold);
+    let str = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.strength)
+    };
+    let dex = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.dexterity)
+    };
+    let int = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.intelligence)
+    };
+    let vit = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.vitality)
+    };
+    let wis = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.wisdom)
+    };
+    let cha = if adventurer.get_level() == 1 {
+        "?"
+    } else {
+        format!("{}", adventurer.stats.charisma)
+    };
+    let luck = format!("{}", adventurer.stats.luck);
+
+    let item_specials_seed = adventurer.item_specials_seed;
+    // Equipped items
+    let equipped_weapon = generate_item(adventurer.equipment.weapon, false, item_specials_seed);
+    let equipped_chest = generate_item(adventurer.equipment.chest, false, item_specials_seed);
+    let equipped_head = generate_item(adventurer.equipment.head, false, item_specials_seed);
+    let equipped_waist = generate_item(adventurer.equipment.waist, false, item_specials_seed);
+    let equipped_foot = generate_item(adventurer.equipment.foot, false, item_specials_seed);
+    let equipped_hand = generate_item(adventurer.equipment.hand, false, item_specials_seed);
+    let equipped_neck = generate_item(adventurer.equipment.neck, false, item_specials_seed);
+    let equipped_ring = generate_item(adventurer.equipment.ring, false, item_specials_seed);
+
+    array![
+        GameDetail {
+            name: "XP",
+            value: xp,
+        },
+        GameDetail {
+            name: "Level",
+            value: level,
+        },
+        GameDetail {
+            name: "Health",
+            value: health,
+        },
+        GameDetail {
+            name: "Gold",
+            value: gold,
+        },
+        GameDetail {
+            name: "Strength",
+            value: str,
+        },
+        GameDetail {
+            name: "Dexterity",
+            value: dex,
+        },
+        GameDetail {
+            name: "Intelligence",
+            value: int,
+        },
+        GameDetail {
+            name: "Vitality",
+            value: vit,
+        },
+        GameDetail {
+            name: "Wisdom",
+            value: wis,
+        },
+        GameDetail {
+            name: "Charisma",
+            value: cha,
+        },
+        GameDetail {
+            name: "Luck",
+            value: luck,
+        },
+        GameDetail {
+            name: "Weapon",
+            value: equipped_weapon,
+        },
+        GameDetail {
+            name: "Chest Armor",
+            value: equipped_chest,
+        },
+        GameDetail {
+            name: "Head Armor",
+            value: equipped_head,
+        },
+        GameDetail {
+            name: "Waist Armor",
+            value: equipped_waist,
+        },
+        GameDetail {
+            name: "Foot Armor",
+            value: equipped_foot,
+        },
+        GameDetail {
+            name: "Hand Armor",
+            value: equipped_hand,
+        },
+        GameDetail {
+            name: "Necklace",
+            value: equipped_neck,
+        },
+        GameDetail {
+            name: "Ring",
+            value: equipped_ring,
+        },
+    ]
+        .span()
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -414,6 +693,7 @@ mod tests {
     use death_mountain::models::adventurer::item::{ImplItem, Item};
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::utils::renderer::renderer_utils::create_metadata;
+    use death_mountain::utils::renderer::renderer_utils::generate_svg;
 
 
     #[test]
@@ -473,6 +753,73 @@ mod tests {
         let historical_3 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
 
         let plain = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        println!("Current 1: {}", current_1);
+        println!("Current 2: {}", current_2);
+        println!("Current 3: {}", current_3);
+        println!("Historical 1: {}", historical_1);
+        println!("Historical 2: {}", historical_2);
+        println!("Historical 3: {}", historical_3);
+        println!("Plain: {}", plain);
+    }
+
+    #[test]
+    fn svg() {
+        let adventurer = Adventurer {
+            health: 1023,
+            xp: 10000,
+            stats: Stats {
+                strength: 10, dexterity: 50, vitality: 50, intelligence: 50, wisdom: 50, charisma: 50, luck: 100,
+            },
+            gold: 1023,
+            equipment: Equipment {
+                weapon: Item { id: 42, xp: 400 },
+                chest: Item { id: 49, xp: 400 },
+                head: Item { id: 53, xp: 400 },
+                waist: Item { id: 59, xp: 400 },
+                foot: Item { id: 64, xp: 400 },
+                hand: Item { id: 69, xp: 400 },
+                neck: Item { id: 1, xp: 400 },
+                ring: Item { id: 7, xp: 400 },
+            },
+            beast_health: BeastSettings::STARTER_BEAST_HEALTH.into(),
+            stat_upgrades_available: 0,
+            item_specials_seed: 0,
+            action_count: 0,
+        };
+
+        let bag = Bag {
+            item_1: Item { id: 8, xp: 400 },
+            item_2: Item { id: 40, xp: 400 },
+            item_3: Item { id: 57, xp: 400 },
+            item_4: Item { id: 83, xp: 400 },
+            item_5: Item { id: 12, xp: 400 },
+            item_6: Item { id: 77, xp: 400 },
+            item_7: Item { id: 68, xp: 400 },
+            item_8: Item { id: 100, xp: 400 },
+            item_9: Item { id: 94, xp: 400 },
+            item_10: Item { id: 54, xp: 400 },
+            item_11: Item { id: 87, xp: 400 },
+            item_12: Item { id: 81, xp: 400 },
+            item_13: Item { id: 30, xp: 400 },
+            item_14: Item { id: 11, xp: 400 },
+            item_15: Item { id: 29, xp: 400 },
+            mutated: false,
+        };
+
+        let current_1 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let current_2 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let current_3 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let historical_1 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let historical_2 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let historical_3 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+
+        let plain = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
 
         println!("Current 1: {}", current_1);
         println!("Current 2: {}", current_2);
