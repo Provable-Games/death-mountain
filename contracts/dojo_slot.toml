@@ -4,11 +4,11 @@ description = "DNC"
 seed = "pg-slot"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/pg-slot/katana"
+rpc_url = "https://api.cartridge.gg/x/pg-slot-2/katana"
 # Default account for katana with seed = 0
 account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
-world_address = "0x046db16dc94308e77fd862bb9fbd481951c7c521fc5297663a4740a85ef699a0"
+world_address = "0x3fcff8ebdff3a82dfb72246cecbffabbd22ecfe47d34ad7cb809f982ffda206"
 
 [namespace]
 default = "ls_0_0_3"
@@ -25,5 +25,5 @@ default = "ls_0_0_3"
 [init_call_args]
 "ls_0_0_3-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x012bb7287df14a1c37cb99f74cadac83f76071c366975071103fce5eccdec6c8" # denshokan_address
+    "0x01e7aa02faf2d63179c8efd47e6502b215a1f0448a7aa4b17ad2c70160a4b33a" # denshokan_address
 ]

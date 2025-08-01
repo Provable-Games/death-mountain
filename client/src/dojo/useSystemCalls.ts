@@ -96,15 +96,11 @@ export const useSystemCalls = () => {
         { retryInterval: 500 }
       );
 
-      let gameId = 0;
-      if (receipt.events[0].data.length > 0) {
-        gameId = parseInt(
-          receipt.events[0].data[receipt.events[0].data.length - 1],
-          16
-        );
-      } else {
-        gameId = parseInt(receipt.events[1].data[0], 16);
-      }
+      const tokenMetadataEvent = receipt.events.find(
+        (event: any) => event.data.length === 14
+      );
+
+      const gameId = parseInt(tokenMetadataEvent.data[1], 16);
 
       return gameId;
     } catch (error) {

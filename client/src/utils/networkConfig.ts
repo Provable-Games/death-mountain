@@ -62,7 +62,7 @@ export const NETWORKS = {
     status: "online",
     namespace: "ls_0_0_3",
     slot: "pg-slot",
-    rpcUrl: "https://api.cartridge.gg/x/pg-slot/katana",
+    rpcUrl: "https://api.cartridge.gg/x/pg-slot-2/katana",
     torii: "https://api.cartridge.gg/x/pg-slot-2/torii",
     tokens: {
       erc20: [],

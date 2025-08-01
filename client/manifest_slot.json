@@ -1,7 +1,7 @@
 {
   "world": {
     "class_hash": "0x685ed02eefa98fe7e208aa295042e9bbad8029b0d3d6f0ba2b32546efe0a1f9",
-    "address": "0x46db16dc94308e77fd862bb9fbd481951c7c521fc5297663a4740a85ef699a0",
+    "address": "0x3fcff8ebdff3a82dfb72246cecbffabbd22ecfe47d34ad7cb809f982ffda206",
     "seed": "pg-slot",
     "name": "Provable Games",
     "entrypoints": [
@@ -1328,8 +1328,8 @@
   },
   "contracts": [
     {
-      "address": "0x27792594c66d9f55d9e7a65705bb966469a2becbe36028d37be376faee7cb5d",
-      "class_hash": "0x26f6d9ecadd8a8227216b33b70701aff753b01e56c71350e9b51ad494d1d29",
+      "address": "0x3a038d7d5356206b49eb571301b01b714a96b8457e742ec9e1ba251fb14c61c",
+      "class_hash": "0x3cd7a83178ff9439e3901a32550ff866076974270c4377061e4c2747da7a11a",
       "abi": [
         {
           "type": "impl",
@@ -1599,20 +1599,16 @@
           ]
         },
         {
-          "type": "struct",
-          "name": "death_mountain::models::game::AdventurerEntropy",
-          "members": [
+          "type": "enum",
+          "name": "death_mountain::models::game_data::DataResult::<core::integer::u8>",
+          "variants": [
             {
-              "name": "adventurer_id",
-              "type": "core::integer::u64"
+              "name": "Ok",
+              "type": "core::integer::u8"
             },
             {
-              "name": "market_seed",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "beast_seed",
-              "type": "core::integer::u64"
+              "name": "Err",
+              "type": "core::felt252"
             }
           ]
         },
@@ -1722,8 +1718,12 @@
             },
             {
               "type": "function",
-              "name": "get_adventurer_entropy",
+              "name": "get_adventurer_level",
               "inputs": [
+                {
+                  "name": "dungeon",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
                 {
                   "name": "adventurer_id",
                   "type": "core::integer::u64"
@@ -1731,7 +1731,7 @@
               ],
               "outputs": [
                 {
-                  "type": "death_mountain::models::game::AdventurerEntropy"
+                  "type": "death_mountain::models::game_data::DataResult::<core::integer::u8>"
                 }
               ],
               "state_mutability": "view"
@@ -1779,7 +1779,6 @@
               ],
               "outputs": [
                 {
-                  "type": "core::byte_array::ByteArray"
                   "type": "core::byte_array::ByteArray"
                 }
               ],
@@ -2131,8 +2130,8 @@
       ]
     },
     {
-      "address": "0x9cd6d3f53aadded42e6f8188205ae5484c2b8a7fdb9c5e6ec5f77d0d74f7e5",
-      "class_hash": "0x4f83c3867d222441321b264e8406d7aa3b8ee40bb49b302d8cf4ac27b752a15",
+      "address": "0x31db65b212199fe18279b4b78d96ce44aa7eb98d505d8e3ab42cd4ef05492b3",
+      "class_hash": "0x7858ae933c1e86700460ea53f1b94ccf024040bb17e1093a17bb2b83a016867",
       "abi": [
         {
           "type": "impl",
@@ -2191,7 +2190,7 @@
         },
         {
           "type": "enum",
-          "name": "death_mountain::models::game_data::CollectableResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>",
+          "name": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>",
           "variants": [
             {
               "name": "Ok",
@@ -2246,20 +2245,6 @@
             {
               "name": "killed_by",
               "type": "core::integer::u64"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::bool",
-          "variants": [
-            {
-              "name": "False",
-              "type": "()"
-            },
-            {
-              "name": "True",
-              "type": "()"
             }
           ]
         },
@@ -2529,42 +2514,6 @@
             },
             {
               "type": "function",
-              "name": "premint_collectable",
-              "inputs": [
-                {
-                  "name": "seed",
-                  "type": "core::integer::u64"
-                },
-                {
-                  "name": "entity_id",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "prefix",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "suffix",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "level",
-                  "type": "core::integer::u16"
-                },
-                {
-                  "name": "health",
-                  "type": "core::integer::u16"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::integer::u64"
-                }
-              ],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
               "name": "get_valid_collectable",
               "inputs": [
                 {
@@ -2582,7 +2531,7 @@
               ],
               "outputs": [
                 {
-                  "type": "death_mountain::models::game_data::CollectableResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>"
+                  "type": "death_mountain::models::game_data::DataResult::<(core::integer::u64, core::integer::u16, core::integer::u16)>"
                 }
               ],
               "state_mutability": "view"
@@ -2627,34 +2576,6 @@
               "outputs": [
                 {
                   "type": "core::integer::u64"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "is_beast_collectable",
-              "inputs": [
-                {
-                  "name": "dungeon",
-                  "type": "core::starknet::contract_address::ContractAddress"
-                },
-                {
-                  "name": "beast_id",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "prefix",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "suffix",
-                  "type": "core::integer::u8"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
                 }
               ],
               "state_mutability": "view"
@@ -2911,12 +2832,11 @@
         "add_collectable",
         "add_kill",
         "premint_collectable",
-        "premint_collectable",
         "upgrade"
       ]
     },
     {
-      "address": "0x41d8c1ea44e1a5f39254371abe2bb1b8bba2624f163495cabbbbe2aabf6a721",
+      "address": "0x7d3267f41c36a5330c82deea71244b64d3541499873a4e76622853f6031c570",
       "class_hash": "0xec64a7ecf09e11d6dacb87b30a1f84935f42faa44d9835180503ec95dbdf35",
       "abi": [
         {
@@ -3305,8 +3225,8 @@
       ]
     },
     {
-      "address": "0x415423d6752770f7ceb71ed05b1a795ca7b89a04c5d539330c485805fe9459",
-      "class_hash": "0x59e78a82f28105401b50e36c19eba8ed39c4e10f1852fdf88b51726d91da973",
+      "address": "0x4e2bd51c0389ee09bade9da864742fc36a0e1f3458e6cd381f75d799d09a620",
+      "class_hash": "0x632cecc3c4b68f08651f0187a9b16183d331ecab0b40b30e0adf23fbfc08a10",
       "abi": [
         {
           "type": "impl",
@@ -3369,10 +3289,6 @@
             {
               "name": "denshokan_address",
               "type": "core::starknet::contract_address::ContractAddress"
-            },
-            {
-              "name": "denshokan_address",
-              "type": "core::starknet::contract_address::ContractAddress"
             }
           ],
           "outputs": [],
@@ -3380,8 +3296,6 @@
         },
         {
           "type": "impl",
-          "name": "GameTokenDataImpl",
-          "interface_name": "game_components_minigame::interface::IMinigameTokenData"
           "name": "GameTokenDataImpl",
           "interface_name": "game_components_minigame::interface::IMinigameTokenData"
         },
@@ -3402,43 +3316,34 @@
         {
           "type": "interface",
           "name": "game_components_minigame::interface::IMinigameTokenData",
-          "name": "game_components_minigame::interface::IMinigameTokenData",
           "items": [
             {
               "type": "function",
               "name": "score",
-              "name": "score",
               "inputs": [
                 {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
                   "name": "token_id",
                   "type": "core::integer::u64"
                 }
               ],
               "outputs": [
                 {
-                  "type": "core::integer::u32"
                   "type": "core::integer::u32"
                 }
               ],
               "state_mutability": "view"
             },
-            },
             {
               "type": "function",
               "name": "game_over",
-              "name": "game_over",
               "inputs": [
                 {
-                  "name": "token_id",
                   "name": "token_id",
                   "type": "core::integer::u64"
                 }
               ],
               "outputs": [
                 {
-                  "type": "core::bool"
                   "type": "core::bool"
                 }
               ],
@@ -3450,31 +3355,12 @@
           "type": "impl",
           "name": "GameDetailsImpl",
           "interface_name": "game_components_minigame::interface::IMinigameDetails"
-          "name": "GameDetailsImpl",
-          "interface_name": "game_components_minigame::interface::IMinigameDetails"
         },
         {
           "type": "struct",
           "name": "game_components_minigame::structs::GameDetail",
-          "name": "game_components_minigame::structs::GameDetail",
           "members": [
             {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::structs::GameDetail>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::structs::GameDetail>"
               "name": "name",
               "type": "core::byte_array::ByteArray"
             },
@@ -3496,7 +3382,6 @@
         },
         {
           "type": "interface",
-          "name": "game_components_minigame::interface::IMinigameDetails",
           "name": "game_components_minigame::interface::IMinigameDetails",
           "items": [
             {
@@ -3549,12 +3434,11 @@
                 {
                   "name": "token_id",
                   "type": "core::integer::u64"
-                  "type": "core::integer::u64"
                 }
               ],
               "outputs": [
                 {
-                  "type": "core::array::Span::<game_components_minigame::structs::GameDetail>"
+                  "type": "core::byte_array::ByteArray"
                 }
               ],
               "state_mutability": "view"
@@ -3565,21 +3449,12 @@
           "type": "impl",
           "name": "ObjectivesImpl",
           "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives"
-          "name": "ObjectivesImpl",
-          "interface_name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives"
         },
         {
           "type": "struct",
           "name": "game_components_minigame::extensions::objectives::structs::GameObjective",
-          "name": "game_components_minigame::extensions::objectives::structs::GameObjective",
           "members": [
             {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
               "name": "name",
               "type": "core::byte_array::ByteArray"
             },
@@ -3593,12 +3468,7 @@
           "type": "struct",
           "name": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>",
           "members": [
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>",
-          "members": [
             {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::extensions::objectives::structs::GameObjective>"
               "name": "snapshot",
               "type": "@core::array::Array::<game_components_minigame::extensions::objectives::structs::GameObjective>"
             }
@@ -3607,47 +3477,16 @@
         {
           "type": "interface",
           "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives",
-          "name": "game_components_minigame::extensions::objectives::interface::IMinigameObjectives",
           "items": [
             {
               "type": "function",
               "name": "objective_exists",
-              "name": "objective_exists",
               "inputs": [
                 {
                   "name": "objective_id",
                   "type": "core::integer::u32"
-                  "name": "objective_id",
-                  "type": "core::integer::u32"
                 }
               ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "completed_objective",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                },
-                {
-                  "name": "objective_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
               "outputs": [
                 {
                   "type": "core::bool"
@@ -3702,41 +3541,11 @@
           "type": "struct",
           "name": "death_mountain::models::market::ItemPurchase",
           "members": [
-              "type": "function",
-              "name": "objectives",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::array::Span::<game_components_minigame::extensions::objectives::structs::GameObjective>"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "GameTokenSystemsImpl",
-          "interface_name": "death_mountain::systems::game_token::contracts::IGameTokenSystems"
-        },
-        {
-          "type": "struct",
-          "name": "death_mountain::models::market::ItemPurchase",
-          "members": [
             {
-              "name": "item_id",
-              "type": "core::integer::u8"
               "name": "item_id",
               "type": "core::integer::u8"
             },
             {
-              "name": "equip",
-              "type": "core::bool"
               "name": "equip",
               "type": "core::bool"
             }
@@ -3745,17 +3554,12 @@
         {
           "type": "struct",
           "name": "death_mountain::models::adventurer::stats::Stats",
-          "name": "death_mountain::models::adventurer::stats::Stats",
           "members": [
             {
               "name": "strength",
               "type": "core::integer::u8"
-              "name": "strength",
-              "type": "core::integer::u8"
             },
             {
-              "name": "dexterity",
-              "type": "core::integer::u8"
               "name": "dexterity",
               "type": "core::integer::u8"
             },
@@ -3766,28 +3570,16 @@
             {
               "name": "intelligence",
               "type": "core::integer::u8"
-              "name": "vitality",
-              "type": "core::integer::u8"
             },
             {
-              "name": "intelligence",
-              "type": "core::integer::u8"
-            },
-            {
-              "name": "wisdom",
-              "type": "core::integer::u8"
               "name": "wisdom",
               "type": "core::integer::u8"
             },
             {
               "name": "charisma",
               "type": "core::integer::u8"
-              "name": "charisma",
-              "type": "core::integer::u8"
             },
             {
-              "name": "luck",
-              "type": "core::integer::u8"
               "name": "luck",
               "type": "core::integer::u8"
             }
@@ -3796,16 +3588,12 @@
         {
           "type": "interface",
           "name": "death_mountain::systems::game_token::contracts::IGameTokenSystems",
-          "name": "death_mountain::systems::game_token::contracts::IGameTokenSystems",
           "items": [
             {
               "type": "function",
               "name": "start_game",
-              "name": "start_game",
               "inputs": [
                 {
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
                   "name": "adventurer_id",
                   "type": "core::integer::u64"
                 },
@@ -3821,20 +3609,7 @@
               "type": "function",
               "name": "explore",
               "inputs": [
-                  "name": "weapon",
-                  "type": "core::integer::u8"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "explore",
-              "inputs": [
                 {
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
                   "name": "adventurer_id",
                   "type": "core::integer::u64"
                 },
@@ -3850,7 +3625,12 @@
               "type": "function",
               "name": "attack",
               "inputs": [
-                  "name": "till_beast",
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "to_the_death",
                   "type": "core::bool"
                 }
               ],
@@ -3859,39 +3639,11 @@
             },
             {
               "type": "function",
-              "name": "attack",
-              "inputs": [
-                {
-                  "name": "adventurer_id",
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
-                },
-                {
-                  "name": "to_the_death",
-                  "type": "core::bool"
-                },
-                {
-                  "name": "to_the_death",
-                  "type": "core::bool"
-                }
-              ],
-              "outputs": [],
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "flee",
               "name": "flee",
               "inputs": [
                 {
                   "name": "adventurer_id",
-                  "name": "adventurer_id",
                   "type": "core::integer::u64"
-                },
-                {
-                  "name": "to_the_death",
-                  "type": "core::bool"
                 },
                 {
                   "name": "to_the_death",
@@ -3912,7 +3664,14 @@
                 {
                   "name": "items",
                   "type": "core::array::Array::<core::integer::u8>"
-              "name": "equip",
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "drop",
               "inputs": [
                 {
                   "name": "adventurer_id",
@@ -3925,50 +3684,14 @@
               ],
               "outputs": [],
               "state_mutability": "external"
-              "outputs": [],
-              "state_mutability": "external"
-            },
-            {
-              "type": "function",
-              "name": "drop",
-              "name": "drop",
-              "inputs": [
-                {
-                  "name": "adventurer_id",
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
-                },
-                },
-                {
-                  "name": "items",
-                  "type": "core::array::Array::<core::integer::u8>"
-                  "name": "items",
-                  "type": "core::array::Array::<core::integer::u8>"
-                }
-              ],
-              "outputs": [],
-              "state_mutability": "external"
-              "outputs": [],
-              "state_mutability": "external"
             },
             {
               "type": "function",
               "name": "buy_items",
               "inputs": [
-              "name": "buy_items",
-              "inputs": [
                 {
-                  "name": "adventurer_id",
                   "name": "adventurer_id",
                   "type": "core::integer::u64"
-                },
-                {
-                  "name": "potions",
-                  "type": "core::integer::u8"
-                },
-                {
-                  "name": "items",
-                  "type": "core::array::Array::<death_mountain::models::market::ItemPurchase>"
                 },
                 {
                   "name": "potions",
@@ -3981,8 +3704,6 @@
               ],
               "outputs": [],
               "state_mutability": "external"
-              "outputs": [],
-              "state_mutability": "external"
             },
             {
               "type": "function",
@@ -3992,21 +3713,11 @@
                   "name": "adventurer_id",
                   "type": "core::integer::u64"
                 },
-              "name": "select_stat_upgrades",
-              "inputs": [
                 {
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
-                },
-                {
-                  "name": "stat_upgrades",
-                  "type": "death_mountain::models::adventurer::stats::Stats"
                   "name": "stat_upgrades",
                   "type": "death_mountain::models::adventurer::stats::Stats"
                 }
               ],
-              "outputs": [],
-              "state_mutability": "external"
               "outputs": [],
               "state_mutability": "external"
             },
@@ -4014,29 +3725,16 @@
               "type": "function",
               "name": "create_objective",
               "inputs": [
-              "name": "create_objective",
-              "inputs": [
                 {
-                  "name": "score",
-                  "type": "core::integer::u32"
                   "name": "score",
                   "type": "core::integer::u32"
                 }
               ],
-              "outputs": [],
-              "state_mutability": "external"
               "outputs": [],
               "state_mutability": "external"
             },
             {
               "type": "function",
-              "name": "player_name",
-              "inputs": [
-                {
-                  "name": "adventurer_id",
-                  "type": "core::integer::u64"
-                }
-              ],
               "name": "player_name",
               "inputs": [
                 {
@@ -4050,7 +3748,6 @@
                 }
               ],
               "state_mutability": "external"
-              "state_mutability": "external"
             }
           ]
         },
@@ -4058,17 +3755,12 @@
           "type": "impl",
           "name": "WorldProviderImpl",
           "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
-          "name": "WorldProviderImpl",
-          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
         },
         {
           "type": "struct",
           "name": "dojo::world::iworld::IWorldDispatcher",
-          "name": "dojo::world::iworld::IWorldDispatcher",
           "members": [
             {
-              "name": "contract_address",
-              "type": "core::starknet::contract_address::ContractAddress"
               "name": "contract_address",
               "type": "core::starknet::contract_address::ContractAddress"
             }
@@ -4077,17 +3769,13 @@
         {
           "type": "interface",
           "name": "dojo::contract::components::world_provider::IWorldProvider",
-          "name": "dojo::contract::components::world_provider::IWorldProvider",
           "items": [
             {
               "type": "function",
               "name": "world_dispatcher",
               "inputs": [],
-              "name": "world_dispatcher",
-              "inputs": [],
               "outputs": [
                 {
-                  "type": "dojo::world::iworld::IWorldDispatcher"
                   "type": "dojo::world::iworld::IWorldDispatcher"
                 }
               ],
@@ -4104,26 +3792,11 @@
           "type": "interface",
           "name": "dojo::contract::components::upgradeable::IUpgradeable",
           "items": [
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "UpgradeableImpl",
-          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
-        },
-        {
-          "type": "interface",
-          "name": "dojo::contract::components::upgradeable::IUpgradeable",
-          "items": [
             {
               "type": "function",
               "name": "upgrade",
-              "name": "upgrade",
               "inputs": [
                 {
-                  "name": "new_class_hash",
-                  "type": "core::starknet::class_hash::ClassHash"
                   "name": "new_class_hash",
                   "type": "core::starknet::class_hash::ClassHash"
                 }
@@ -4159,62 +3832,8 @@
             {
               "name": "Some",
               "type": "core::integer::u32"
-              "outputs": [],
-              "state_mutability": "external"
-            }
-          ]
-        },
-        {
-          "type": "impl",
-          "name": "MinigameImpl",
-          "interface_name": "game_components_minigame::interface::IMinigame"
-        },
-        {
-          "type": "enum",
-          "name": "core::option::Option::<core::byte_array::ByteArray>",
-          "variants": [
-            {
-              "name": "Some",
-              "type": "core::byte_array::ByteArray"
             },
             {
-              "name": "None",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::option::Option::<core::integer::u32>",
-          "variants": [
-            {
-              "name": "Some",
-              "type": "core::integer::u32"
-            },
-            {
-              "name": "None",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::option::Option::<core::integer::u64>",
-          "variants": [
-            {
-              "name": "Some",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "None",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<core::integer::u32>",
-          "members": [
               "name": "None",
               "type": "()"
             }
@@ -4276,60 +3895,7 @@
           "type": "struct",
           "name": "core::array::Span::<game_components_metagame::extensions::context::structs::GameContext>",
           "members": [
-              "name": "snapshot",
-              "type": "@core::array::Array::<core::integer::u32>"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::option::Option::<core::array::Span::<core::integer::u32>>",
-          "variants": [
             {
-              "name": "Some",
-              "type": "core::array::Span::<core::integer::u32>"
-            },
-            {
-              "name": "None",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "game_components_metagame::extensions::context::structs::GameContext",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_metagame::extensions::context::structs::GameContext>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_metagame::extensions::context::structs::GameContext>"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "game_components_metagame::extensions::context::structs::GameContextDetails",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "description",
-              "type": "core::byte_array::ByteArray"
               "name": "snapshot",
               "type": "@core::array::Array::<game_components_metagame::extensions::context::structs::GameContext>"
             }
@@ -4368,42 +3934,10 @@
             {
               "name": "None",
               "type": "()"
-              "name": "id",
-              "type": "core::option::Option::<core::integer::u32>"
-            },
-            {
-              "name": "context",
-              "type": "core::array::Span::<game_components_metagame::extensions::context::structs::GameContext>"
             }
           ]
         },
         {
-          "type": "enum",
-          "name": "core::option::Option::<game_components_metagame::extensions::context::structs::GameContextDetails>",
-          "variants": [
-            {
-              "name": "Some",
-              "type": "game_components_metagame::extensions::context::structs::GameContextDetails"
-            },
-            {
-              "name": "None",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "enum",
-          "name": "core::option::Option::<core::starknet::contract_address::ContractAddress>",
-          "variants": [
-            {
-              "name": "Some",
-              "type": "core::starknet::contract_address::ContractAddress"
-            },
-            {
-              "name": "None",
-              "type": "()"
-            }
-          ]
           "type": "enum",
           "name": "core::option::Option::<core::starknet::contract_address::ContractAddress>",
           "variants": [
@@ -4420,16 +3954,12 @@
         {
           "type": "interface",
           "name": "game_components_minigame::interface::IMinigame",
-          "name": "game_components_minigame::interface::IMinigame",
           "items": [
             {
               "type": "function",
               "name": "token_address",
               "inputs": [],
               "outputs": [
-              "name": "token_address",
-              "inputs": [],
-              "outputs": [
                 {
                   "type": "core::starknet::contract_address::ContractAddress"
                 }
@@ -4438,8 +3968,6 @@
             },
             {
               "type": "function",
-              "name": "settings_address",
-              "inputs": [],
               "name": "settings_address",
               "inputs": [],
               "outputs": [
@@ -4454,30 +3982,21 @@
               "name": "objectives_address",
               "inputs": [],
               "outputs": [
-              "name": "objectives_address",
-              "inputs": [],
-              "outputs": [
                 {
                   "type": "core::starknet::contract_address::ContractAddress"
                 }
               ],
               "state_mutability": "view"
-              "state_mutability": "view"
             },
             {
               "type": "function",
-              "name": "mint_game",
               "name": "mint_game",
               "inputs": [
                 {
                   "name": "player_name",
                   "type": "core::option::Option::<core::byte_array::ByteArray>"
-                  "name": "player_name",
-                  "type": "core::option::Option::<core::byte_array::ByteArray>"
                 },
                 {
-                  "name": "settings_id",
-                  "type": "core::option::Option::<core::integer::u32>"
                   "name": "settings_id",
                   "type": "core::option::Option::<core::integer::u32>"
                 },
@@ -4489,16 +4008,7 @@
                   "name": "end",
                   "type": "core::option::Option::<core::integer::u64>"
                 },
-                  "name": "start",
-                  "type": "core::option::Option::<core::integer::u64>"
-                },
                 {
-                  "name": "end",
-                  "type": "core::option::Option::<core::integer::u64>"
-                },
-                {
-                  "name": "objective_ids",
-                  "type": "core::option::Option::<core::array::Span::<core::integer::u32>>"
                   "name": "objective_ids",
                   "type": "core::option::Option::<core::array::Span::<core::integer::u32>>"
                 },
@@ -4506,19 +4016,7 @@
                   "name": "context",
                   "type": "core::option::Option::<game_components_metagame::extensions::context::structs::GameContextDetails>"
                 },
-                  "name": "context",
-                  "type": "core::option::Option::<game_components_metagame::extensions::context::structs::GameContextDetails>"
-                },
                 {
-                  "name": "client_url",
-                  "type": "core::option::Option::<core::byte_array::ByteArray>"
-                },
-                {
-                  "name": "renderer_address",
-                  "type": "core::option::Option::<core::starknet::contract_address::ContractAddress>"
-                },
-                {
-                  "name": "to",
                   "name": "client_url",
                   "type": "core::option::Option::<core::byte_array::ByteArray>"
                 },
@@ -4533,13 +4031,10 @@
                 {
                   "name": "soulbound",
                   "type": "core::bool"
-                  "name": "soulbound",
-                  "type": "core::bool"
                 }
               ],
               "outputs": [
                 {
-                  "type": "core::integer::u64"
                   "type": "core::integer::u64"
                 }
               ],
@@ -4612,17 +4107,13 @@
         {
           "type": "event",
           "name": "game_components_minigame::minigame::MinigameComponent::Event",
-          "name": "game_components_minigame::minigame::MinigameComponent::Event",
           "kind": "enum",
-          "variants": []
           "variants": []
         },
         {
           "type": "event",
           "name": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
-          "name": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
           "kind": "enum",
-          "variants": []
           "variants": []
         },
         {
@@ -4649,13 +4140,9 @@
             {
               "name": "MinigameEvent",
               "type": "game_components_minigame::minigame::MinigameComponent::Event",
-              "name": "MinigameEvent",
-              "type": "game_components_minigame::minigame::MinigameComponent::Event",
               "kind": "flat"
             },
             {
-              "name": "ObjectivesEvent",
-              "type": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
               "name": "ObjectivesEvent",
               "type": "game_components_minigame::extensions::objectives::objectives::ObjectivesComponent::Event",
               "kind": "flat"
@@ -4670,7 +4157,7 @@
       ],
       "init_calldata": [
         "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-        "0x012bb7287df14a1c37cb99f74cadac83f76071c366975071103fce5eccdec6c8"
+        "0x01e7aa02faf2d63179c8efd47e6502b215a1f0448a7aa4b17ad2c70160a4b33a"
       ],
       "tag": "ls_0_0_3-game_token_systems",
       "selector": "0x4cc8e289ab4f6b9bdea32ac2b3428c84c3ae431519428363cc12341b1e4a188",
@@ -4687,21 +4174,10 @@
         "create_objective",
         "player_name",
         "upgrade"
-        "start_game",
-        "explore",
-        "attack",
-        "flee",
-        "equip",
-        "drop",
-        "buy_items",
-        "select_stat_upgrades",
-        "create_objective",
-        "player_name",
-        "upgrade"
       ]
     },
     {
-      "address": "0x757d1c38ff9c13cfa0a25db5fe8ce3f6768d99fe13a18fd1d7035cb33ba4791",
+      "address": "0x49c62192cdc74018a310fefb04f39b5200e5bb476892902ecec23c2f817c176",
       "class_hash": "0x23cdb494302994de197966707c72df5708f2516f5205ed398dacb4c16fc4bcc",
       "abi": [
         {
@@ -5208,7 +4684,7 @@
       ]
     },
     {
-      "address": "0x187dee81864a37a6b46067ade181775900f96acb8603aaa92f283f4bfb4a010",
+      "address": "0x35f02eac8f762749b7cfd433fe421acca994705d35ef3b0341a1deabea9c322",
       "class_hash": "0x6316f94c1c7e7372e59ab541aff2820bea90276f6210ae4651cc2192996ed17",
       "abi": [
         {
@@ -5467,7 +4943,7 @@
       ]
     },
     {
-      "address": "0x7b8ffe55c7d0c11a85133fc2e2dafdf5d7b78d24bc557b2f6b770e7161509c0",
+      "address": "0x4cb09f45d5c087d8b16e4f0bea92df0a5e33155e3f52aabd7fa8b4676734d21",
       "class_hash": "0x4c76ddc85c17af3195c9e385e8360fe07c79dd4530ffc49fec4df9b469a2968",
       "abi": [
         {
@@ -5514,112 +4990,6 @@
               "outputs": [
                 {
                   "type": "core::byte_array::ByteArray"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
-          "type": "function",
-          "name": "dojo_init",
-          "inputs": [],
-          "outputs": [],
-          "state_mutability": "external"
-        },
-        {
-          "type": "impl",
-          "name": "GameSettingsImpl",
-          "interface_name": "game_components_minigame::extensions::settings::interface::IMinigameSettings"
-        },
-        {
-          "type": "enum",
-          "name": "core::bool",
-          "variants": [
-            {
-              "name": "False",
-              "type": "()"
-            },
-            {
-              "name": "True",
-              "type": "()"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "game_components_minigame::extensions::settings::structs::GameSetting",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "value",
-              "type": "core::byte_array::ByteArray"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "core::array::Span::<game_components_minigame::extensions::settings::structs::GameSetting>",
-          "members": [
-            {
-              "name": "snapshot",
-              "type": "@core::array::Array::<game_components_minigame::extensions::settings::structs::GameSetting>"
-            }
-          ]
-        },
-        {
-          "type": "struct",
-          "name": "game_components_minigame::extensions::settings::structs::GameSettingDetails",
-          "members": [
-            {
-              "name": "name",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "description",
-              "type": "core::byte_array::ByteArray"
-            },
-            {
-              "name": "settings",
-              "type": "core::array::Span::<game_components_minigame::extensions::settings::structs::GameSetting>"
-            }
-          ]
-        },
-        {
-          "type": "interface",
-          "name": "game_components_minigame::extensions::settings::interface::IMinigameSettings",
-          "items": [
-            {
-              "type": "function",
-              "name": "settings_exist",
-              "inputs": [
-                {
-                  "name": "settings_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "settings",
-              "inputs": [
-                {
-                  "name": "settings_id",
-                  "type": "core::integer::u32"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "game_components_minigame::extensions::settings::structs::GameSettingDetails"
                 }
               ],
               "state_mutability": "view"
@@ -6012,10 +5382,6 @@
                   "type": "core::byte_array::ByteArray"
                 },
                 {
-                  "name": "description",
-                  "type": "core::byte_array::ByteArray"
-                },
-                {
                   "name": "adventurer",
                   "type": "death_mountain::models::adventurer::adventurer::Adventurer"
                 },
@@ -6179,33 +5545,6 @@
           ]
         },
         {
-          "type": "impl",
-          "name": "SRC5Impl",
-          "interface_name": "openzeppelin_introspection::interface::ISRC5"
-        },
-        {
-          "type": "interface",
-          "name": "openzeppelin_introspection::interface::ISRC5",
-          "items": [
-            {
-              "type": "function",
-              "name": "supports_interface",
-              "inputs": [
-                {
-                  "name": "interface_id",
-                  "type": "core::felt252"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            }
-          ]
-        },
-        {
           "type": "constructor",
           "name": "constructor",
           "inputs": []
@@ -6254,18 +5593,6 @@
         },
         {
           "type": "event",
-          "name": "game_components_minigame::extensions::settings::settings::SettingsComponent::Event",
-          "kind": "enum",
-          "variants": []
-        },
-        {
-          "type": "event",
-          "name": "openzeppelin_introspection::src5::SRC5Component::Event",
-          "kind": "enum",
-          "variants": []
-        },
-        {
-          "type": "event",
           "name": "death_mountain::systems::settings::contracts::settings_systems::Event",
           "kind": "enum",
           "variants": [
@@ -6288,16 +5615,6 @@
               "name": "SRC5Event",
               "type": "openzeppelin_introspection::src5::SRC5Component::Event",
               "kind": "flat"
-            },
-            {
-              "name": "SettingsEvent",
-              "type": "game_components_minigame::extensions::settings::settings::SettingsComponent::Event",
-              "kind": "flat"
-            },
-            {
-              "name": "SRC5Event",
-              "type": "openzeppelin_introspection::src5::SRC5Component::Event",
-              "kind": "flat"
             }
           ]
         }
@@ -6306,7 +5623,6 @@
       "tag": "ls_0_0_3-settings_systems",
       "selector": "0x2254d45023f5ef42fea645233c31178dd5d52f4f4e565b8271891a9939842d9",
       "systems": [
-        "dojo_init",
         "dojo_init",
         "add_settings",
         "upgrade"
@@ -6372,7 +5688,6 @@
     {
       "members": [],
       "class_hash": "0x42467a73ead2a48a5d522d48d5ca6fa81a6a5b1377b6b8f0e32c3b0f4c0c8b6",
-      "class_hash": "0x42467a73ead2a48a5d522d48d5ca6fa81a6a5b1377b6b8f0e32c3b0f4c0c8b6",
       "tag": "ls_0_0_3-GameSettingsMetadata",
       "selector": "0x7544994f840a8e3ef7592b4c863e124c02d76dd7149c23f2569b5df812a39bd"
     },
@@ -6381,15 +5696,9 @@
       "class_hash": "0x2aa835e634c1a8ff12a13e1f1e8592a1f9efcfb61f048e8907a7b4e29656930",
       "tag": "ls_0_0_3-ScoreObjective",
       "selector": "0x40d937c19191bf178df18b746de58721794c7c6a81e57c8a249bf4fff770842"
-      "class_hash": "0x2aa835e634c1a8ff12a13e1f1e8592a1f9efcfb61f048e8907a7b4e29656930",
-      "tag": "ls_0_0_3-ScoreObjective",
-      "selector": "0x40d937c19191bf178df18b746de58721794c7c6a81e57c8a249bf4fff770842"
     },
     {
       "members": [],
-      "class_hash": "0x5ece982bfe94084959dcedbf5a4474810aeeef714cc4bb2ef78248aa36dd9e4",
-      "tag": "ls_0_0_3-ScoreObjectiveCount",
-      "selector": "0x39e7bc23658680ced3e82a2544c3418953e2fb8c98066c185be6de9f1b95ae2"
       "class_hash": "0x5ece982bfe94084959dcedbf5a4474810aeeef714cc4bb2ef78248aa36dd9e4",
       "tag": "ls_0_0_3-ScoreObjectiveCount",
       "selector": "0x39e7bc23658680ced3e82a2544c3418953e2fb8c98066c185be6de9f1b95ae2"
