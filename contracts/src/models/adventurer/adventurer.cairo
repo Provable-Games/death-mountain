@@ -21,8 +21,8 @@ use death_mountain::constants::loot::ItemSuffix::{
     of_Rage, of_Reflection, of_Skill, of_Titans, of_Vitriol, of_the_Fox, of_the_Twins,
 };
 use death_mountain::constants::loot::{ItemId, SUFFIX_UNLOCK_GREATNESS};
-use death_mountain::models::adventurer::bag::{Bag, IBag};
-use death_mountain::models::adventurer::equipment::{Equipment, IEquipment, ImplEquipment};
+use death_mountain::models::adventurer::bag::{Bag, BagVerbose, IBag, ImplBag};
+use death_mountain::models::adventurer::equipment::{Equipment, EquipmentVerbose, IEquipment, ImplEquipment};
 use death_mountain::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
 use death_mountain::models::adventurer::stats::{IStat, ImplStats, Stats};
 use death_mountain::models::beast::{Beast};
@@ -43,6 +43,23 @@ pub struct Adventurer {
     pub equipment: Equipment, // 128 bits
     pub item_specials_seed: u16, // 16 bits
     pub action_count: u16,
+}
+
+// for clients and renderers
+#[derive(Introspect, Drop, Serde)]
+pub struct AdventurerVerbose {
+    pub name: ByteArray,
+    pub health: u16,
+    pub xp: u16,
+    pub level: u8,
+    pub gold: u16,
+    pub beast_health: u16,
+    pub stat_upgrades_available: u8,
+    pub stats: Stats,
+    pub equipment: EquipmentVerbose,
+    pub item_specials_seed: u16,
+    pub action_count: u16,
+    pub bag: BagVerbose,
 }
 
 #[derive(Drop, Serde)]

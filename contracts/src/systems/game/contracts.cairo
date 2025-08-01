@@ -27,7 +27,7 @@ mod game_systems {
         POTION_HEALTH_AMOUNT, STARTING_HEALTH, XP_FOR_DISCOVERIES,
     };
     use death_mountain::constants::beast::BeastSettings::BEAST_SPECIAL_NAME_LEVEL_UNLOCK;
-    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
     use death_mountain::constants::discovery::DiscoveryEnums::{DiscoveryType, ExploreResult};
     use death_mountain::constants::game::{MAINNET_CHAIN_ID, SEPOLIA_CHAIN_ID, STARTER_BEAST_ATTACK_DAMAGE, messages};
     use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
@@ -1613,7 +1613,7 @@ mod game_systems {
 mod tests {
     use death_mountain::constants::adventurer::{BASE_POTION_PRICE, POTION_HEALTH_AMOUNT};
     use death_mountain::constants::beast::BeastSettings;
-    use death_mountain::constants::combat::CombatEnums::{Slot, Tier};
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
     use death_mountain::constants::loot::ItemId;
     use death_mountain::constants::world::DEFAULT_NS;
     use death_mountain::libs::game::{GameLibs, ImplGameLibs};
@@ -2630,5 +2630,608 @@ mod tests {
         world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
         let token_uri = denshokan_erc721_dispatcher.token_uri(1);
         println!("Token URI: {}", token_uri);
+    }
+
+    #[test]
+    fn test_get_adventurer_verbose() {
+        let (mut world, _, game_libs, _) = deploy_dungeon();
+        let adventurer_id = 1;
+
+        // Create a test adventurer with specific equipment and stats
+        let test_adventurer = Adventurer {
+            health: 100,
+            xp: 1500,
+            gold: 250,
+            beast_health: 0,
+            stat_upgrades_available: 2,
+            stats: Stats {
+                strength: 5, dexterity: 8, vitality: 6, intelligence: 12, wisdom: 10, charisma: 15, luck: 3,
+            },
+            equipment: Equipment {
+                weapon: Item { id: ItemId::Wand, xp: 100 },
+                chest: Item { id: ItemId::DivineRobe, xp: 50 },
+                head: Item { id: ItemId::Crown, xp: 75 },
+                waist: Item { id: ItemId::DemonhideBelt, xp: 30 },
+                foot: Item { id: ItemId::LeatherBoots, xp: 20 },
+                hand: Item { id: ItemId::LeatherGloves, xp: 15 },
+                neck: Item { id: ItemId::Amulet, xp: 40 },
+                ring: Item { id: ItemId::GoldRing, xp: 60 },
+            },
+            item_specials_seed: 12345,
+            action_count: 150,
+        };
+
+        // Create a test bag with various items
+        let test_bag = Bag {
+            item_1: Item { id: ItemId::Falchion, xp: 80 },
+            item_2: Item { id: ItemId::GhostWand, xp: 120 },
+            item_3: Item { id: ItemId::Grimoire, xp: 200 },
+            item_4: Item { id: ItemId::SilkRobe, xp: 45 },
+            item_5: Item { id: ItemId::LinenGloves, xp: 10 },
+            item_6: Item { id: 0, xp: 0 }, // Empty slot
+            item_7: Item { id: 0, xp: 0 }, // Empty slot
+            item_8: Item { id: 0, xp: 0 }, // Empty slot
+            item_9: Item { id: 0, xp: 0 }, // Empty slot
+            item_10: Item { id: 0, xp: 0 }, // Empty slot
+            item_11: Item { id: 0, xp: 0 }, // Empty slot
+            item_12: Item { id: 0, xp: 0 }, // Empty slot
+            item_13: Item { id: 0, xp: 0 }, // Empty slot
+            item_14: Item { id: 0, xp: 0 }, // Empty slot
+            item_15: Item { id: 0, xp: 0 }, // Empty slot
+            mutated: false,
+        };
+
+        // Stage the adventurer data
+        let packed_adventurer = game_libs.adventurer.pack_adventurer(test_adventurer);
+        world.write_model_test(@AdventurerPacked { adventurer_id, packed: packed_adventurer });
+
+        // Stage the bag data
+        let packed_bag = game_libs.adventurer.pack_bag(test_bag);
+        world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
+
+        // Now call get_adventurer_verbose and verify the response
+        let adventurer_verbose = game_libs.adventurer.get_adventurer_verbose(adventurer_id);
+
+        // Verify basic adventurer data
+        assert!(adventurer_verbose.xp == 1500, "incorrect xp. expected 1500, actual {:?}", adventurer_verbose.xp);
+        assert!(adventurer_verbose.level == 38, "incorrect level. expected 38, actual {:?}", adventurer_verbose.level);
+        assert!(adventurer_verbose.gold == 250, "incorrect gold. expected 250, actual {:?}", adventurer_verbose.gold);
+        assert!(
+            adventurer_verbose.health == 100, "incorrect health. expected 100, actual {:?}", adventurer_verbose.health,
+        );
+        assert!(
+            adventurer_verbose.beast_health == 0,
+            "incorrect beast health. expected 0, actual {:?}",
+            adventurer_verbose.beast_health,
+        );
+        assert!(
+            adventurer_verbose.stat_upgrades_available == 2,
+            "incorrect stat upgrades. expected 2, actual {:?}",
+            adventurer_verbose.stat_upgrades_available,
+        );
+        // Note: name is fetched from game_token_systems, not testing it here
+
+        // Verify stats
+        assert!(
+            adventurer_verbose.stats.strength == 5,
+            "incorrect strength. expected 5, actual {:?}",
+            adventurer_verbose.stats.strength,
+        );
+        assert!(
+            adventurer_verbose.stats.dexterity == 8,
+            "incorrect dexterity. expected 8, actual {:?}",
+            adventurer_verbose.stats.dexterity,
+        );
+        assert!(
+            adventurer_verbose.stats.vitality == 6,
+            "incorrect vitality. expected 6, actual {:?}",
+            adventurer_verbose.stats.vitality,
+        );
+        assert!(
+            adventurer_verbose.stats.intelligence == 12,
+            "incorrect intelligence. expected 12, actual {:?}",
+            adventurer_verbose.stats.intelligence,
+        );
+        assert!(
+            adventurer_verbose.stats.wisdom == 10,
+            "incorrect wisdom. expected 10, actual {:?}",
+            adventurer_verbose.stats.wisdom,
+        );
+        assert!(
+            adventurer_verbose.stats.charisma == 15,
+            "incorrect charisma. expected 15, actual {:?}",
+            adventurer_verbose.stats.charisma,
+        );
+        // Note: luck is always 0 in the packed/unpacked stats (by design)
+        assert!(
+            adventurer_verbose.stats.luck == 0,
+            "luck should be 0. expected 0, actual {:?}",
+            adventurer_verbose.stats.luck,
+        );
+
+        // Verify equipment verbose data
+        assert!(
+            adventurer_verbose.equipment.weapon.id == ItemId::Wand,
+            "wrong weapon id. expected {:?}, actual {:?}",
+            ItemId::Wand,
+            adventurer_verbose.equipment.weapon.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.weapon.name == 'Wand',
+            "wrong weapon name. expected {:?}, actual {:?}",
+            'Wand',
+            adventurer_verbose.equipment.weapon.name,
+        );
+        assert!(
+            adventurer_verbose.equipment.weapon.xp == 100,
+            "wrong weapon xp. expected 100, actual {:?}",
+            adventurer_verbose.equipment.weapon.xp,
+        );
+        assert(adventurer_verbose.equipment.weapon.tier == Tier::T5, 'wrong weapon tier');
+        assert(adventurer_verbose.equipment.weapon.item_type == Type::Magic_or_Cloth, 'wrong weapon type');
+        assert(adventurer_verbose.equipment.weapon.slot == Slot::Weapon, 'wrong weapon slot');
+
+        assert!(
+            adventurer_verbose.equipment.chest.id == ItemId::DivineRobe,
+            "wrong chest id. expected {:?}, actual {:?}",
+            ItemId::DivineRobe,
+            adventurer_verbose.equipment.chest.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.chest.xp == 50,
+            "wrong chest xp. expected 50, actual {:?}",
+            adventurer_verbose.equipment.chest.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.chest.name == 'Divine Robe',
+            "wrong chest name. expected {:?}, actual {:?}",
+            'Divine Robe',
+            adventurer_verbose.equipment.chest.name,
+        );
+        assert(adventurer_verbose.equipment.chest.tier == Tier::T1, 'wrong chest tier');
+        assert(adventurer_verbose.equipment.chest.item_type == Type::Magic_or_Cloth, 'wrong chest type');
+        assert(adventurer_verbose.equipment.chest.slot == Slot::Chest, 'wrong chest slot');
+
+        assert!(
+            adventurer_verbose.equipment.head.id == ItemId::Crown,
+            "wrong head id. expected {:?}, actual {:?}",
+            ItemId::Crown,
+            adventurer_verbose.equipment.head.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.head.xp == 75,
+            "wrong head xp. expected 75, actual {:?}",
+            adventurer_verbose.equipment.head.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.head.name == 'Crown',
+            "wrong head name. expected {:?}, actual {:?}",
+            'Crown',
+            adventurer_verbose.equipment.head.name,
+        );
+        assert(adventurer_verbose.equipment.head.tier == Tier::T1, 'wrong head tier');
+        assert(adventurer_verbose.equipment.head.item_type == Type::Magic_or_Cloth, 'wrong head type');
+        assert(adventurer_verbose.equipment.head.slot == Slot::Head, 'wrong head slot');
+
+        assert!(
+            adventurer_verbose.equipment.waist.id == ItemId::DemonhideBelt,
+            "wrong waist id. expected {:?}, actual {:?}",
+            ItemId::DemonhideBelt,
+            adventurer_verbose.equipment.waist.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.waist.xp == 30,
+            "wrong waist xp. expected 30, actual {:?}",
+            adventurer_verbose.equipment.waist.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.waist.name == 'Demonhide Belt',
+            "wrong waist name. expected {:?}, actual {:?}",
+            'Demonhide Belt',
+            adventurer_verbose.equipment.waist.name,
+        );
+        assert(adventurer_verbose.equipment.waist.tier == Tier::T1, 'wrong waist tier');
+        assert(adventurer_verbose.equipment.waist.item_type == Type::Blade_or_Hide, 'wrong waist type');
+        assert(adventurer_verbose.equipment.waist.slot == Slot::Waist, 'wrong waist slot');
+
+        assert!(
+            adventurer_verbose.equipment.foot.id == ItemId::LeatherBoots,
+            "wrong foot id. expected {:?}, actual {:?}",
+            ItemId::LeatherBoots,
+            adventurer_verbose.equipment.foot.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.foot.xp == 20,
+            "wrong foot xp. expected 20, actual {:?}",
+            adventurer_verbose.equipment.foot.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.foot.name == 'Leather Boots',
+            "wrong foot name. expected {:?}, actual {:?}",
+            'Leather Boots',
+            adventurer_verbose.equipment.foot.name,
+        );
+        assert(adventurer_verbose.equipment.foot.tier == Tier::T5, 'wrong foot tier');
+        assert(adventurer_verbose.equipment.foot.item_type == Type::Blade_or_Hide, 'wrong foot type');
+        assert(adventurer_verbose.equipment.foot.slot == Slot::Foot, 'wrong foot slot');
+
+        assert!(
+            adventurer_verbose.equipment.hand.id == ItemId::LeatherGloves,
+            "wrong hand id. expected {:?}, actual {:?}",
+            ItemId::LeatherGloves,
+            adventurer_verbose.equipment.hand.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.hand.xp == 15,
+            "wrong hand xp. expected 15, actual {:?}",
+            adventurer_verbose.equipment.hand.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.hand.name == 'Leather Gloves',
+            "wrong hand name. expected {:?}, actual {:?}",
+            'Leather Gloves',
+            adventurer_verbose.equipment.hand.name,
+        );
+        assert(adventurer_verbose.equipment.hand.tier == Tier::T5, 'wrong hand tier');
+        assert(adventurer_verbose.equipment.hand.item_type == Type::Blade_or_Hide, 'wrong hand type');
+        assert(adventurer_verbose.equipment.hand.slot == Slot::Hand, 'wrong hand slot');
+
+        assert!(
+            adventurer_verbose.equipment.ring.id == ItemId::GoldRing,
+            "wrong ring id. expected {:?}, actual {:?}",
+            ItemId::GoldRing,
+            adventurer_verbose.equipment.ring.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.ring.xp == 60,
+            "wrong ring xp. expected 60, actual {:?}",
+            adventurer_verbose.equipment.ring.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.ring.name == 'Gold Ring',
+            "wrong ring name. expected {:?}, actual {:?}",
+            'Gold Ring',
+            adventurer_verbose.equipment.ring.name,
+        );
+        assert(adventurer_verbose.equipment.ring.tier == Tier::T1, 'wrong ring tier');
+        assert(adventurer_verbose.equipment.ring.item_type == Type::Ring, 'wrong ring type');
+        assert(adventurer_verbose.equipment.ring.slot == Slot::Ring, 'wrong ring slot');
+
+        assert!(
+            adventurer_verbose.equipment.neck.id == ItemId::Amulet,
+            "wrong neck id. expected {:?}, actual {:?}",
+            ItemId::Amulet,
+            adventurer_verbose.equipment.neck.id,
+        );
+        assert!(
+            adventurer_verbose.equipment.neck.xp == 40,
+            "wrong neck xp. expected 40, actual {:?}",
+            adventurer_verbose.equipment.neck.xp,
+        );
+        assert!(
+            adventurer_verbose.equipment.neck.name == 'Amulet',
+            "wrong neck name. expected {:?}, actual {:?}",
+            'Amulet',
+            adventurer_verbose.equipment.neck.name,
+        );
+        assert(adventurer_verbose.equipment.neck.tier == Tier::T1, 'wrong neck tier');
+        assert(adventurer_verbose.equipment.neck.item_type == Type::Necklace, 'wrong neck type');
+        assert(adventurer_verbose.equipment.neck.slot == Slot::Neck, 'wrong neck slot');
+
+        // Verify bag verbose data
+        assert!(
+            adventurer_verbose.bag.item_1.id == ItemId::Falchion,
+            "wrong bag item 1 id. expected {:?}, actual {:?}",
+            ItemId::Falchion,
+            adventurer_verbose.bag.item_1.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_1.xp == 80,
+            "wrong bag item 1 xp. expected 80, actual {:?}",
+            adventurer_verbose.bag.item_1.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_1.name == 'Falchion',
+            "wrong bag item 1 name. expected {:?}, actual {:?}",
+            'Falchion',
+            adventurer_verbose.bag.item_1.name,
+        );
+        assert(adventurer_verbose.bag.item_1.tier == Tier::T2, 'wrong bag item 1 tier');
+        assert(adventurer_verbose.bag.item_1.item_type == Type::Blade_or_Hide, 'wrong bag item 1 type');
+        assert(adventurer_verbose.bag.item_1.slot == Slot::Weapon, 'wrong bag item 1 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_2.id == ItemId::GhostWand,
+            "wrong bag item 2 id. expected {:?}, actual {:?}",
+            ItemId::GhostWand,
+            adventurer_verbose.bag.item_2.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_2.xp == 120,
+            "wrong bag item 2 xp. expected 120, actual {:?}",
+            adventurer_verbose.bag.item_2.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_2.name == 'Ghost Wand',
+            "wrong bag item 2 name. expected {:?}, actual {:?}",
+            'Ghost Wand',
+            adventurer_verbose.bag.item_2.name,
+        );
+        assert(adventurer_verbose.bag.item_2.tier == Tier::T1, 'wrong bag item 2 tier');
+        assert(adventurer_verbose.bag.item_2.item_type == Type::Magic_or_Cloth, 'wrong bag item 2 type');
+        assert(adventurer_verbose.bag.item_2.slot == Slot::Weapon, 'wrong bag item 2 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_3.id == ItemId::Grimoire,
+            "wrong bag item 3 id. expected {:?}, actual {:?}",
+            ItemId::Grimoire,
+            adventurer_verbose.bag.item_3.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_3.xp == 200,
+            "wrong bag item 3 xp. expected 200, actual {:?}",
+            adventurer_verbose.bag.item_3.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_3.name == 'Grimoire',
+            "wrong bag item 3 name. expected {:?}, actual {:?}",
+            'Grimoire',
+            adventurer_verbose.bag.item_3.name,
+        );
+        assert(adventurer_verbose.bag.item_3.tier == Tier::T1, 'wrong bag item 3 tier');
+        assert(adventurer_verbose.bag.item_3.item_type == Type::Magic_or_Cloth, 'wrong bag item 3 type');
+        assert(adventurer_verbose.bag.item_3.slot == Slot::Weapon, 'wrong bag item 3 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_4.id == ItemId::SilkRobe,
+            "wrong bag item 4 id. expected {:?}, actual {:?}",
+            ItemId::SilkRobe,
+            adventurer_verbose.bag.item_4.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_4.xp == 45,
+            "wrong bag item 4 xp. expected 45, actual {:?}",
+            adventurer_verbose.bag.item_4.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_4.name == 'Silk Robe',
+            "wrong bag item 4 name. expected {:?}, actual {:?}",
+            'Silk Robe',
+            adventurer_verbose.bag.item_4.name,
+        );
+        assert(adventurer_verbose.bag.item_4.tier == Tier::T2, 'wrong bag item 4 tier');
+        assert(adventurer_verbose.bag.item_4.item_type == Type::Magic_or_Cloth, 'wrong bag item 4 type');
+        assert(adventurer_verbose.bag.item_4.slot == Slot::Chest, 'wrong bag item 4 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_5.id == ItemId::LinenGloves,
+            "wrong bag item 5 id. expected {:?}, actual {:?}",
+            ItemId::LinenGloves,
+            adventurer_verbose.bag.item_5.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_5.xp == 10,
+            "wrong bag item 5 xp. expected 10, actual {:?}",
+            adventurer_verbose.bag.item_5.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_5.name == 'Linen Gloves',
+            "wrong bag item 5 name. expected {:?}, actual {:?}",
+            'Linen Gloves',
+            adventurer_verbose.bag.item_5.name,
+        );
+        assert(adventurer_verbose.bag.item_5.tier == Tier::T4, 'wrong bag item 5 tier');
+        assert(adventurer_verbose.bag.item_5.item_type == Type::Magic_or_Cloth, 'wrong bag item 5 type');
+        assert(adventurer_verbose.bag.item_5.slot == Slot::Hand, 'wrong bag item 5 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_6.id == 0,
+            "wrong bag item 6 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_6.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_6.xp == 0,
+            "wrong bag item 6 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_6.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_6.name == 0,
+            "wrong bag item 6 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_6.name,
+        );
+        assert(adventurer_verbose.bag.item_6.tier == Tier::None, 'wrong bag item 6 tier');
+        assert(adventurer_verbose.bag.item_6.item_type == Type::None, 'wrong bag item 6 type');
+        assert(adventurer_verbose.bag.item_6.slot == Slot::None, 'wrong bag item 6 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_7.id == 0,
+            "wrong bag item 7 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_7.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_7.xp == 0,
+            "wrong bag item 7 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_7.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_7.name == 0,
+            "wrong bag item 7 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_7.name,
+        );
+        assert(adventurer_verbose.bag.item_7.tier == Tier::None, 'wrong bag item 7 tier');
+        assert(adventurer_verbose.bag.item_7.item_type == Type::None, 'wrong bag item 7 type');
+        assert(adventurer_verbose.bag.item_7.slot == Slot::None, 'wrong bag item 7 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_8.id == 0,
+            "wrong bag item 8 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_8.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_8.xp == 0,
+            "wrong bag item 8 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_8.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_8.name == 0,
+            "wrong bag item 8 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_8.name,
+        );
+        assert(adventurer_verbose.bag.item_8.tier == Tier::None, 'wrong bag item 8 tier');
+        assert(adventurer_verbose.bag.item_8.item_type == Type::None, 'wrong bag item 8 type');
+        assert(adventurer_verbose.bag.item_8.slot == Slot::None, 'wrong bag item 8 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_9.id == 0,
+            "wrong bag item 9 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_9.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_9.xp == 0,
+            "wrong bag item 9 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_9.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_9.name == 0,
+            "wrong bag item 9 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_9.name,
+        );
+        assert(adventurer_verbose.bag.item_9.tier == Tier::None, 'wrong bag item 9 tier');
+        assert(adventurer_verbose.bag.item_9.item_type == Type::None, 'wrong bag item 9 type');
+        assert(adventurer_verbose.bag.item_9.slot == Slot::None, 'wrong bag item 9 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_10.id == 0,
+            "wrong bag item 10 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_10.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_10.xp == 0,
+            "wrong bag item 10 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_10.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_10.name == 0,
+            "wrong bag item 10 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_10.name,
+        );
+        assert(adventurer_verbose.bag.item_10.tier == Tier::None, 'wrong bag item 10 tier');
+        assert(adventurer_verbose.bag.item_10.item_type == Type::None, 'wrong bag item 10 type');
+        assert(adventurer_verbose.bag.item_10.slot == Slot::None, 'wrong bag item 10 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_11.id == 0,
+            "wrong bag item 11 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_11.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_11.xp == 0,
+            "wrong bag item 11 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_11.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_11.name == 0,
+            "wrong bag item 11 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_11.name,
+        );
+        assert(adventurer_verbose.bag.item_11.tier == Tier::None, 'wrong bag item 11 tier');
+        assert(adventurer_verbose.bag.item_11.item_type == Type::None, 'wrong bag item 11 type');
+        assert(adventurer_verbose.bag.item_11.slot == Slot::None, 'wrong bag item 11 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_12.id == 0,
+            "wrong bag item 12 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_12.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_12.xp == 0,
+            "wrong bag item 12 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_12.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_12.name == 0,
+            "wrong bag item 12 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_12.name,
+        );
+        assert(adventurer_verbose.bag.item_12.tier == Tier::None, 'wrong bag item 12 tier');
+        assert(adventurer_verbose.bag.item_12.item_type == Type::None, 'wrong bag item 12 type');
+        assert(adventurer_verbose.bag.item_12.slot == Slot::None, 'wrong bag item 12 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_13.id == 0,
+            "wrong bag item 13 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_13.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_13.xp == 0,
+            "wrong bag item 13 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_13.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_13.name == 0,
+            "wrong bag item 13 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_13.name,
+        );
+        assert(adventurer_verbose.bag.item_13.tier == Tier::None, 'wrong bag item 13 tier');
+        assert(adventurer_verbose.bag.item_13.item_type == Type::None, 'wrong bag item 13 type');
+        assert(adventurer_verbose.bag.item_13.slot == Slot::None, 'wrong bag item 13 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_14.id == 0,
+            "wrong bag item 14 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_14.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_14.xp == 0,
+            "wrong bag item 14 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_14.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_14.name == 0,
+            "wrong bag item 14 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_14.name,
+        );
+        assert(adventurer_verbose.bag.item_14.tier == Tier::None, 'wrong bag item 14 tier');
+        assert(adventurer_verbose.bag.item_14.item_type == Type::None, 'wrong bag item 14 type');
+        assert(adventurer_verbose.bag.item_14.slot == Slot::None, 'wrong bag item 14 slot');
+
+        assert!(
+            adventurer_verbose.bag.item_15.id == 0,
+            "wrong bag item 15 id. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_15.id,
+        );
+        assert!(
+            adventurer_verbose.bag.item_15.xp == 0,
+            "wrong bag item 15 xp. expected 0, actual {:?}",
+            adventurer_verbose.bag.item_15.xp,
+        );
+        assert!(
+            adventurer_verbose.bag.item_15.name == 0,
+            "wrong bag item 15 name. expected {:?}, actual {:?}",
+            0,
+            adventurer_verbose.bag.item_15.name,
+        );
+        assert(adventurer_verbose.bag.item_15.tier == Tier::None, 'wrong bag item 15 tier');
+        assert(adventurer_verbose.bag.item_15.item_type == Type::None, 'wrong bag item 15 type');
+        assert(adventurer_verbose.bag.item_15.slot == Slot::None, 'wrong bag item 15 slot');
     }
 }

@@ -4,7 +4,7 @@ use core::panic_with_felt252;
 use core::traits::DivRem;
 use death_mountain::constants::combat::CombatEnums::Slot;
 use death_mountain::constants::loot::SUFFIX_UNLOCK_GREATNESS;
-use death_mountain::models::adventurer::item::{IItemPrimitive, ImplItem, Item};
+use death_mountain::models::adventurer::item::{IItemPrimitive, ImplItem, Item, ItemVerbose};
 use death_mountain::models::adventurer::stats::{ImplStats, Stats};
 use death_mountain::models::loot::ImplLoot;
 
@@ -21,6 +21,19 @@ pub struct Equipment { // 128 bits
     pub hand: Item,
     pub neck: Item,
     pub ring: Item,
+}
+
+/// @notice Intended for clients and onchain renderers
+#[derive(Introspect, Drop, Copy, Serde, PartialEq)]
+pub struct EquipmentVerbose {
+    pub weapon: ItemVerbose,
+    pub chest: ItemVerbose,
+    pub head: ItemVerbose,
+    pub waist: ItemVerbose,
+    pub foot: ItemVerbose,
+    pub hand: ItemVerbose,
+    pub neck: ItemVerbose,
+    pub ring: ItemVerbose,
 }
 
 #[generate_trait]
@@ -304,6 +317,24 @@ pub impl ImplEquipment of IEquipment {
     }
 }
 
+/// @notice Converts an Equipment to an EquipmentVerbose
+/// @param self the Equipment to convert
+/// @return EquipmentVerbose: the verbose Equipment
+impl EquipmentIntoEquipmentVerbose of Into<Equipment, EquipmentVerbose> {
+    fn into(self: Equipment) -> EquipmentVerbose {
+        EquipmentVerbose {
+            weapon: self.weapon.into(),
+            chest: self.chest.into(),
+            head: self.head.into(),
+            waist: self.waist.into(),
+            foot: self.foot.into(),
+            hand: self.hand.into(),
+            neck: self.neck.into(),
+            ring: self.ring.into(),
+        }
+    }
+}
+
 const TWO_POW_16: u256 = 0x10000;
 const TWO_POW_16_NZ: NonZero<u256> = 0x10000;
 const TWO_POW_32: u256 = 0x100000000;
@@ -318,10 +349,10 @@ const TWO_POW_112: u256 = 0x10000000000000000000000000000;
 // ---------------------------
 #[cfg(test)]
 mod tests {
-    use death_mountain::constants::combat::CombatEnums::Slot;
+    use death_mountain::constants::combat::CombatEnums::{Slot, Tier, Type};
     use death_mountain::constants::loot::ItemId;
     use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
-    use death_mountain::models::adventurer::equipment::{Equipment, ImplEquipment, Item};
+    use death_mountain::models::adventurer::equipment::{Equipment, EquipmentVerbose, ImplEquipment, Item};
     use death_mountain::models::adventurer::item::{MAX_ITEM_XP, MAX_PACKABLE_ITEM_ID, MAX_PACKABLE_XP};
     use death_mountain::models::loot::ImplLoot;
 
@@ -1043,5 +1074,343 @@ mod tests {
         assert(adventurer.equipment.weapon.xp == 0, 'weapon should start with 0xp');
         adventurer.equipment.increase_item_xp_at_slot(Slot::Weapon(()), 0);
         assert(adventurer.equipment.weapon.xp == 0, 'weapon should still have 0xp');
+    }
+
+    #[test]
+    #[available_gas(1000000)]
+    fn equipment_into_equipment_verbose() {
+        let mut adventurer = ImplAdventurer::new(ItemId::Wand);
+
+        // Equip some items
+        let katana = Item { id: ItemId::Katana, xp: 100 };
+        let divine_robe = Item { id: ItemId::DivineRobe, xp: 200 };
+
+        adventurer.equipment.equip(katana, ImplLoot::get_slot(katana.id));
+        adventurer.equipment.equip(divine_robe, ImplLoot::get_slot(divine_robe.id));
+
+        // verify the conversion worked correctly
+        let equipment_verbose: EquipmentVerbose = adventurer.equipment.into();
+        assert(equipment_verbose.weapon.id == ItemId::Katana, 'weapon id mismatch');
+        assert(equipment_verbose.weapon.xp == 100, 'weapon xp mismatch');
+        assert(equipment_verbose.chest.id == ItemId::DivineRobe, 'chest id mismatch');
+        assert(equipment_verbose.chest.xp == 200, 'chest xp mismatch');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_equipment_into_equipment_verbose_empty() {
+        let empty_equipment = Equipment {
+            weapon: Item { id: 0, xp: 0 },
+            chest: Item { id: 0, xp: 0 },
+            head: Item { id: 0, xp: 0 },
+            waist: Item { id: 0, xp: 0 },
+            foot: Item { id: 0, xp: 0 },
+            hand: Item { id: 0, xp: 0 },
+            neck: Item { id: 0, xp: 0 },
+            ring: Item { id: 0, xp: 0 },
+        };
+
+        let verbose_equipment: EquipmentVerbose = empty_equipment.into();
+
+        // Weapon assertions
+        assert(verbose_equipment.weapon.id == 0, 'weapon wrong id');
+        assert(verbose_equipment.weapon.xp == 0, 'weapon wrong xp');
+        assert(verbose_equipment.weapon.name == 0, 'weapon wrong name');
+        assert(verbose_equipment.weapon.tier == Tier::None, 'weapon wrong tier');
+        assert(verbose_equipment.weapon.item_type == Type::None, 'weapon wrong type');
+        assert(verbose_equipment.weapon.slot == Slot::None, 'weapon wrong slot');
+
+        // Chest assertions
+        assert(verbose_equipment.chest.id == 0, 'chest wrong id');
+        assert(verbose_equipment.chest.xp == 0, 'chest wrong xp');
+        assert(verbose_equipment.chest.name == 0, 'chest wrong name');
+        assert(verbose_equipment.chest.tier == Tier::None, 'chest wrong tier');
+        assert(verbose_equipment.chest.item_type == Type::None, 'chest wrong type');
+        assert(verbose_equipment.chest.slot == Slot::None, 'chest wrong slot');
+
+        // Head assertions
+        assert(verbose_equipment.head.id == 0, 'head wrong id');
+        assert(verbose_equipment.head.xp == 0, 'head wrong xp');
+        assert(verbose_equipment.head.name == 0, 'head wrong name');
+        assert(verbose_equipment.head.tier == Tier::None, 'head wrong tier');
+        assert(verbose_equipment.head.item_type == Type::None, 'head wrong type');
+        assert(verbose_equipment.head.slot == Slot::None, 'head wrong slot');
+
+        // Waist assertions
+        assert(verbose_equipment.waist.id == 0, 'waist wrong id');
+        assert(verbose_equipment.waist.xp == 0, 'waist wrong xp');
+        assert(verbose_equipment.waist.name == 0, 'waist wrong name');
+        assert(verbose_equipment.waist.tier == Tier::None, 'waist wrong tier');
+        assert(verbose_equipment.waist.item_type == Type::None, 'waist wrong type');
+        assert(verbose_equipment.waist.slot == Slot::None, 'waist wrong slot');
+
+        // Foot assertions
+        assert(verbose_equipment.foot.id == 0, 'foot wrong id');
+        assert(verbose_equipment.foot.xp == 0, 'foot wrong xp');
+        assert(verbose_equipment.foot.name == 0, 'foot wrong name');
+        assert(verbose_equipment.foot.tier == Tier::None, 'foot wrong tier');
+        assert(verbose_equipment.foot.item_type == Type::None, 'foot wrong type');
+        assert(verbose_equipment.foot.slot == Slot::None, 'foot wrong slot');
+
+        // Hand assertions
+        assert(verbose_equipment.hand.id == 0, 'hand wrong id');
+        assert(verbose_equipment.hand.xp == 0, 'hand wrong xp');
+        assert(verbose_equipment.hand.name == 0, 'hand wrong name');
+        assert(verbose_equipment.hand.tier == Tier::None, 'hand wrong tier');
+        assert(verbose_equipment.hand.item_type == Type::None, 'hand wrong type');
+        assert(verbose_equipment.hand.slot == Slot::None, 'hand wrong slot');
+
+        // Neck assertions
+        assert(verbose_equipment.neck.id == 0, 'neck wrong id');
+        assert(verbose_equipment.neck.xp == 0, 'neck wrong xp');
+        assert(verbose_equipment.neck.name == 0, 'neck wrong name');
+        assert(verbose_equipment.neck.tier == Tier::None, 'neck wrong tier');
+        assert(verbose_equipment.neck.item_type == Type::None, 'neck wrong type');
+        assert(verbose_equipment.neck.slot == Slot::None, 'neck wrong slot');
+
+        // Ring assertions
+        assert(verbose_equipment.ring.id == 0, 'ring wrong id');
+        assert(verbose_equipment.ring.xp == 0, 'ring wrong xp');
+        assert(verbose_equipment.ring.name == 0, 'ring wrong name');
+        assert(verbose_equipment.ring.tier == Tier::None, 'ring wrong tier');
+        assert(verbose_equipment.ring.item_type == Type::None, 'ring wrong type');
+        assert(verbose_equipment.ring.slot == Slot::None, 'ring wrong slot');
+    }
+
+    #[test]
+    #[available_gas(3000000)]
+    fn test_equipment_into_equipment_verbose_full() {
+        let full_equipment = Equipment {
+            weapon: Item { id: ItemId::Katana, xp: 100 },
+            chest: Item { id: ItemId::DivineRobe, xp: 200 },
+            head: Item { id: ItemId::DemonCrown, xp: 300 },
+            waist: Item { id: ItemId::DemonhideBelt, xp: 400 },
+            foot: Item { id: ItemId::DivineSlippers, xp: 150 },
+            hand: Item { id: ItemId::DivineGloves, xp: 250 },
+            neck: Item { id: ItemId::Amulet, xp: 350 },
+            ring: Item { id: ItemId::PlatinumRing, xp: 450 },
+        };
+
+        let verbose_equipment: EquipmentVerbose = full_equipment.into();
+
+        // Weapon assertions
+        assert(verbose_equipment.weapon.id == ItemId::Katana, 'weapon wrong id');
+        assert(verbose_equipment.weapon.xp == 100, 'weapon wrong xp');
+        assert(verbose_equipment.weapon.name == 'Katana', 'weapon wrong name');
+        assert(verbose_equipment.weapon.tier == Tier::T1, 'weapon wrong tier');
+        assert(verbose_equipment.weapon.item_type == Type::Blade_or_Hide, 'weapon wrong type');
+        assert(verbose_equipment.weapon.slot == Slot::Weapon, 'weapon wrong slot');
+
+        // Chest assertions
+        assert(verbose_equipment.chest.id == ItemId::DivineRobe, 'chest wrong id');
+        assert(verbose_equipment.chest.xp == 200, 'chest wrong xp');
+        assert(verbose_equipment.chest.name == 'Divine Robe', 'chest wrong name');
+        assert(verbose_equipment.chest.tier == Tier::T1, 'chest wrong tier');
+        assert(verbose_equipment.chest.item_type == Type::Magic_or_Cloth, 'chest wrong type');
+        assert(verbose_equipment.chest.slot == Slot::Chest, 'chest wrong slot');
+
+        // Head assertions
+        assert(verbose_equipment.head.id == ItemId::DemonCrown, 'head wrong id');
+        assert(verbose_equipment.head.xp == 300, 'head wrong xp');
+        assert(verbose_equipment.head.name == 'Demon Crown', 'head wrong name');
+        assert(verbose_equipment.head.tier == Tier::T1, 'head wrong tier');
+        assert(verbose_equipment.head.item_type == Type::Blade_or_Hide, 'head wrong type');
+        assert(verbose_equipment.head.slot == Slot::Head, 'head wrong slot');
+
+        // Waist assertions
+        assert(verbose_equipment.waist.id == ItemId::DemonhideBelt, 'waist wrong id');
+        assert(verbose_equipment.waist.xp == 400, 'waist wrong xp');
+        assert(verbose_equipment.waist.name == 'Demonhide Belt', 'waist wrong name');
+        assert(verbose_equipment.waist.tier == Tier::T1, 'waist wrong tier');
+        assert(verbose_equipment.waist.item_type == Type::Blade_or_Hide, 'waist wrong type');
+        assert(verbose_equipment.waist.slot == Slot::Waist, 'waist wrong slot');
+
+        // Foot assertions
+        assert(verbose_equipment.foot.id == ItemId::DivineSlippers, 'foot wrong id');
+        assert(verbose_equipment.foot.xp == 150, 'foot wrong xp');
+        assert(verbose_equipment.foot.name == 'Divine Slippers', 'foot wrong name');
+        assert(verbose_equipment.foot.tier == Tier::T1, 'foot wrong tier');
+        assert(verbose_equipment.foot.item_type == Type::Magic_or_Cloth, 'foot wrong type');
+        assert(verbose_equipment.foot.slot == Slot::Foot, 'foot wrong slot');
+
+        // Hand assertions
+        assert(verbose_equipment.hand.id == ItemId::DivineGloves, 'hand wrong id');
+        assert(verbose_equipment.hand.xp == 250, 'hand wrong xp');
+        assert(verbose_equipment.hand.name == 'Divine Gloves', 'hand wrong name');
+        assert(verbose_equipment.hand.tier == Tier::T1, 'hand wrong tier');
+        assert(verbose_equipment.hand.item_type == Type::Magic_or_Cloth, 'hand wrong type');
+        assert(verbose_equipment.hand.slot == Slot::Hand, 'hand wrong slot');
+
+        // Neck assertions
+        assert(verbose_equipment.neck.id == ItemId::Amulet, 'neck wrong id');
+        assert(verbose_equipment.neck.xp == 350, 'neck wrong xp');
+        assert(verbose_equipment.neck.name == 'Amulet', 'neck wrong name');
+        assert(verbose_equipment.neck.tier == Tier::T1, 'neck wrong tier');
+        assert(verbose_equipment.neck.item_type == Type::Necklace, 'neck wrong type');
+        assert(verbose_equipment.neck.slot == Slot::Neck, 'neck wrong slot');
+
+        // Ring assertions
+        assert(verbose_equipment.ring.id == ItemId::PlatinumRing, 'ring wrong id');
+        assert(verbose_equipment.ring.xp == 450, 'ring wrong xp');
+        assert(verbose_equipment.ring.name == 'Platinum Ring', 'ring wrong name');
+        assert(verbose_equipment.ring.tier == Tier::T1, 'ring wrong tier');
+        assert(verbose_equipment.ring.item_type == Type::Ring, 'ring wrong type');
+        assert(verbose_equipment.ring.slot == Slot::Ring, 'ring wrong slot');
+    }
+
+    #[test]
+    #[available_gas(2500000)]
+    fn test_equipment_into_equipment_verbose_partial() {
+        let partial_equipment = Equipment {
+            weapon: Item { id: ItemId::Wand, xp: 10 },
+            chest: Item { id: 0, xp: 0 },
+            head: Item { id: ItemId::Crown, xp: 20 },
+            waist: Item { id: 0, xp: 0 },
+            foot: Item { id: ItemId::LeatherBoots, xp: 30 },
+            hand: Item { id: 0, xp: 0 },
+            neck: Item { id: ItemId::Pendant, xp: 40 },
+            ring: Item { id: ItemId::GoldRing, xp: 50 },
+        };
+
+        let verbose_equipment: EquipmentVerbose = partial_equipment.into();
+
+        // Weapon assertions
+        assert(verbose_equipment.weapon.id == ItemId::Wand, 'weapon wrong id');
+        assert(verbose_equipment.weapon.xp == 10, 'weapon wrong xp');
+        assert(verbose_equipment.weapon.name == 'Wand', 'weapon wrong name');
+        assert(verbose_equipment.weapon.tier == Tier::T5, 'weapon wrong tier');
+        assert(verbose_equipment.weapon.item_type == Type::Magic_or_Cloth, 'weapon wrong type');
+        assert(verbose_equipment.weapon.slot == Slot::Weapon, 'weapon wrong slot');
+
+        // Chest assertions (empty)
+        assert(verbose_equipment.chest.id == 0, 'chest wrong id');
+        assert(verbose_equipment.chest.xp == 0, 'chest wrong xp');
+        assert(verbose_equipment.chest.name == 0, 'chest wrong name');
+        assert(verbose_equipment.chest.tier == Tier::None, 'chest wrong tier');
+        assert(verbose_equipment.chest.item_type == Type::None, 'chest wrong type');
+        assert(verbose_equipment.chest.slot == Slot::None, 'chest wrong slot');
+
+        // Head assertions
+        assert(verbose_equipment.head.id == ItemId::Crown, 'head wrong id');
+        assert(verbose_equipment.head.xp == 20, 'head wrong xp');
+        assert(verbose_equipment.head.name == 'Crown', 'head wrong name');
+        assert(verbose_equipment.head.tier == Tier::T1, 'head wrong tier');
+        assert(verbose_equipment.head.item_type == Type::Magic_or_Cloth, 'head wrong type');
+        assert(verbose_equipment.head.slot == Slot::Head, 'head wrong slot');
+
+        // Waist assertions (empty)
+        assert(verbose_equipment.waist.id == 0, 'waist wrong id');
+        assert(verbose_equipment.waist.xp == 0, 'waist wrong xp');
+        assert(verbose_equipment.waist.name == 0, 'waist wrong name');
+        assert(verbose_equipment.waist.tier == Tier::None, 'waist wrong tier');
+        assert(verbose_equipment.waist.item_type == Type::None, 'waist wrong type');
+        assert(verbose_equipment.waist.slot == Slot::None, 'waist wrong slot');
+
+        // Foot assertions
+        assert(verbose_equipment.foot.id == ItemId::LeatherBoots, 'foot wrong id');
+        assert(verbose_equipment.foot.xp == 30, 'foot wrong xp');
+        assert(verbose_equipment.foot.name == 'Leather Boots', 'foot wrong name');
+        assert(verbose_equipment.foot.tier == Tier::T5, 'foot wrong tier');
+        assert(verbose_equipment.foot.item_type == Type::Blade_or_Hide, 'foot wrong type');
+        assert(verbose_equipment.foot.slot == Slot::Foot, 'foot wrong slot');
+
+        // Hand assertions (empty)
+        assert(verbose_equipment.hand.id == 0, 'hand wrong id');
+        assert(verbose_equipment.hand.xp == 0, 'hand wrong xp');
+        assert(verbose_equipment.hand.name == 0, 'hand wrong name');
+        assert(verbose_equipment.hand.tier == Tier::None, 'hand wrong tier');
+        assert(verbose_equipment.hand.item_type == Type::None, 'hand wrong type');
+        assert(verbose_equipment.hand.slot == Slot::None, 'hand wrong slot');
+
+        // Neck assertions
+        assert(verbose_equipment.neck.id == ItemId::Pendant, 'neck wrong id');
+        assert(verbose_equipment.neck.xp == 40, 'neck wrong xp');
+        assert(verbose_equipment.neck.name == 'Pendant', 'neck wrong name');
+        assert(verbose_equipment.neck.tier == Tier::T1, 'neck wrong tier');
+        assert(verbose_equipment.neck.item_type == Type::Necklace, 'neck wrong type');
+        assert(verbose_equipment.neck.slot == Slot::Neck, 'neck wrong slot');
+
+        // Ring assertions
+        assert(verbose_equipment.ring.id == ItemId::GoldRing, 'ring wrong id');
+        assert(verbose_equipment.ring.xp == 50, 'ring wrong xp');
+        assert(verbose_equipment.ring.name == 'Gold Ring', 'ring wrong name');
+        assert(verbose_equipment.ring.tier == Tier::T1, 'ring wrong tier');
+        assert(verbose_equipment.ring.item_type == Type::Ring, 'ring wrong type');
+        assert(verbose_equipment.ring.slot == Slot::Ring, 'ring wrong slot');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_equipment_into_equipment_verbose_max_xp() {
+        let max_xp_equipment = Equipment {
+            weapon: Item { id: ItemId::Katana, xp: MAX_PACKABLE_XP },
+            chest: Item { id: ItemId::DivineRobe, xp: MAX_PACKABLE_XP },
+            head: Item { id: ItemId::Crown, xp: MAX_PACKABLE_XP },
+            waist: Item { id: ItemId::BrightsilkSash, xp: MAX_PACKABLE_XP },
+            foot: Item { id: ItemId::SilkSlippers, xp: MAX_PACKABLE_XP },
+            hand: Item { id: ItemId::SilkGloves, xp: MAX_PACKABLE_XP },
+            neck: Item { id: ItemId::Amulet, xp: MAX_PACKABLE_XP },
+            ring: Item { id: ItemId::SilverRing, xp: MAX_PACKABLE_XP },
+        };
+
+        let verbose_equipment: EquipmentVerbose = max_xp_equipment.into();
+
+        // Verify all items maintain their max XP value after conversion
+        assert(verbose_equipment.weapon.xp == MAX_PACKABLE_XP, 'weapon xp not max');
+        assert(verbose_equipment.chest.xp == MAX_PACKABLE_XP, 'chest xp not max');
+        assert(verbose_equipment.head.xp == MAX_PACKABLE_XP, 'head xp not max');
+        assert(verbose_equipment.waist.xp == MAX_PACKABLE_XP, 'waist xp not max');
+        assert(verbose_equipment.foot.xp == MAX_PACKABLE_XP, 'foot xp not max');
+        assert(verbose_equipment.hand.xp == MAX_PACKABLE_XP, 'hand xp not max');
+        assert(verbose_equipment.neck.xp == MAX_PACKABLE_XP, 'neck xp not max');
+        assert(verbose_equipment.ring.xp == MAX_PACKABLE_XP, 'ring xp not max');
+
+        // Verify IDs are preserved
+        assert(verbose_equipment.weapon.id == ItemId::Katana, 'weapon id wrong');
+        assert(verbose_equipment.chest.id == ItemId::DivineRobe, 'chest id wrong');
+        assert(verbose_equipment.head.id == ItemId::Crown, 'head id wrong');
+        assert(verbose_equipment.waist.id == ItemId::BrightsilkSash, 'waist id wrong');
+        assert(verbose_equipment.foot.id == ItemId::SilkSlippers, 'foot id wrong');
+        assert(verbose_equipment.hand.id == ItemId::SilkGloves, 'hand id wrong');
+        assert(verbose_equipment.neck.id == ItemId::Amulet, 'neck id wrong');
+        assert(verbose_equipment.ring.id == ItemId::SilverRing, 'ring id wrong');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_equipment_into_equipment_verbose_mixed_tiers() {
+        // Test with items from different tiers
+        let mixed_equipment = Equipment {
+            weapon: Item { id: ItemId::Katana, xp: 100 }, // T1
+            chest: Item { id: ItemId::SilkRobe, xp: 200 }, // T2
+            head: Item { id: ItemId::LinenHood, xp: 300 }, // T4
+            waist: Item { id: ItemId::WoolSash, xp: 400 }, // T3
+            foot: Item { id: ItemId::DivineSlippers, xp: 500 }, // T1
+            hand: Item { id: ItemId::SilkGloves, xp: 50 }, // T2
+            neck: Item { id: ItemId::Amulet, xp: 150 }, // T1
+            ring: Item { id: ItemId::BronzeRing, xp: 250 } // T3
+        };
+
+        let verbose_equipment: EquipmentVerbose = mixed_equipment.into();
+
+        // Verify tier assignments
+        assert(verbose_equipment.weapon.tier == Tier::T1, 'weapon tier wrong');
+        assert(verbose_equipment.chest.tier == Tier::T2, 'chest tier wrong');
+        assert(verbose_equipment.head.tier == Tier::T4, 'head tier wrong');
+        assert(verbose_equipment.waist.tier == Tier::T3, 'waist tier wrong');
+        assert(verbose_equipment.foot.tier == Tier::T1, 'foot tier wrong');
+        assert(verbose_equipment.hand.tier == Tier::T2, 'hand tier wrong');
+        assert(verbose_equipment.neck.tier == Tier::T1, 'neck tier wrong');
+        assert(verbose_equipment.ring.tier == Tier::T3, 'ring tier wrong');
+
+        // Verify XP values are preserved
+        assert(verbose_equipment.weapon.xp == 100, 'weapon xp wrong');
+        assert(verbose_equipment.chest.xp == 200, 'chest xp wrong');
+        assert(verbose_equipment.head.xp == 300, 'head xp wrong');
+        assert(verbose_equipment.waist.xp == 400, 'waist xp wrong');
+        assert(verbose_equipment.foot.xp == 500, 'foot xp wrong');
+        assert(verbose_equipment.hand.xp == 50, 'hand xp wrong');
+        assert(verbose_equipment.neck.xp == 150, 'neck xp wrong');
+        assert(verbose_equipment.ring.xp == 250, 'ring xp wrong');
     }
 }
