@@ -8,9 +8,9 @@ use death_mountain::models::adventurer::equipment::ImplEquipment;
 use death_mountain::models::adventurer::item::{ImplItem, Item};
 use death_mountain::models::loot::ImplLoot;
 use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
-use graffiti::json::JsonImpl;
 
 use game_components_minigame::structs::GameDetail;
+use graffiti::json::JsonImpl;
 
 // @notice Generates the LS logo svg
 // @return The generated LS logo
@@ -603,82 +603,25 @@ pub fn generate_details(adventurer: Adventurer) -> Span<GameDetail> {
     let equipped_ring = generate_item(adventurer.equipment.ring, false, item_specials_seed);
 
     array![
-        GameDetail {
-            name: "XP",
-            value: xp,
-        },
-        GameDetail {
-            name: "Level",
-            value: level,
-        },
-        GameDetail {
-            name: "Health",
-            value: health,
-        },
-        GameDetail {
-            name: "Gold",
-            value: gold,
-        },
-        GameDetail {
-            name: "Strength",
-            value: str,
-        },
-        GameDetail {
-            name: "Dexterity",
-            value: dex,
-        },
-        GameDetail {
-            name: "Intelligence",
-            value: int,
-        },
-        GameDetail {
-            name: "Vitality",
-            value: vit,
-        },
-        GameDetail {
-            name: "Wisdom",
-            value: wis,
-        },
-        GameDetail {
-            name: "Charisma",
-            value: cha,
-        },
-        GameDetail {
-            name: "Luck",
-            value: luck,
-        },
-        GameDetail {
-            name: "Weapon",
-            value: equipped_weapon,
-        },
-        GameDetail {
-            name: "Chest Armor",
-            value: equipped_chest,
-        },
-        GameDetail {
-            name: "Head Armor",
-            value: equipped_head,
-        },
-        GameDetail {
-            name: "Waist Armor",
-            value: equipped_waist,
-        },
-        GameDetail {
-            name: "Foot Armor",
-            value: equipped_foot,
-        },
-        GameDetail {
-            name: "Hand Armor",
-            value: equipped_hand,
-        },
-        GameDetail {
-            name: "Necklace",
-            value: equipped_neck,
-        },
-        GameDetail {
-            name: "Ring",
-            value: equipped_ring,
-        },
+        GameDetail { name: "XP", value: xp },
+        GameDetail { name: "Level", value: level },
+        GameDetail { name: "Health", value: health },
+        GameDetail { name: "Gold", value: gold },
+        GameDetail { name: "Strength", value: str },
+        GameDetail { name: "Dexterity", value: dex },
+        GameDetail { name: "Intelligence", value: int },
+        GameDetail { name: "Vitality", value: vit },
+        GameDetail { name: "Wisdom", value: wis },
+        GameDetail { name: "Charisma", value: cha },
+        GameDetail { name: "Luck", value: luck },
+        GameDetail { name: "Weapon", value: equipped_weapon },
+        GameDetail { name: "Chest Armor", value: equipped_chest },
+        GameDetail { name: "Head Armor", value: equipped_head },
+        GameDetail { name: "Waist Armor", value: equipped_waist },
+        GameDetail { name: "Foot Armor", value: equipped_foot },
+        GameDetail { name: "Hand Armor", value: equipped_hand },
+        GameDetail { name: "Necklace", value: equipped_neck },
+        GameDetail { name: "Ring", value: equipped_ring },
     ]
         .span()
 }

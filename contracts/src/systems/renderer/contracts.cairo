@@ -16,10 +16,10 @@ mod renderer_systems {
     use death_mountain::models::adventurer::adventurer::Adventurer;
     use death_mountain::models::adventurer::bag::Bag;
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::utils::renderer::renderer_utils::{create_metadata, generate_svg, generate_details};
-    use super::IRendererSystems;
+    use death_mountain::utils::renderer::renderer_utils::{create_metadata, generate_details, generate_svg};
 
     use game_components_minigame::structs::GameDetail;
+    use super::IRendererSystems;
 
     #[abi(embed_v0)]
     impl RendererSystemsImpl of IRendererSystems<ContractState> {

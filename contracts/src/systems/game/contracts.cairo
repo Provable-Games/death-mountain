@@ -1621,10 +1621,10 @@ mod tests {
     use death_mountain::models::adventurer::bag::{Bag, ImplBag};
     use death_mountain::models::adventurer::equipment::{Equipment};
     use death_mountain::models::adventurer::item::{Item};
-    use death_mountain::models::adventurer::stats::{IStat, Stats, ImplStats};
+    use death_mountain::models::adventurer::stats::{IStat, ImplStats, Stats};
     use death_mountain::models::game::{
-        AdventurerEntropy, AdventurerPacked, BagPacked, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked, m_BagPacked, m_GameSettings,
-        m_GameSettingsMetadata, m_SettingsCounter,
+        AdventurerEntropy, AdventurerPacked, BagPacked, e_GameEvent, m_AdventurerEntropy, m_AdventurerPacked,
+        m_BagPacked, m_GameSettings, m_GameSettingsMetadata, m_SettingsCounter,
     };
     use death_mountain::models::game_data::m_DroppedItem;
     use death_mountain::models::market::ItemPurchase;
@@ -1644,8 +1644,8 @@ mod tests {
     };
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
     use game_components_token::interface::{IMinigameTokenMixinDispatcher};
-    use starknet::{ContractAddress, contract_address_const};
     use openzeppelin_token::erc721::interface::{IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
+    use starknet::{ContractAddress, contract_address_const};
 
     fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -2587,33 +2587,25 @@ mod tests {
         let adventurer_id = new_game(world, game);
         let denshokan_erc721_dispatcher = IERC721MetadataDispatcher { contract_address: denshokan.contract_address };
         let adventurer = Adventurer {
-                health: 72,
-                xp: 100,
-                stats: Stats {
-                    strength: 3,
-                    dexterity: 2,
-                    vitality: 0,
-                    intelligence: 1,
-                    wisdom: 5,
-                    charisma: 3,
-                    luck: 2,
-                },
-                gold: 40,
-                equipment: Equipment {
-                    weapon: Item { id: 13, xp: 0 },
-                    chest: Item { id: 0, xp: 0 },
-                    head: Item { id: 0, xp: 0 },
-                    waist: Item { id: 61, xp: 0 },
-                    foot: Item { id: 0, xp: 0 },
-                    hand: Item { id: 0, xp: 0 },
-                    neck: Item { id: 0, xp: 0 },
-                    ring: Item { id: 0, xp: 0 },
-                },
-                beast_health: 0,
-                stat_upgrades_available: 0,
-                item_specials_seed: 0,
-                action_count: 0,
-            };
+            health: 72,
+            xp: 100,
+            stats: Stats { strength: 3, dexterity: 2, vitality: 0, intelligence: 1, wisdom: 5, charisma: 3, luck: 2 },
+            gold: 40,
+            equipment: Equipment {
+                weapon: Item { id: 13, xp: 0 },
+                chest: Item { id: 0, xp: 0 },
+                head: Item { id: 0, xp: 0 },
+                waist: Item { id: 61, xp: 0 },
+                foot: Item { id: 0, xp: 0 },
+                hand: Item { id: 0, xp: 0 },
+                neck: Item { id: 0, xp: 0 },
+                ring: Item { id: 0, xp: 0 },
+            },
+            beast_health: 0,
+            stat_upgrades_available: 0,
+            item_specials_seed: 0,
+            action_count: 0,
+        };
         let packed_adventurer = game_libs.adventurer.pack_adventurer(adventurer);
         world.write_model_test(@AdventurerPacked { adventurer_id, packed: packed_adventurer });
         let bag = Bag {
@@ -2632,7 +2624,7 @@ mod tests {
             item_13: Item { id: 0, xp: 0 },
             item_14: Item { id: 0, xp: 0 },
             item_15: Item { id: 0, xp: 0 },
-            mutated: false
+            mutated: false,
         };
         let packed_bag = game_libs.adventurer.pack_bag(bag);
         world.write_model_test(@BagPacked { adventurer_id, packed: packed_bag });
