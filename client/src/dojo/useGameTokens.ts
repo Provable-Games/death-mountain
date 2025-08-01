@@ -233,9 +233,9 @@ export const useGameTokens = () => {
 
         let adventurer = adventurerData?.details?.adventurer || {};
 
-        let tokenId = parseInt(game.token_id, 16);
-        let expires_at = parseInt(game.lifecycle.end || 0, 16) * 1000;
-        let available_at = parseInt(game.lifecycle.start || 0, 16) * 1000;
+        let tokenId = game.token_id;
+        let expires_at = game.lifecycle.end * 1000;
+        let available_at = game.lifecycle.start * 1000;
 
         return {
           ...adventurer,
