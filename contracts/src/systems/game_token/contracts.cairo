@@ -28,14 +28,13 @@ mod game_token_systems {
     use death_mountain::models::objectives::{ScoreObjective, ScoreObjectiveCount};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait};
-    use death_mountain::systems::renderer::contracts::{IRendererSystemsDispatcherTrait};
     use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
     use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives};
     use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
     use game_components_minigame::extensions::objectives::structs::{GameObjective};
-    use game_components_minigame::interface::{IMinigameDetails, IMinigameTokenData, IMinigameDetailsSVG};
+    use game_components_minigame::interface::{IMinigameDetails, IMinigameTokenData};
 
     use game_components_minigame::minigame::MinigameComponent;
     use game_components_minigame::structs::{GameDetail};
@@ -154,22 +153,10 @@ mod game_token_systems {
     #[abi(embed_v0)]
     impl GameDetailsImpl of IMinigameDetails<ContractState> {
         fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
-            // self.erc721._require_owned(token_id);
             format!("Test Token Description for token {}", token_id)
         }
         fn game_details(self: @ContractState, token_id: u64) -> Span<GameDetail> {
-            // self.erc721._require_owned(token_id);
-            let game_libs = ImplGameLibs::new(self.world(@DEFAULT_NS()));
-            game_libs.renderer.generate_details(token_id.try_into().unwrap())
-        }
-    }
-
-    #[abi(embed_v0)]
-    impl GameDetailsSVGImpl of IMinigameDetailsSVG<ContractState> {
-        fn game_details_svg(self: @ContractState, token_id: u64) -> ByteArray {
-            // self.erc721._require_owned(token_id);
-            let game_libs = ImplGameLibs::new(self.world(@DEFAULT_NS()));
-            game_libs.renderer.generate_svg(token_id.try_into().unwrap())
+            array![GameDetail { name: "Test Game Detail", value: format!("Test Value for token {}", token_id) }].span()
         }
     }
 

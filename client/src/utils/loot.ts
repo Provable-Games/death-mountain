@@ -123,7 +123,7 @@ export const ItemUtils = {
     if (id === 4) return Tier.T2;
 
     // bronze ring (5) is T3
-    if (id === 5) return Tier.T2;
+    if (id === 5) return Tier.T3;
 
     // other rings are T1
     if (id <= 8) return Tier.T1;

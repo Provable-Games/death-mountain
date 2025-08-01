@@ -1637,15 +1637,14 @@ mod tests {
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
+    use death_mountain::systems::settings::contracts::settings_systems;
     use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
     };
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
-    use game_components_token::interface::{IMinigameTokenMixinDispatcher};
     use starknet::{ContractAddress, contract_address_const};
-    use openzeppelin_token::erc721::interface::{IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait};
 
     fn namespace_def() -> NamespaceDef {
         let ndef = NamespaceDef {
@@ -1696,7 +1695,7 @@ mod tests {
             .span()
     }
 
-    fn deploy_dungeon() -> (WorldStorage, IGameTokenSystemsDispatcher, GameLibs, IMinigameTokenMixinDispatcher) {
+    fn deploy_dungeon() -> (WorldStorage, IGameTokenSystemsDispatcher, GameLibs) {
         let denshokan_contracts = death_mountain::utils::setup_denshokan::setup();
 
         let ndef = namespace_def();

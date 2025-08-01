@@ -2,7 +2,7 @@
 
 use death_mountain::constants::combat::CombatEnums::Type;
 use death_mountain::models::beast::Beast;
-use death_mountain::models::game_data::{AdventurerKilled, CollectableEntity, CollectableResult, EntityStats};
+use death_mountain::models::game_data::{AdventurerKilled, CollectableEntity, DataResult, EntityStats};
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -16,7 +16,7 @@ pub trait IBeastSystems<T> {
     ) -> u64;
     fn get_valid_collectable(
         self: @T, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
-    ) -> CollectableResult<(u64, u16, u16)>;
+    ) -> DataResult<(u64, u16, u16)>;
     fn get_collectable(self: @T, dungeon: ContractAddress, entity_hash: felt252, index: u64) -> CollectableEntity;
     fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> u64;
     fn is_beast_collectable(self: @T, dungeon: ContractAddress, beast_id: u8, prefix: u8, suffix: u8) -> bool;
@@ -44,7 +44,7 @@ mod beast_systems {
     use death_mountain::models::adventurer::adventurer::ImplAdventurer;
     use death_mountain::models::beast::{Beast, ImplBeast};
     use death_mountain::models::game_data::{
-        AdventurerKilled, CollectableCount, CollectableEntity, CollectableResult, EntityStats,
+        AdventurerKilled, CollectableCount, CollectableEntity, DataResult, EntityStats,
     };
     use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
@@ -164,14 +164,14 @@ mod beast_systems {
 
         fn get_valid_collectable(
             self: @ContractState, dungeon: ContractAddress, adventurer_id: u64, entity_hash: felt252,
-        ) -> CollectableResult<(u64, u16, u16)> {
+        ) -> DataResult<(u64, u16, u16)> {
             let mut world: WorldStorage = self.world(@DEFAULT_NS());
             let collectable_entity: CollectableEntity = world.read_model((dungeon, entity_hash, 0));
 
             if collectable_entity.killed_by == adventurer_id {
-                CollectableResult::Ok((collectable_entity.seed, collectable_entity.level, collectable_entity.health))
+                DataResult::Ok((collectable_entity.seed, collectable_entity.level, collectable_entity.health))
             } else {
-                CollectableResult::Err('Not Valid'.into())
+                DataResult::Err('Not Valid'.into())
             }
         }
 

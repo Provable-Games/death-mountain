@@ -6,7 +6,8 @@ use death_mountain::models::adventurer::bag::Bag;
 use death_mountain::models::adventurer::item::Item;
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::models::game::AdventurerEntropy;
-
+use death_mountain::models::game_data::DataResult;
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IAdventurerSystems<T> {
@@ -14,6 +15,7 @@ pub trait IAdventurerSystems<T> {
     fn generate_starting_stats(self: @T, seed: u64) -> Stats;
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
+    fn get_adventurer_level(self: @T, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8>;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
     fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
@@ -42,11 +44,17 @@ mod adventurer_systems {
     use death_mountain::models::adventurer::item::Item;
     use death_mountain::models::adventurer::stats::{ImplStats, Stats};
     use death_mountain::models::game::{AdventurerEntropy, AdventurerPacked, BagPacked};
-    use death_mountain::models::game_data::DroppedItem;
+    use death_mountain::models::game_data::{DataResult, DroppedItem};
     use death_mountain::models::market::ImplMarket;
     use death_mountain::systems::game_token::contracts::{IGameTokenSystemsDispatcher, IGameTokenSystemsDispatcherTrait};
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_token::core::interface::{IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait};
+    use game_components_token::extensions::minter::interface::{
+        IMinigameTokenMinterDispatcher, IMinigameTokenMinterDispatcherTrait,
+    };
+    use starknet::ContractAddress;
     use super::IAdventurerSystems;
 
     #[abi(embed_v0)]
@@ -83,6 +91,24 @@ mod adventurer_systems {
 
         fn get_adventurer(self: @ContractState, adventurer_id: u64) -> Adventurer {
             _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
+        }
+
+        fn get_adventurer_level(self: @ContractState, dungeon: ContractAddress, adventurer_id: u64) -> DataResult<u8> {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = game_token.token_address();
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }
+                .token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
+                .get_minter_address(token_metadata.minted_by);
+
+            if minted_by_address == dungeon {
+                let adventurer: Adventurer = _load_adventurer(world, adventurer_id);
+                DataResult::Ok(adventurer.get_level())
+            } else {
+                DataResult::Err('Not Valid'.into())
+            }
         }
 
         fn get_adventurer_entropy(self: @ContractState, adventurer_id: u64) -> AdventurerEntropy {

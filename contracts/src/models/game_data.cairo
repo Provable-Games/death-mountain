@@ -1,9 +1,9 @@
 use death_mountain::models::adventurer::item::Item;
 use starknet::ContractAddress;
 
-/// Result type for collectable operations
+/// Result type for operations
 #[derive(Drop, Copy, Serde, PartialEq)]
-pub enum CollectableResult<T> {
+pub enum DataResult<T> {
     Ok: T,
     Err: felt252,
 }
