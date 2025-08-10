@@ -30,10 +30,11 @@ pub trait ISettingsSystems<T> {
 mod settings_systems {
     use death_mountain::constants::world::{DEFAULT_NS, VERSION};
     use death_mountain::libs::settings::generate_settings_array;
-    use death_mountain::models::adventurer::adventurer::{Adventurer};
+    use death_mountain::models::adventurer::adventurer::{Adventurer, ImplAdventurer};
     use death_mountain::models::adventurer::bag::{Bag, ImplBag};
     use death_mountain::models::adventurer::equipment::{IEquipment, ImplEquipment};
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, SettingsCounter, StatsMode};
+    use death_mountain::utils::vrf::VRFImpl;
 
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
@@ -74,7 +75,55 @@ mod settings_systems {
     }
 
     fn dojo_init(ref self: ContractState) {
+        let mut world: WorldStorage = self.world(@DEFAULT_NS());
         self.settings.initializer();
+
+        let default_settings = GameSettings {
+            settings_id: 0,
+            vrf_address: VRFImpl::cartridge_vrf_address(),
+            adventurer: ImplAdventurer::new(0),
+            bag: ImplBag::new(),
+            game_seed: 0,
+            game_seed_until_xp: 0,
+            in_battle: false,
+            stats_mode: StatsMode::Dodge,
+            base_damage_reduction: 50,
+            market_size: 25,
+        };
+
+        world
+            .write_model(
+                @default_settings,
+            );
+
+        world
+            .write_model(
+                @GameSettingsMetadata {
+                    settings_id: 0,
+                    name: 'Default',
+                    description: "Default Game Settings",
+                    created_by: starknet::get_caller_address(),
+                    created_at: starknet::get_block_timestamp(),
+                },
+            );
+
+        
+        let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+        let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };
+        let minigame_token_address = minigame_dispatcher.token_address();
+
+        let settings: Span<GameSetting> = generate_settings_array(default_settings);
+
+        self
+            .settings
+            .create_settings(
+                game_token_systems_address,
+                0,
+                "Default",
+                "These are the default Death Mountain settings",
+                settings,
+                minigame_token_address,
+            );
     }
 
     #[abi(embed_v0)]
