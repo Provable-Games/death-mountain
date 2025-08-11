@@ -22,6 +22,9 @@ pub mod systems {
     pub mod settings {
         pub mod contracts;
     }
+    pub mod objectives {
+        pub mod contracts;
+    }
 }
 
 pub mod models {
