@@ -104,9 +104,7 @@ mod objectives_systems {
             let token_address = minigame_dispatcher.token_address();
             self
                 .objectives
-                .create_objective(
-                    objective_count + 1, "Target Score", format!("Score Above {}", score), token_address,
-                );
+                .create_objective(objective_count + 1, "Target Score", format!("Score Above {}", score), token_address);
             world.write_model(@ScoreObjectiveCount { key: VERSION, count: objective_count + 1 })
         }
     }

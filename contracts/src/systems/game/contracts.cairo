@@ -55,10 +55,10 @@ mod game_systems {
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
+    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
+    use game_components_minigame::libs::{assert_token_ownership, post_action, pre_action};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
-    use game_components_minigame::libs::{assert_token_ownership, pre_action, post_action};
-    use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
 
     // ------------------------------------------ //
     // ------------ Helper Functions ------------ //
@@ -199,7 +199,6 @@ mod game_systems {
                 _save_seed(ref world, adventurer_id, market_seed, 0);
                 _save_bag(ref world, adventurer_id, adventurer.action_count, game_settings.bag, game_libs);
                 _save_adventurer(ref world, ref adventurer, game_settings.bag, adventurer_id, game_libs);
-
             }
             post_action(token_address, adventurer_id)
         }
@@ -1727,9 +1726,9 @@ mod tests {
     use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait, game_systems};
     use death_mountain::systems::game_token::contracts::game_token_systems;
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
+    use death_mountain::systems::objectives::contracts::objectives_systems;
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
-    use death_mountain::systems::objectives::contracts::objectives_systems;
     use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
