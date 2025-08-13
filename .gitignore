@@ -7,3 +7,4 @@ contracts/deploy
 contracts/.DS_Store
 .DS_Store
 veo-client/tsconfig.tsbuildinfo
+.env

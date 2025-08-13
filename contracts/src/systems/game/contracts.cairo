@@ -55,7 +55,6 @@ mod game_systems {
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use openzeppelin_token::erc721::interface::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{ContractAddress, get_tx_info};
     use super::VRF_ENABLED;
     use game_components_minigame::libs::{assert_token_ownership, pre_action, post_action};

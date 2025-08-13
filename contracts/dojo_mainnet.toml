@@ -7,16 +7,23 @@ seed = "DNC"
 [env]
 chain_id = "SN_MAINNET"
 rpc_url = "https://api.cartridge.gg/x/starknet/mainnet"
-world_address = "0x06a9e4c6f0799160ea8ddc43ff982a5f83d7f633e9732ce42701de1288ff705f"
-world_block = 948010
+world_address = "0x7c2db2c4225bf87561faac0c9b93fa63a39ee306065e5ed0bf6e8d6c040fbbc"
+world_block = 1712240
 
 [namespace]
-default = "ls_0_0_1"
+default = "ls_0_0_5"
 
 [writers]
-"ls_0_0_1" = ["ls_0_0_1-game_systems", "ls_0_0_1-game_token_systems"]
+"ls_0_0_5" = [
+    "ls_0_0_5-game_systems", 
+    "ls_0_0_5-game_token_systems", 
+    "ls_0_0_5-settings_systems",
+    "ls_0_0_5-beast_systems",
+    "ls_0_0_5-adventurer_systems"
+]
 
 [init_call_args]
-"ls_0_0_1-game_token_systems" = [
-    "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
+"ls_0_0_5-game_token_systems" = [
+    "0x01aebEB03D574e1B6c1c6D4E988b3cc3914705dE9Ec76B62D49967F26e616d4e",
+    "0x070051630806034721bf9e374ac15a7d28ee655cd8909925384790edc737a002" # denshokan_address
 ]

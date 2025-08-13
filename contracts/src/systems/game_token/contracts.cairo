@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-use death_mountain::models::adventurer::stats::Stats;
-use death_mountain::models::market::ItemPurchase;
 
 #[starknet::interface]
 pub trait IGameTokenSystems<T> {
@@ -14,12 +12,9 @@ mod game_token_systems {
     use death_mountain::libs::game::ImplGameLibs;
     use death_mountain::models::adventurer::adventurer::{ImplAdventurer};
     use death_mountain::models::adventurer::bag::{ImplBag};
-    use death_mountain::models::adventurer::stats::Stats;
     use death_mountain::models::game::{GameSettings, GameSettingsMetadata, StatsMode};
-    use death_mountain::models::market::ItemPurchase;
     use death_mountain::models::objectives::{ScoreObjective, ScoreObjectiveCount};
     use death_mountain::systems::adventurer::contracts::{IAdventurerSystemsDispatcherTrait};
-    use death_mountain::systems::game::contracts::{IGameSystemsDispatcher, IGameSystemsDispatcherTrait};
     use death_mountain::utils::vrf::VRFImpl;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
