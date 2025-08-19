@@ -25,5 +25,6 @@ default = "ls_0_0_4"
 [init_call_args]
 "ls_0_0_4-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598" # denshokan_address
+    "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598", # denshokan_address
+    "1" # Option::None for renderer address
 ]

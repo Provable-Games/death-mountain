@@ -1744,7 +1744,7 @@ mod tests {
     use death_mountain::systems::loot::contracts::{ILootSystemsDispatcherTrait, loot_systems};
     use death_mountain::systems::renderer::contracts::renderer_systems;
     use death_mountain::systems::settings::contracts::settings_systems;
-    use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
+    use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
     use dojo_cairo_test::{
         ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait, spawn_test_world,
@@ -1783,6 +1783,7 @@ mod tests {
         let mut game_token_init_calldata: Array<felt252> = array![];
         game_token_init_calldata.append(contract_address_const::<'player1'>().into()); // creator_address
         game_token_init_calldata.append(denshokan_address.into()); // denshokan_address
+        game_token_init_calldata.append(1); // Option::None for renderer address
         [
             ContractDefTrait::new(@DEFAULT_NS(), @"game_systems")
                 .with_writer_of([dojo::utils::bytearray_hash(@DEFAULT_NS())].span()),
@@ -2071,7 +2072,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Market item does not exist', 'ENTRYPOINT_FAILED'))]
     fn buy_item_not_on_market() {
-        let (world, game, game_libs, _) = deploy_dungeon();
+        let (world, game, _, _) = deploy_dungeon();
         let adventurer_id = new_game(world, game);
 
         // take out starter beast
