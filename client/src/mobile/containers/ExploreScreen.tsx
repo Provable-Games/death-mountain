@@ -4,10 +4,11 @@ import { getEventIcon, getEventTitle } from '@/utils/events';
 import { Box, Button, Typography, keyframes } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import AdventurerInfo from '../components/AdventurerInfo';
+import BeastCollectedPopup from '@/components/BeastCollectedPopup';
 
 export default function ExploreScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { exploreLog } = useGameStore();
+  const { exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
@@ -159,19 +160,15 @@ export default function ExploreScreen() {
               </Typography>
             }
           </Button>
-          {/* <FormControlLabel
-            control={
-              <Switch
-                checked={untilBeast}
-                onChange={(e) => setUntilBeast(e.target.checked)}
-                sx={styles.switch}
-              />
-            }
-            label="Until Beast"
-            sx={styles.switchLabel}
-          /> */}
         </Box>
       </Box>
+
+      {collectable && collectableTokenURI && (
+        <BeastCollectedPopup
+          onClose={() => setCollectable(null)}
+          tokenURI={collectableTokenURI}
+        />
+      )}
     </Box>
   );
 }

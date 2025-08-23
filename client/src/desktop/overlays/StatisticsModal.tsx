@@ -118,7 +118,6 @@ function PriceChart() {
   }
 
   // Transform data for Recharts with actual dates
-  console.log(gamePriceHistory);
   const chartData = gamePriceHistory.map((item, index) => {
     const date = new Date(item.start);
 

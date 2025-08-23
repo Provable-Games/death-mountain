@@ -1,9 +1,10 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
 import { ability_based_percentage, calculateCombatStats, calculateLevel } from '@/utils/game';
+import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, FormControl, MenuItem, Select, Tooltip, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -49,11 +50,22 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
   }, [selectedStats, onStatsChange]);
 
   useEffect(() => {
-    setViewMode(beast ? 'combat' : 'stats');
+    setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
   }, [beast]);
 
+  const combatStats = useMemo(() => {
+    return calculateCombatStats(adventurer!, bag, beast);
+  }, [adventurer, bag, beast]);
+
+  const equippedItemStats = useMemo(() => {
+    return ItemUtils.getEquippedItemStats(adventurer!, bag);
+  }, [adventurer, bag]);
+
+  const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
+  const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
+
   const handleStatIncrement = (stat: keyof typeof STAT_DESCRIPTIONS) => {
-    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < MAX_STAT_VALUE) {
+    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < (MAX_STAT_VALUE + equippedItemStats[stat])) {
       setSelectedStats(prev => ({
         ...prev,
         [stat]: prev[stat] + 1
@@ -69,10 +81,6 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
       }));
     }
   };
-
-  const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
-  const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
-  const combatStats = calculateCombatStats(adventurer!, bag, beast);
 
   function STAT_TITLE(stat: string) {
     if (stat === 'intelligence') {
@@ -207,7 +215,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
               variant="contained"
               size="small"
               onClick={() => handleStatIncrement(stat as keyof typeof STAT_DESCRIPTIONS)}
-              disabled={(adventurer!.stats[stat as keyof typeof STAT_DESCRIPTIONS] + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]) >= MAX_STAT_VALUE}
+              disabled={(adventurer!.stats[stat as keyof typeof STAT_DESCRIPTIONS] + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]) >= (MAX_STAT_VALUE + equippedItemStats[stat as keyof typeof STAT_DESCRIPTIONS])}
               sx={styles.controlButton}
             >
               +
@@ -215,7 +223,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
           </Box>
         </Box>
       ))}
-      
+
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
         {adventurer?.stat_upgrades_available! > 0 &&
           <Typography color="secondary" >{pointsRemaining} remaining</Typography>
@@ -279,7 +287,7 @@ export default function AdventurerStats({ onStatsChange }: AdventurerStatsProps)
             <Typography sx={styles.statLabel}>{COMBAT_STAT_TITLE(stat)}</Typography>
           </Box>
           <Box sx={styles.statControls}>
-            <Typography sx={{ width: '18px', textAlign: 'center', pt: '1px' }}>
+            <Typography sx={{ width: '28px', textAlign: 'center', pt: '1px' }}>
               {(combatStats as any)?.[stat]}{stat === 'critChance' && '%'}
             </Typography>
           </Box>
@@ -391,7 +399,7 @@ const styles = {
     },
   },
   menuPaper: {
-    backgroundColor: 'rgba(17, 17, 17, 0.95)',
+    backgroundColor: 'rgba(17, 17, 17, 1)',
     border: '1px solid #083e22',
     '& .MuiMenuItem-root': {
       color: '#d0c98d',

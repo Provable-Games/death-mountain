@@ -1,8 +1,9 @@
+import { STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
-import { getBeastImageById } from '@/utils/beast';
+import { getBeastImageById, getCollectableTraits } from '@/utils/beast';
 import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, calculateLevel, getNewItemsEquipped } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
 import { Box, Button, Checkbox, LinearProgress, Menu, Tooltip, Typography, keyframes } from '@mui/material';
@@ -14,16 +15,14 @@ import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
 import ItemTooltip from '../components/ItemTooltip';
-import { useStarknetApi } from '@/api/starknet';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
-  const { isBeastCollectable } = useStarknetApi();
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, adventurerState, beast, battleEvent, bag, gameSettings,
+  const { adventurer, adventurerState, beast, battleEvent, bag,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
 
   const [untilDeath, setUntilDeath] = useState(false);
@@ -111,12 +110,14 @@ export default function BeastScreen() {
   };
 
   const handleFlee = () => {
+    setShowBeastRewards(false);
     setFleeInProgress(true);
     setCombatLog(fleeMessage);
     executeGameAction({ type: 'flee', untilDeath });
   };
 
   const handleEquipItems = () => {
+    setShowBeastRewards(false);
     setEquipInProgress(true);
     setCombatLog(equipMessage);
     executeGameAction({ type: 'equip' });
@@ -142,7 +143,9 @@ export default function BeastScreen() {
 
   const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
+  const collectable = beast ? beast!.isCollectable : false;
+  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
@@ -151,7 +154,6 @@ export default function BeastScreen() {
 
   const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
   const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
-  const collectable = beast ? isBeastCollectable(beast!.id) : false;
 
   return (
     <motion.div
@@ -170,7 +172,7 @@ export default function BeastScreen() {
                 variant={beast!.name.length > 28 ? "h5" : "h4"}
                 sx={[
                   styles.beastName,
-                  collectable && {
+                  beast!.isCollectable && {
                     animation: `${pulseTextGlow} 2s infinite`,
                   }
                 ]}
@@ -203,14 +205,30 @@ export default function BeastScreen() {
                 value={(beastHealth / beast!.health) * 100}
                 sx={styles.healthBar}
               />
-              {collectable && (
-                <Typography sx={styles.collectableText}>
-                  This beast can be collected
-                </Typography>
+              {beast!.isCollectable && (
+                <>
+                  <Typography sx={styles.collectableText}>
+                    Defeat this beast to collect it
+                  </Typography>
+                  {collectableTraits && (
+                    <Box sx={styles.traitIndicators}>
+                      {collectableTraits.shiny && (
+                        <Box sx={styles.traitBox}>
+                          <Typography sx={styles.traitText}>SHINY</Typography>
+                        </Box>
+                      )}
+                      {collectableTraits.animated && (
+                        <Box sx={styles.traitBox}>
+                          <Typography sx={styles.traitText}>ANIMATED</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                </>
               )}
             </Box>
           </Box>
-          <Box sx={collectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
+          <Box sx={beast!.isCollectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
             <img
               src={getBeastImageById(beast!.id)}
               alt={beast!.name}
@@ -663,6 +681,32 @@ const styles = {
     color: '#80FF00',
     fontWeight: 'bold',
     textShadow: '0 0 10px rgba(128, 255, 0, 0.3)',
+  },
+  beastNameContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  traitIndicators: {
+    display: 'flex',
+    gap: '4px',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  traitBox: {
+    padding: '2px 6px',
+    background: 'rgba(237, 207, 51, 0.1)',
+    borderRadius: '4px',
+    border: '1px solid rgba(237, 207, 51, 0.3)',
+  },
+  traitText: {
+    color: '#EDCF33',
+    fontSize: '0.7rem',
+    fontFamily: 'VT323, monospace',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    lineHeight: '1',
   },
   beastType: {
     display: 'flex',

@@ -4,21 +4,23 @@ import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathOverlay() {
-  const { gameId, adventurer, exploreLog, battleEvent, beast, quest } = useGameStore();
+  const { gameId, exploreLog, battleEvent, beast, quest, collectableCount } = useGameStore();
   const navigate = useNavigate();
 
-  const deathEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
+  const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
 
-  let deathMessage = '';
-  if (deathEvent?.type === 'obstacle') {
-    deathMessage = `${OBSTACLE_NAMES[deathEvent.obstacle?.id!]} hit your ${deathEvent.obstacle?.location} for ${deathEvent.obstacle?.damage} damage ${deathEvent.obstacle?.critical_hit ? 'CRITICAL HIT!' : ''}`;
-  } else if (deathEvent?.type === 'beast_attack') {
-    deathMessage = `${beast?.name} attacked your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
-  } else if (deathEvent?.type === 'ambush') {
-    deathMessage = `${beast?.name} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
+  let battleMessage = '';
+  if (finalBattleEvent?.type === 'obstacle') {
+    battleMessage = `${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} hit your ${finalBattleEvent.obstacle?.location} for ${finalBattleEvent.obstacle?.damage} damage ${finalBattleEvent.obstacle?.critical_hit ? 'CRITICAL HIT!' : ''}`;
+  } else if (finalBattleEvent?.type === 'beast_attack') {
+    battleMessage = `${beast?.name} attacked your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
+  } else if (finalBattleEvent?.type === 'ambush') {
+    battleMessage = `${beast?.name} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  const shareMessage = `I fell to the mist in Loot Survivor after reaching ${adventurer?.xp || 0} XP. Want to see how I did it? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
+  const shareMessage = collectableCount > 0 
+    ? `I fought bravely in Death Mountain and collected ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}! Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`
+    : `I fought bravely in Death Mountain but couldn't collect any beasts. Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -34,26 +36,29 @@ export default function DeathOverlay() {
 
       <Box sx={styles.content}>
         <Typography variant="h2" sx={styles.title}>
-          DEATH
+          GAME OVER
         </Typography>
 
         <Box sx={styles.statsContainer}>
           <Box sx={styles.statCard}>
-            <Typography sx={styles.statLabel}>Final Score</Typography>
-            <Typography sx={styles.statValue}>{adventurer?.xp || 0}</Typography>
+            <Typography sx={styles.statLabel}>Beasts Collected</Typography>
+            <Typography sx={styles.statValue}>{collectableCount}</Typography>
           </Box>
         </Box>
 
-        {deathEvent && (
-          <Box sx={styles.deathCauseContainer}>
-            <Typography sx={styles.deathCauseTitle}>Cause of Death</Typography>
-            <Typography sx={styles.deathMessage}>{deathMessage}</Typography>
+        {finalBattleEvent && (
+          <Box sx={styles.battleCauseContainer}>
+            <Typography sx={styles.battleCauseTitle}>Final Encounter</Typography>
+            <Typography sx={styles.battleMessage}>{battleMessage}</Typography>
           </Box>
         )}
 
         <Box sx={styles.messageContainer}>
           <Typography sx={styles.message}>
-            Your quest for loot ends here, brave adventurer. The mist has claimed you, but your legend will live on in the halls of the fallen.
+            {collectableCount > 0 
+              ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}. Your victories will echo through the halls of the great adventurers.`
+              : `Though you fought valiantly in Death Mountain, the beasts proved too elusive this time. The mountain awaits your return, adventurer.`
+            }
           </Typography>
         </Box>
 
@@ -150,26 +155,26 @@ const styles = {
     fontFamily: 'Cinzel, Georgia, serif',
     fontWeight: 'bold',
   },
-  deathCauseContainer: {
+  battleCauseContainer: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     padding: '20px',
     boxSizing: 'border-box',
-    background: 'rgba(80, 0, 0, 0.9)',
+    background: 'rgba(80, 40, 0, 0.9)',
     borderRadius: '12px',
-    border: '2px solid #ff0000',
+    border: '2px solid #ff6600',
     width: '100%',
   },
-  deathCauseTitle: {
-    color: '#ff3333',
+  battleCauseTitle: {
+    color: '#ff9933',
     fontFamily: 'Cinzel, Georgia, serif',
     marginBottom: '8px',
     fontWeight: 'bold',
     opacity: 0.9,
   },
-  deathMessage: {
-    color: '#ff3333',
+  battleMessage: {
+    color: '#ff9933',
     fontSize: '1rem',
     fontFamily: 'Cinzel, Georgia, serif',
     textAlign: 'center',

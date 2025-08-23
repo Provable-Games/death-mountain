@@ -82,8 +82,13 @@ export default function GamePage() {
   useEffect(() => {
     if (!sdk || isPending) return;
 
-    if (mode === "real" && dojoConfig.chainId !== ChainId.SN_SEPOLIA) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_SEPOLIA) as NetworkConfig);
+    if (mode === "entering") {
+      setVideoQueue([streamIds.start]);
+      return;
+    }
+
+    if (mode === "real" && dojoConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
+      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
       return;
     }
 
@@ -98,7 +103,6 @@ export default function GamePage() {
     }
 
     if (!account) {
-      forceUpdate();
       return;
     }
 
@@ -107,7 +111,7 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, controllerAddress, isPending, sdk, update, dojoConfig.chainId]);
+  }, [game_id, controllerAddress, isPending, sdk, account, dojoConfig.chainId]);
 
   useEffect(() => {
     return () => {

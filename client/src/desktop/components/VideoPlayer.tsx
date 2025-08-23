@@ -13,7 +13,7 @@ const CUSTOMER_CODE = import.meta.env.VITE_PUBLIC_CLOUDFLARE_ID;
 export default function VideoPlayer() {
   const { videoQueue, setVideoQueue } = useGameDirector();
   const { setShowOverlay } = useGameStore();
-  const { hasInteracted } = useSound();
+  const { hasInteracted, muted, volume } = useSound();
 
   const playerRef = useRef<StreamPlayerApi | undefined>(undefined);
   const [videoReady, setVideoReady] = useState(false);
@@ -67,7 +67,8 @@ export default function VideoPlayer() {
                 autoplay
                 preload="auto"
                 controls={false}
-                muted={!hasInteracted}
+                muted={!hasInteracted || muted}
+                volume={volume}
                 onEnded={handleEnded}
                 onCanPlayThrough={() => setVideoReady(true)}
               />

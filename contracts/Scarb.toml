@@ -10,20 +10,20 @@ edition = "2024_07"
 sierra-replace-ids = true
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0" }
 openzeppelin_token = "1.0.0"
 openzeppelin_introspection = "1.0.0"
-game_components_minigame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.7" }
-game_components_metagame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.7" }
-game_components_test_starknet = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.7" }
-game_components_token = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.7" }
+game_components_minigame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.8" }
+game_components_metagame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.8" }
+game_components_test_starknet = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.8" }
+game_components_token = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.8" }
 alexandria_encoding = { git = "https://github.com/keep-starknet-strange/alexandria.git", tag = "v0.3.0" }
 graffiti = { git = "https://github.com/ponderingdemocritus/graffiti", rev = "bc569531791dbc71c6cd8d9bc154c34eedad31fe" }
 
 
 [dev-dependencies]
 cairo_test = "=2.10.1"
-dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0-alpha.2" }
+dojo_cairo_test = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.0" }
 
 [[target.starknet-contract]]
 sierra = true

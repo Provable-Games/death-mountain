@@ -1,4 +1,4 @@
-import { useDynamicConnector } from "@/contexts/starknet";
+import { useDojoConfig, useDynamicConnector } from "@/contexts/starknet";
 import { Settings, useGameSettings } from "@/dojo/useGameSettings";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
@@ -14,7 +14,9 @@ import {
 import { getNewItemsEquipped } from "@/utils/game";
 import { useQueries } from "@/utils/queries";
 import { delay } from "@/utils/utils";
+import { getContractByName } from "@dojoengine/core";
 import { useDojoSDK } from "@dojoengine/sdk/react";
+import { useSubscribeGameTokens } from "metagame-sdk";
 import {
   createContext,
   PropsWithChildren,
@@ -22,11 +24,8 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useState,
+  useState
 } from "react";
-import { useSubscribeGameTokens } from "metagame-sdk";
-import { getContractByName } from "@dojoengine/core";
-import { useDojoConfig } from "@/contexts/starknet";
 import { addAddressPadding } from "starknet";
 
 export interface GameDirectorContext {
@@ -76,11 +75,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     selectStatUpgrades,
     equip,
     drop,
+    claimBeast,
   } = useSystemCalls();
   const { getSettingsList } = useGameSettings();
   const { fetchMetadata } = useGameTokens();
   const dojoConfig = useDojoConfig();
-
   const namespace = dojoConfig.namespace;
   const GAME_TOKEN_ADDRESS = getContractByName(
     dojoConfig.manifest,
@@ -95,6 +94,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
+    collectable,
     setAdventurer,
     setBag,
     setBeast,
@@ -109,6 +109,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setGameSettings,
     setShowInventory,
     setShowOverlay,
+    setCollectable,
+    incrementBeastsCollected
   } = useGameStore();
 
   const { games: gameTokens } = useSubscribeGameTokens({
@@ -125,6 +127,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [eventQueue, setEventQueue] = useState<any[]>([]);
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
+
+  const [beastDefeated, setBeastDefeated] = useState(false);
 
   const gameTokensKey = useMemo(() => {
     return gameTokens.map((token: any) => token.token_id).join(",");
@@ -176,11 +180,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     processNextEvent();
   }, [eventQueue, isProcessing]);
 
+  useEffect(() => {
+    if (beastDefeated && collectable) {
+      incrementBeastsCollected();
+      claimBeast(gameId!, collectable);
+    }
+  }, [beastDefeated]);
+
   const subscribeEvents = async (gameId: number, settings: Settings) => {
     if (subscription) {
       try {
         subscription.cancel();
-      } catch (error) {}
+      } catch (error) { }
     }
 
     const [initialData, sub] = await sdk.subscribeEventQuery({
@@ -192,6 +203,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
               Boolean(getEntityModel(entity, "GameEvent"))
             )
             .map((entity: any) => processGameEvent(entity));
+
+          if (events.some((event: any) => event.type === "defeated_beast")) {
+            setBeastDefeated(true);
+          }
 
           setEventQueue((prev) => [...prev, ...events]);
         }
@@ -221,7 +236,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
   };
 
-  const processEvent = async (event: any, skipVideo: boolean) => {
+  const processEvent = async (event: any, reconnecting: boolean) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
 
@@ -231,7 +246,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       }
 
       if (
-        !skipVideo &&
+        !reconnecting &&
         event.adventurer!.item_specials_seed &&
         event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed
       ) {
@@ -240,12 +255,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setShowInventory(true);
       }
 
-      if (!skipVideo && event.adventurer!.stat_upgrades_available > 0) {
+      if (!reconnecting && event.adventurer!.stat_upgrades_available > 0) {
         setShowInventory(true);
       }
 
       if (
-        !skipVideo &&
+        !reconnecting &&
         event.adventurer!.stat_upgrades_available === 0 &&
         adventurer?.stat_upgrades_available! > 0
       ) {
@@ -263,6 +278,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
+      setBeastDefeated(false);
+      setCollectable(event.beast!.isCollectable ? event.beast! : null);
     }
 
     if (event.type === "market_items") {
@@ -271,7 +288,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (!spectating && ExplorerLogEvents.includes(event.type)) {
-      if (!skipVideo && event.type === "discovery") {
+      if (!reconnecting && event.type === "discovery") {
         if (event.discovery?.type === "Loot") {
           setNewInventoryItems([...newInventoryItems, event.discovery.amount!]);
         }
@@ -284,16 +301,16 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setExploreLog(event);
     }
 
-    if (!skipVideo && BattleEvents.includes(event.type)) {
+    if (!reconnecting && BattleEvents.includes(event.type)) {
       setBattleEvent(event);
     }
 
-    if (!skipVideo && getVideoId(event)) {
+    if (!reconnecting && getVideoId(event)) {
       setShowOverlay(false);
       setVideoQueue((prev) => [...prev, getVideoId(event)!]);
     }
 
-    if (!skipVideo && delayTimes[event.type]) {
+    if (!reconnecting && delayTimes[event.type]) {
       await delay(delayTimes[event.type]);
     }
   };

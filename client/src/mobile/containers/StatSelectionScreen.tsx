@@ -4,10 +4,11 @@ import { useGameStore } from '@/stores/gameStore';
 import { Stats } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
 import { ability_based_damage_reduction, ability_based_percentage, calculateLevel } from '@/utils/game';
+import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -35,7 +36,7 @@ const STAT_ICONS = {
 };
 
 export default function StatSelectionScreen() {
-  const { adventurer, gameSettings } = useGameStore();
+  const { adventurer, gameSettings, bag } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
 
   const [isSelectingStats, setIsSelectingStats] = useState(false);
@@ -53,8 +54,12 @@ export default function StatSelectionScreen() {
     setIsSelectingStats(false);
   }, [actionFailed]);
 
+  const equippedItemStats = useMemo(() => {
+    return ItemUtils.getEquippedItemStats(adventurer!, bag);
+  }, [adventurer, bag]);
+
   const handleStatIncrement = (stat: keyof Stats) => {
-    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < MAX_STAT_VALUE) {
+    if (pointsRemaining > 0 && (selectedStats[stat] + adventurer!.stats[stat]) < (MAX_STAT_VALUE + equippedItemStats[stat])) {
       setSelectedStats(prev => ({
         ...prev,
         [stat]: prev[stat] + 1
@@ -166,7 +171,7 @@ export default function StatSelectionScreen() {
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {(adventurer!.stats[stat as keyof Stats] + selectedStats[stat as keyof Stats]) >= MAX_STAT_VALUE && (
+                  {(adventurer!.stats[stat as keyof Stats] + selectedStats[stat as keyof Stats]) >= (MAX_STAT_VALUE + equippedItemStats[stat as keyof Stats]) && (
                     <Typography sx={styles.maxValueIndicator}>
                       (MAX)
                     </Typography>
@@ -202,7 +207,7 @@ export default function StatSelectionScreen() {
                   variant="contained"
                   size="small"
                   onClick={() => handleStatIncrement(stat as keyof Stats)}
-                  disabled={(adventurer!.stats[stat as keyof Stats] + selectedStats[stat as keyof Stats]) >= MAX_STAT_VALUE}
+                  disabled={(adventurer!.stats[stat as keyof Stats] + selectedStats[stat as keyof Stats]) >= (MAX_STAT_VALUE + equippedItemStats[stat as keyof Stats])}
                   sx={styles.controlButton}
                 >
                   +

@@ -58,7 +58,7 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           const tierColor = tier ? ItemUtils.getTierColor(tier) : undefined;
           const level = item?.id ? calculateLevel(item.xp) : 0;
           const isNameMatch = item?.id && beast ? ItemUtils.isNameMatch(item.id, level, adventurer!.item_specials_seed, beast) : false;
-          const isArmorSlot = ['head', 'chest', 'legs', 'hands', 'waist'].includes(slot.key);
+          const isArmorSlot = ['head', 'chest', 'foot', 'hand', 'waist'].includes(slot.key);
           const isWeaponSlot = slot.key === 'weapon';
           const isNameMatchDanger = isNameMatch && isArmorSlot;
           const isNameMatchPower = isNameMatch && isWeaponSlot;
@@ -68,7 +68,33 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           return (
             <Tooltip
               key={slot.key}
-              title={item?.id ? <ItemTooltip item={item} itemSpecialsSeed={adventurer?.item_specials_seed || 0} style={styles.tooltipContainer} /> : null}
+              title={item?.id ? (
+                <ItemTooltip item={item} itemSpecialsSeed={adventurer?.item_specials_seed || 0} style={styles.tooltipContainer} />
+              ) : (
+                !item?.id && (
+                  beast && isArmorSlot ? (
+                    <Box sx={styles.tooltipContainer}>
+                      <Box sx={styles.emptySlotTooltipHeader}>
+                        <Typography sx={styles.emptySlotTooltipTitle}>
+                          Empty {slot.label} Slot
+                        </Typography>
+                      </Box>
+                      <Box sx={styles.emptySlotTooltipDivider} />
+                      <Box sx={styles.emptySlotTooltipDamageContainer}>
+                        <Typography sx={styles.emptySlotTooltipDamageText}>
+                          -{Math.floor((6 - beast.tier) * beast.level * 1.5)} health when hit
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box sx={styles.tooltipContainer}>
+                      <Typography sx={styles.emptySlotTooltipTitle}>
+                        Empty {slot.label} Slot
+                      </Typography>
+                    </Box>
+                  )
+                )
+              )}
               placement="auto-end"
               slotProps={{
                 popper: {
@@ -110,6 +136,14 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
                         { backgroundColor: tierColor }
                       ]}
                     />
+                    {(isNameMatchDanger || isNameMatchPower) && (
+                      <Box
+                        sx={[
+                          styles.nameMatchGlow,
+                          isNameMatchDanger ? styles.nameMatchDangerGlow : styles.nameMatchPowerGlow
+                        ]}
+                      />
+                    )}
                     <img
                       src={metadata.imageUrl}
                       alt={metadata.name}
@@ -221,6 +255,14 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
                       { backgroundColor: tierColor }
                     ]}
                   />
+                  {(isNameMatchDanger || isNameMatchPower) && (
+                    <Box
+                      sx={[
+                        styles.nameMatchGlow,
+                        isNameMatchDanger ? styles.nameMatchDangerGlow : styles.nameMatchPowerGlow
+                      ]}
+                    />
+                  )}
                   <img
                     src={metadata.imageUrl}
                     alt={metadata.name}
@@ -241,7 +283,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
             <Box sx={styles.emptySlot}></Box>
           </Box>
         ))}
-        {!isDropMode && (
+        {(!isDropMode && !beast) && (
           <Box
             sx={styles.dropButtonSlot}
             onClick={onDropModeToggle}
@@ -389,25 +431,31 @@ export default function InventoryOverlay({ onStatsChange }: InventoryOverlayProp
 
 const pulseRed = keyframes`
   0% {
-    box-shadow: 0 0 12px rgba(248, 27, 27, 0.6);
+    box-shadow: 0 0 16px rgba(248, 27, 27, 0.8), 0 0 24px rgba(248, 27, 27, 0.4);
+    background-color: rgba(248, 27, 27, 0.15);
   }
   50% {
-    box-shadow: 0 0 20px rgba(248, 27, 27, 0.8);
+    box-shadow: 0 0 24px rgba(248, 27, 27, 1), 0 0 36px rgba(248, 27, 27, 0.6);
+    background-color: rgba(248, 27, 27, 0.25);
   }
   100% {
-    box-shadow: 0 0 12px rgba(248, 27, 27, 0.6);
+    box-shadow: 0 0 16px rgba(248, 27, 27, 0.8), 0 0 24px rgba(248, 27, 27, 0.4);
+    background-color: rgba(248, 27, 27, 0.15);
   }
 `;
 
 const pulseGreen = keyframes`
   0% {
-    box-shadow: 0 0 12px rgba(128, 255, 0, 0.6);
+    box-shadow: 0 0 16px rgba(128, 255, 0, 0.8), 0 0 24px rgba(128, 255, 0, 0.4);
+    background-color: rgba(128, 255, 0, 0.15);
   }
   50% {
-    box-shadow: 0 0 20px rgba(128, 255, 0, 0.8);
+    box-shadow: 0 0 24px rgba(128, 255, 0, 1), 0 0 36px rgba(128, 255, 0, 0.6);
+    background-color: rgba(128, 255, 0, 0.25);
   }
   100% {
-    box-shadow: 0 0 12px rgba(128, 255, 0, 0.6);
+    box-shadow: 0 0 16px rgba(128, 255, 0, 0.8), 0 0 24px rgba(128, 255, 0, 0.4);
+    background-color: rgba(128, 255, 0, 0.15);
   }
 `;
 
@@ -561,18 +609,7 @@ const styles = {
     justifyContent: 'center',
     boxShadow: '0 0 4px #000a',
     cursor: 'pointer',
-    overflow: 'hidden',
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      border: '2px solid',
-      borderColor: 'inherit',
-      pointerEvents: 'none',
-    }
+    overflow: 'hidden'
   },
   bagIcon: {
     width: 34,
@@ -661,6 +698,7 @@ const styles = {
     borderRadius: '8px',
     padding: '10px',
     zIndex: 1000,
+    minWidth: '220px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
   newItem: {
@@ -679,36 +717,16 @@ const styles = {
     boxShadow: '0 0 8px rgba(255, 68, 68, 0.3)',
   },
   nameMatchDangerSlot: {
-    animation: `${pulseRed} 1.5s infinite`,
+    animation: `${pulseRed} 1.2s infinite`,
     border: '2px solid rgb(248, 27, 27)',
-    boxShadow: '0 0 12px rgba(248, 27, 27, 0.6)',
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(248, 27, 27, 0.1)',
-      borderRadius: '4px',
-      zIndex: 1,
-    }
+    boxShadow: '0 0 16px rgba(248, 27, 27, 0.8), 0 0 24px rgba(248, 27, 27, 0.4)',
+    zIndex: 10,
   },
   nameMatchPowerSlot: {
-    animation: `${pulseGreen} 1.5s infinite`,
+    animation: `${pulseGreen} 1.2s infinite`,
     border: '2px solid #80FF00',
-    boxShadow: '0 0 12px rgba(128, 255, 0, 0.6)',
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(128, 255, 0, 0.1)',
-      borderRadius: '4px',
-      zIndex: 1,
-    }
+    boxShadow: '0 0 16px rgba(128, 255, 0, 0.8), 0 0 24px rgba(128, 255, 0, 0.4)',
+    zIndex: 10,
   },
   defenseItemSlot: {
     border: '2px solid rgba(128, 255, 0, 0.4)',
@@ -743,5 +761,51 @@ const styles = {
   goldStarIcon: {
     color: '#FFD700',
     filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.8))',
+  },
+  nameMatchGlow: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '120%',
+    height: '120%',
+    filter: 'blur(12px)',
+    opacity: 0.6,
+    zIndex: 1,
+    animation: 'pulse 1.2s infinite',
+  },
+  nameMatchDangerGlow: {
+    backgroundColor: 'rgba(248, 27, 27, 0.8)',
+  },
+  nameMatchPowerGlow: {
+    backgroundColor: 'rgba(128, 255, 0, 0.8)',
+  },
+  emptySlotTooltipHeader: {
+    marginBottom: '8px',
+  },
+  emptySlotTooltipTitle: {
+    color: '#d0c98d',
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+  },
+  emptySlotTooltipDivider: {
+    height: '1px',
+    backgroundColor: '#d7c529',
+    opacity: 0.2,
+    margin: '8px 0',
+  },
+  emptySlotTooltipDamageContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    padding: '6px',
+    borderRadius: '4px',
+    border: '1px solid',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    borderColor: 'rgba(255, 0, 0, 0.2)',
+  },
+  emptySlotTooltipDamageText: {
+    color: '#ff4444',
+    fontSize: '0.85rem',
   },
 };

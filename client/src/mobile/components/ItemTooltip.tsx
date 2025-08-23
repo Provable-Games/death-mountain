@@ -16,7 +16,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
   const tier = ItemUtils.getItemTier(item.id);
   const type = ItemUtils.getItemType(item.id);
   const metadata = ItemUtils.getMetadata(item.id);
-  const xpToNextLevel = calculateNextLevelXP(level);
+  const xpToNextLevel = calculateNextLevelXP(level, true);
   const specials = ItemUtils.getSpecials(item.id, level, itemSpecialsSeed);
   const specialName = specials.suffix ? `"${specials.prefix} ${specials.suffix}"` : null;
 
@@ -81,7 +81,7 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
         </Box>
         <LinearProgress
           variant="determinate"
-          value={calculateProgress(item.xp)}
+          value={calculateProgress(item.xp, true)}
           sx={styles.xpBar}
         />
       </Box>
@@ -144,8 +144,19 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
       {isNameMatch && (
         <>
           <Box sx={styles.divider} />
-          <Box sx={styles.nameMatchContainer}>
-            <Typography sx={styles.nameMatchWarning}>
+          <Box sx={{
+            ...styles.nameMatchContainer,
+            border: ItemUtils.isWeapon(item.id) 
+              ? '1px solid rgba(0, 255, 0, 0.6)' 
+              : '1px solid rgba(255, 0, 0, 0.6)',
+            backgroundColor: ItemUtils.isWeapon(item.id) 
+              ? 'rgba(0, 255, 0, 0.1)' 
+              : 'rgba(255, 0, 0, 0.1)',
+          }}>
+            <Typography sx={{
+              ...styles.nameMatchWarning,
+              color: ItemUtils.isWeapon(item.id) ? '#00FF00' : '#FF4444',
+            }}>
               Name matches beast!
             </Typography>
           </Box>

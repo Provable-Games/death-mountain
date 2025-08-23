@@ -6,14 +6,16 @@ import { getEventTitle } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
+import SettingsOverlay from './Settings';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
-  const { exploreLog, adventurer, setShowOverlay } = useGameStore();
+  const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI, setCollectable } = useGameStore();
   const { cart, inProgress, setInProgress } = useMarketStore();
   const [isSelectingStats, setIsSelectingStats] = useState(false);
   const [selectedStats, setSelectedStats] = useState({
@@ -158,6 +160,7 @@ export default function ExploreOverlay() {
 
       <InventoryOverlay onStatsChange={handleStatsChange} />
       <TipsOverlay />
+      <SettingsOverlay />
 
       {adventurer?.stat_upgrades_available! === 0 && <MarketOverlay />}
 
@@ -201,6 +204,13 @@ export default function ExploreOverlay() {
           </Button>
         )}
       </Box>
+
+      {collectable && collectableTokenURI && (
+        <BeastCollectedPopup
+          onClose={() => setCollectable(null)}
+          tokenURI={collectableTokenURI}
+        />
+      )}
     </Box>
   );
 }

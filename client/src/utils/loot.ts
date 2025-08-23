@@ -13,7 +13,7 @@ import {
 
 // Import icons
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
-import { Beast, Item, Stats } from '@/types/game';
+import { Adventurer, Beast, Item, Stats } from '@/types/game';
 import { calculateLevel } from './game';
 
 export const slotIcons = {
@@ -438,6 +438,84 @@ export const ItemUtils = {
       stats.intelligence += 1;
       stats.wisdom += 2;
     }
+
+    return stats;
+  },
+
+  fullItemBoost: (item: Item, item_specials_seed: number, stats: Stats): Stats => {
+    const level = calculateLevel(item.xp);
+    const specials = ItemUtils.getSpecials(item.id, level, item_specials_seed);
+
+    if (!specials.special1) {
+      return stats;
+    }
+
+    if (specials.special1 === "of Power") {
+      stats.strength += 3;
+    } else if (specials.special1 === "of Giant") {
+      stats.vitality += 3;
+    } else if (specials.special1 === "of Titans") {
+      stats.strength += 2;
+      stats.charisma += 1;
+    } else if (specials.special1 === "of Skill") {
+      stats.dexterity += 3;
+    } else if (specials.special1 === "of Perfection") {
+      stats.strength += 1;
+      stats.dexterity += 1;
+      stats.vitality += 1;
+    } else if (specials.special1 === "of Brilliance") {
+      stats.intelligence += 3;
+    } else if (specials.special1 === "of Enlightenment") {
+      stats.wisdom += 3;
+    } else if (specials.special1 === "of Protection") {
+      stats.vitality += 2;
+      stats.dexterity += 1;
+    } else if (specials.special1 === "of Anger") {
+      stats.strength += 2;
+      stats.dexterity += 1;
+    } else if (specials.special1 === "of Rage") {
+      stats.strength += 1;
+      stats.charisma += 1;
+      stats.wisdom += 1;
+    } else if (specials.special1 === "of Fury") {
+      stats.vitality += 1;
+      stats.charisma += 1;
+      stats.intelligence += 1;
+    } else if (specials.special1 === "of Vitriol") {
+      stats.intelligence += 2;
+      stats.wisdom += 1;
+    } else if (specials.special1 === "of the Fox") {
+      stats.dexterity += 2;
+      stats.charisma += 1;
+    } else if (specials.special1 === "of Detection") {
+      stats.wisdom += 2;
+      stats.dexterity += 1;
+    } else if (specials.special1 === "of Reflection") {
+      stats.intelligence += 1;
+      stats.wisdom += 2;
+    } else if (specials.special1 === "of the Twins") {
+      stats.charisma += 3;
+    }
+
+    return stats;
+  },
+
+  getEquippedItemStats: (adventurer: Adventurer, bag: Item[]): Stats => {
+    let stats: Stats = { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 };
+    let bagStats: Stats = { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 };
+
+    for (const item of bag) {
+      bagStats = ItemUtils.fullItemBoost(item, adventurer.item_specials_seed, bagStats);
+    }
+
+    stats.vitality += bagStats.vitality;
+    stats.charisma += bagStats.charisma;
+
+    Object.values(adventurer.equipment).forEach((item) => {
+      if (item.id !== 0) {
+        stats = ItemUtils.fullItemBoost(item, adventurer.item_specials_seed, stats);
+      }
+    });
 
     return stats;
   }

@@ -66,16 +66,16 @@ dependencies = [
 
 [[package]]
 name = "dojo"
-version = "1.6.0-alpha.0"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0-alpha.2#184a4e8368269815823004d61e71f0699059ad77"
+version = "1.6.0"
+source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0#c7d8b321abc711c14bddcf76f41587f6ef21c356"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_cairo_test"
-version = "1.6.0-alpha.0"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0-alpha.2#184a4e8368269815823004d61e71f0699059ad77"
+version = "1.6.0"
+source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0#c7d8b321abc711c14bddcf76f41587f6ef21c356"
 dependencies = [
  "dojo",
 ]
@@ -83,12 +83,12 @@ dependencies = [
 [[package]]
 name = "dojo_plugin"
 version = "2.10.1"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0-alpha.2#184a4e8368269815823004d61e71f0699059ad77"
+source = "git+https://github.com/dojoengine/dojo?tag=v1.6.0#c7d8b321abc711c14bddcf76f41587f6ef21c356"
 
 [[package]]
 name = "game_components_metagame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.7#04c8df8f769b17233d86f0da785a80b966ea86ec"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.8#bf62fc5b4702894318c9a51ce249658df234251f"
 dependencies = [
  "game_components_minigame",
  "game_components_token",
@@ -100,7 +100,7 @@ dependencies = [
 [[package]]
 name = "game_components_minigame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.7#04c8df8f769b17233d86f0da785a80b966ea86ec"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.8#bf62fc5b4702894318c9a51ce249658df234251f"
 dependencies = [
  "game_components_metagame",
  "game_components_token",
@@ -112,7 +112,7 @@ dependencies = [
 [[package]]
 name = "game_components_test_starknet"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.7#04c8df8f769b17233d86f0da785a80b966ea86ec"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.8#bf62fc5b4702894318c9a51ce249658df234251f"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -125,7 +125,7 @@ dependencies = [
 [[package]]
 name = "game_components_token"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.7#04c8df8f769b17233d86f0da785a80b966ea86ec"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.8#bf62fc5b4702894318c9a51ce249658df234251f"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -138,7 +138,7 @@ dependencies = [
 [[package]]
 name = "game_components_utils"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.7#04c8df8f769b17233d86f0da785a80b966ea86ec"
+source = "git+https://github.com/Provable-Games/game-components?tag=0.0.8#bf62fc5b4702894318c9a51ce249658df234251f"
 dependencies = [
  "alexandria_encoding",
  "game_components_metagame",

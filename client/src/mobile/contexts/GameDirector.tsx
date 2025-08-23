@@ -33,7 +33,7 @@ export interface GameDirectorContext {
     setSpectating: (spectating: boolean) => void;
     spectating: boolean;
     replayEvents: any[];
-    processEvent: (event: any, skipAnimation: boolean) => void;
+    processEvent: (event: any, reconnecting: boolean) => void;
     setEventQueue: (events: any[]) => void;
     eventsProcessed: number;
     setEventsProcessed: (eventsProcessed: number) => void;
@@ -96,6 +96,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     selectStatUpgrades,
     equip,
     drop,
+    claimBeast,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
   const { getAdventurer } = useStarknetApi();
@@ -109,6 +110,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     gameId,
     adventurer,
     adventurerState,
+    collectable,
     setAdventurer,
     setBag,
     setBeast,
@@ -121,6 +123,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     metadata,
     gameSettings,
     setGameSettings,
+    incrementBeastsCollected,
+    setCollectable
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -132,6 +136,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [eventQueue, setEventQueue] = useState<any[]>([]);
   const [eventsProcessed, setEventsProcessed] = useState(0);
   const [actionFailed, setActionFailed] = useReducer((x) => x + 1, 0);
+
+  const [beastDefeated, setBeastDefeated] = useState(false);
 
   const dojoConfig = useDojoConfig();
   const namespace = dojoConfig.namespace;
@@ -198,11 +204,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     processNextEvent();
   }, [eventQueue, isProcessing]);
 
+  useEffect(() => {
+    if (beastDefeated && collectable) {
+      incrementBeastsCollected();
+      claimBeast(gameId!, collectable);
+    }
+  }, [beastDefeated]);
+
   const subscribeEvents = async (gameId: number, settings: Settings) => {
     if (subscription) {
       try {
         subscription.cancel();
-      } catch (error) {}
+      } catch (error) { }
     }
 
     const [initialData, sub] = await sdk.subscribeEventQuery({
@@ -214,6 +227,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
               Boolean(getEntityModel(entity, "GameEvent"))
             )
             .map((entity: any) => processGameEvent(entity));
+
+          if (events.some((event: any) => event.type === "defeated_beast")) {
+            setBeastDefeated(true);
+          }
 
           setEventQueue((prev) => [...prev, ...events]);
         }
@@ -263,7 +280,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
   };
 
-  const processEvent = async (event: any, skipAnimation: boolean) => {
+  const processEvent = async (event: any, reconnecting: boolean) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
     }
@@ -278,6 +295,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (event.type === "beast") {
       setBeast(event.beast!);
+      setBeastDefeated(false);
+      setCollectable(event.beast!.isCollectable ? event.beast! : null);
     }
 
     if (event.type === "market_items") {
@@ -286,7 +305,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (!spectating && ExplorerLogEvents.includes(event.type)) {
-      if (!skipAnimation && event.type === "discovery") {
+      if (!reconnecting && event.type === "discovery") {
         if (event.discovery?.type === "Loot") {
           setNewInventoryItems([...newInventoryItems, event.discovery.amount!]);
         }
@@ -299,12 +318,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setExploreLog(event);
     }
 
-    if (!skipAnimation && BattleEvents.includes(event.type)) {
+    if (!reconnecting && BattleEvents.includes(event.type)) {
       setBattleEvent(event);
     }
 
     if (
-      !skipAnimation &&
+      !reconnecting &&
       (delayTimes[event.type] || replayDelayTimes[event.type])
     ) {
       await delay(

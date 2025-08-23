@@ -18,14 +18,19 @@ pub trait IAdventurerSystems<T> {
     fn get_adventurer_dungeon(self: @T, adventurer_id: u64) -> ContractAddress;
     fn get_adventurer_verbose(self: @T, adventurer_id: u64) -> AdventurerVerbose;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
+    fn get_adventurer_packed(self: @T, adventurer_id: u64) -> felt252;
+    fn get_bag_packed(self: @T, adventurer_id: u64) -> felt252;
     fn get_bag(self: @T, adventurer_id: u64) -> Bag;
-    fn get_adventurer_name(self: @T, adventurer_id: u64) -> ByteArray;
+    fn get_adventurer_name(self: @T, adventurer_id: u64) -> felt252;
+    fn add_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn remove_stat_boosts(self: @T, adventurer: Adventurer, bag: Bag) -> Adventurer;
     fn pack_adventurer(self: @T, adventurer: Adventurer) -> felt252;
+    fn unpack_adventurer(self: @T, packed_adventurer: felt252) -> Adventurer;
     fn get_discovery(
         self: @T, adventurer_level: u8, discovery_type_rnd: u8, amount_rnd1: u8, amount_rnd2: u8,
     ) -> DiscoveryType;
     fn pack_bag(self: @T, bag: Bag) -> felt252;
+    fn unpack_bag(self: @T, packed_bag: felt252) -> Bag;
     fn add_item_to_bag(self: @T, bag: Bag, item: Item) -> Bag;
     fn remove_item_from_bag(self: @T, bag: Bag, item_id: u8) -> (Bag, Item);
     fn add_new_item_to_bag(self: @T, bag: Bag, item_id: u8) -> Bag;
@@ -73,14 +78,14 @@ mod adventurer_systems {
 
         fn load_assets(self: @ContractState, adventurer_id: u64) -> (Adventurer, Bag) {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let mut adventurer = _load_adventurer(world, adventurer_id);
+            let (mut adventurer, _) = _load_adventurer(world, adventurer_id);
 
             if adventurer.equipment.has_specials() {
                 let item_stat_boosts = _get_stat_boosts(adventurer);
                 adventurer.stats.apply_stats(item_stat_boosts);
             }
 
-            let bag = _load_bag(world, adventurer_id);
+            let (bag, _) = _load_bag(world, adventurer_id);
             if bag.has_specials() {
                 let bag_stat_boosts = _get_bag_stat_boosts(adventurer, bag);
                 adventurer.stats.apply_stats(bag_stat_boosts);
@@ -91,19 +96,21 @@ mod adventurer_systems {
         }
 
         fn get_adventurer(self: @ContractState, adventurer_id: u64) -> Adventurer {
-            _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id)
+            let (adventurer, _) = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            adventurer
         }
 
         fn get_adventurer_level(self: @ContractState, adventurer_id: u64) -> u8 {
-            let adventurer: Adventurer = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            let (adventurer, _) = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
             adventurer.get_level()
         }
 
         fn get_adventurer_verbose(self: @ContractState, adventurer_id: u64) -> AdventurerVerbose {
             let world_storage = self.world(@DEFAULT_NS());
-            let adventurer = _load_adventurer(world_storage, adventurer_id);
-            let bag: Bag = _load_bag(world_storage, adventurer_id);
-            let name: ByteArray = _get_adventurer_name(world_storage, adventurer_id);
+
+            let (adventurer, packed_adventurer) = _load_adventurer(world_storage, adventurer_id);
+            let (bag, packed_bag) = _load_bag(world_storage, adventurer_id);
+            let name: felt252 = _get_adventurer_name(world_storage, adventurer_id);
 
             // proceed to create the verbose adventurer
             let equipment_verbose: EquipmentVerbose = adventurer.equipment.into();
@@ -111,6 +118,8 @@ mod adventurer_systems {
 
             AdventurerVerbose {
                 name,
+                packed_adventurer,
+                packed_bag,
                 health: adventurer.health,
                 xp: adventurer.xp,
                 level: adventurer.get_level(),
@@ -142,12 +151,37 @@ mod adventurer_systems {
             world.read_model(adventurer_id)
         }
 
-        fn get_bag(self: @ContractState, adventurer_id: u64) -> Bag {
-            _load_bag(self.world(@DEFAULT_NS()), adventurer_id)
+        fn get_adventurer_packed(self: @ContractState, adventurer_id: u64) -> felt252 {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let adventurer_packed: AdventurerPacked = world.read_model(adventurer_id);
+            adventurer_packed.packed
         }
 
-        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> ByteArray {
+        fn get_bag_packed(self: @ContractState, adventurer_id: u64) -> felt252 {
+            let world: WorldStorage = self.world(@DEFAULT_NS());
+            let bag_packed: BagPacked = world.read_model(adventurer_id);
+            bag_packed.packed
+        }
+
+        fn get_bag(self: @ContractState, adventurer_id: u64) -> Bag {
+            let (bag, _) = _load_bag(self.world(@DEFAULT_NS()), adventurer_id);
+            bag
+        }
+
+        fn get_adventurer_name(self: @ContractState, adventurer_id: u64) -> felt252 {
             _get_adventurer_name(self.world(@DEFAULT_NS()), adventurer_id)
+        }
+
+        fn add_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
+            if adventurer.equipment.has_specials() {
+                let item_stat_boosts = _get_stat_boosts(adventurer);
+                adventurer.stats.apply_stats(item_stat_boosts);
+            }
+            if bag.has_specials() {
+                let bag_stat_boosts = _get_bag_stat_boosts(adventurer, bag);
+                adventurer.stats.apply_stats(bag_stat_boosts);
+            }
+            adventurer
         }
 
         fn remove_stat_boosts(self: @ContractState, mut adventurer: Adventurer, bag: Bag) -> Adventurer {
@@ -166,6 +200,10 @@ mod adventurer_systems {
             ImplAdventurer::pack(adventurer)
         }
 
+        fn unpack_adventurer(self: @ContractState, packed_adventurer: felt252) -> Adventurer {
+            ImplAdventurer::unpack(packed_adventurer)
+        }
+
         fn get_discovery(
             self: @ContractState, adventurer_level: u8, discovery_type_rnd: u8, amount_rnd1: u8, amount_rnd2: u8,
         ) -> DiscoveryType {
@@ -174,6 +212,10 @@ mod adventurer_systems {
 
         fn pack_bag(self: @ContractState, bag: Bag) -> felt252 {
             ImplBag::pack(bag)
+        }
+
+        fn unpack_bag(self: @ContractState, packed_bag: felt252) -> Bag {
+            ImplBag::unpack(packed_bag)
         }
 
         fn add_item_to_bag(self: @ContractState, mut bag: Bag, item: Item) -> Bag {
@@ -213,11 +255,12 @@ mod adventurer_systems {
     /// @dev This function is called when the adventurer is loaded.
     /// @param world A reference to the WorldStorage object.
     /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @return The adventurer.
-    fn _load_adventurer(world: WorldStorage, adventurer_id: u64) -> Adventurer {
-        let mut adventurer_packed: AdventurerPacked = world.read_model(adventurer_id);
-        let mut adventurer = ImplAdventurer::unpack(adventurer_packed.packed);
-        adventurer
+    /// @return The unpacked adventurer struct.
+    /// @return A felt252 representing the adventurer.
+    fn _load_adventurer(world: WorldStorage, adventurer_id: u64) -> (Adventurer, felt252) {
+        let adventurer_packed: AdventurerPacked = world.read_model(adventurer_id);
+        let adventurer = ImplAdventurer::unpack(adventurer_packed.packed);
+        (adventurer, adventurer_packed.packed)
     }
 
     /// @title Load Bag
@@ -225,13 +268,15 @@ mod adventurer_systems {
     /// @dev This function is called when the bag is loaded.
     /// @param self A reference to the ContractState object.
     /// @param adventurer_id A felt252 representing the unique ID of the adventurer.
-    /// @return The bag.
-    fn _load_bag(world: WorldStorage, adventurer_id: u64) -> Bag {
+    /// @return The unpacked bag struct.
+    /// @return A felt252 representing the bag.
+    fn _load_bag(world: WorldStorage, adventurer_id: u64) -> (Bag, felt252) {
         let bag_packed: BagPacked = world.read_model(adventurer_id);
-        ImplBag::unpack(bag_packed.packed)
+        let bag = ImplBag::unpack(bag_packed.packed);
+        (bag, bag_packed.packed)
     }
 
-    fn _get_adventurer_name(world: WorldStorage, adventurer_id: u64) -> ByteArray {
+    fn _get_adventurer_name(world: WorldStorage, adventurer_id: u64) -> felt252 {
         let (game_token_address, _) = world.dns(@"game_token_systems").unwrap();
         let game_token = IGameTokenSystemsDispatcher { contract_address: game_token_address };
         let player_name = game_token.player_name(adventurer_id);

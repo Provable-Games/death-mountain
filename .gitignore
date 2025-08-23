@@ -7,4 +7,7 @@ contracts/deploy
 contracts/.DS_Store
 .DS_Store
 veo-client/tsconfig.tsbuildinfo
-contracts/.env
+.env
+.env.local
+*.env.bak
+argent_account_*.json

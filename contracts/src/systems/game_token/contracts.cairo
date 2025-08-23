@@ -2,7 +2,7 @@
 
 #[starknet::interface]
 pub trait IGameTokenSystems<T> {
-    fn player_name(ref self: T, adventurer_id: u64) -> ByteArray;
+    fn player_name(ref self: T, adventurer_id: u64) -> felt252;
 }
 
 #[dojo::contract]
@@ -54,11 +54,26 @@ mod game_token_systems {
     /// deployed.
     ///
     /// @param creator_address: the address of the creator of the game
-    fn dojo_init(ref self: ContractState, creator_address: ContractAddress, denshokan_address: ContractAddress) {
+    /// @param denshokan_address: the address of the denshokan contract
+    /// @param renderer_address: optional renderer address, defaults to 'renderer_systems' if None
+    fn dojo_init(
+        ref self: ContractState,
+        creator_address: ContractAddress,
+        denshokan_address: ContractAddress,
+        renderer_address: Option<ContractAddress>,
+    ) {
         let mut world: WorldStorage = self.world(@DEFAULT_NS());
         let (settings_systems_address, _) = world.dns(@"settings_systems").unwrap();
         let (objectives_systems_address, _) = world.dns(@"objectives_systems").unwrap();
-        let (renderer_address, _) = world.dns(@"renderer_systems").unwrap();
+
+        // Use provided renderer address or default to 'renderer_systems'
+        let final_renderer_address = match renderer_address {
+            Option::Some(addr) => addr,
+            Option::None => {
+                let (default_renderer, _) = world.dns(@"renderer_systems").unwrap();
+                default_renderer
+            },
+        };
 
         self
             .minigame
@@ -72,7 +87,7 @@ mod game_token_systems {
                 "https://deathmountain.gg/favicon.png",
                 Option::None, // color
                 Option::None, // client_url
-                Option::Some(renderer_address), // renderer address
+                Option::Some(final_renderer_address), // renderer address
                 Option::Some(settings_systems_address), // settings_address
                 Option::Some(objectives_systems_address), // objectives_address
                 denshokan_address,
@@ -101,7 +116,7 @@ mod game_token_systems {
     // ------------------------------------------ //
     #[abi(embed_v0)]
     impl GameTokenSystemsImpl of super::IGameTokenSystems<ContractState> {
-        fn player_name(ref self: ContractState, adventurer_id: u64) -> ByteArray {
+        fn player_name(ref self: ContractState, adventurer_id: u64) -> felt252 {
             self.minigame.get_player_name(adventurer_id)
         }
     }

@@ -117,6 +117,7 @@ pub struct BeastEvent {
     pub health: u16,
     pub level: u16,
     pub specials: SpecialPowers,
+    pub is_collectable: bool,
 }
 
 #[derive(Introspect, Copy, Drop, Serde)]

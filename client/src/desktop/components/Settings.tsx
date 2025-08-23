@@ -1,22 +1,27 @@
-import { Box, Button, Typography, Switch, FormControlLabel } from '@mui/material';
-import { motion } from 'framer-motion';
+
 import { useSound } from '@/contexts/Sound';
 import { useUIStore } from '@/stores/uiStore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import { Box, Button, IconButton, Slider, Typography } from '@mui/material';
+import { motion } from 'framer-motion';
 
 interface SettingsProps {
   onBack: () => void;
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { playing, setPlaying, volume, setVolume } = useSound();
-  const { useMobileClient, setUseMobileClient } = useUIStore();
+  const { setUseMobileClient } = useUIStore();
+  const { volume, setVolume, muted, setMuted } = useSound();
 
   const handleSwitchToMobile = () => {
     setUseMobileClient(true);
+  };
+
+  const handleVolumeChange = (_: Event, newValue: number | number[]) => {
+    setVolume((newValue as number) / 100);
   };
 
   return (
@@ -41,38 +46,46 @@ export default function Settings({ onBack }: SettingsProps) {
 
       <Box sx={styles.settingsContainer}>
         {/* Sound Settings */}
-        {/* <Box sx={styles.settingSection}>
+        <Box sx={styles.settingSection}>
           <Typography sx={styles.sectionTitle} color="primary">
             Sound
           </Typography>
-          
-          <Box sx={styles.settingItem}>
-            <Box sx={styles.settingLabel}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {playing ? (
-                  <VolumeUpIcon sx={{ fontSize: 20, color: '#d0c98d' }} />
-                ) : (
-                  <VolumeOffIcon sx={{ fontSize: 20, color: '#d0c98d' }} />
-                )}
-                <Typography color="primary" sx={{ fontSize: '14px' }}>
-                  SFX & Music
-                </Typography>
-              </Box>
-            </Box>
-            <Switch
-              checked={playing}
-              onChange={(e) => setPlaying(e.target.checked)}
-              sx={styles.switch}
+
+          <Box sx={styles.soundControl}>
+            <IconButton
+              size="small"
+              onClick={() => setMuted(!muted)}
+              sx={{ color: !muted ? '#d0c98d' : '#666', padding: '4px' }}
+            >
+              {muted ? (
+                <VolumeOffIcon sx={{ fontSize: 22 }} />
+              ) : (
+                <VolumeUpIcon sx={{ fontSize: 22 }} />
+              )}
+            </IconButton>
+            <Slider
+              value={Math.round(volume * 100)}
+              onChange={handleVolumeChange}
+              disabled={muted}
+              aria-labelledby="volume-slider"
+              valueLabelDisplay="auto"
+              step={1}
+              min={0}
+              max={100}
+              sx={styles.volumeSlider}
             />
+            <Typography sx={{ color: '#d0c98d', fontSize: '12px', minWidth: '35px', textAlign: 'right' }}>
+              {Math.round(volume * 100)}%
+            </Typography>
           </Box>
-        </Box> */}
+        </Box>
 
         {/* Client Settings */}
         <Box sx={styles.settingSection}>
           <Typography sx={styles.sectionTitle} color="primary">
             Client
           </Typography>
-          
+
           <Button
             variant="outlined"
             fullWidth
@@ -127,6 +140,49 @@ const styles = {
   settingLabel: {
     display: 'flex',
     alignItems: 'center',
+  },
+  soundControl: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+    padding: '6px 10px',
+    background: 'rgba(24, 40, 24, 0.3)',
+    border: '1px solid rgba(8, 62, 34, 0.5)',
+    borderRadius: '6px',
+  },
+  volumeSlider: {
+    flex: 1,
+    color: '#d0c98d',
+    height: 4,
+    '& .MuiSlider-thumb': {
+      backgroundColor: '#d0c98d',
+      width: 14,
+      height: 14,
+      '&:hover': {
+        boxShadow: '0 0 0 6px rgba(208, 201, 141, 0.16)',
+      },
+    },
+    '& .MuiSlider-track': {
+      backgroundColor: '#d0c98d',
+      border: 'none',
+    },
+    '& .MuiSlider-rail': {
+      backgroundColor: 'rgba(208, 201, 141, 0.2)',
+    },
+    '& .MuiSlider-valueLabel': {
+      backgroundColor: '#d0c98d',
+      color: '#1a1a1a',
+      fontSize: '10px',
+      fontWeight: 600,
+    },
+    '&.Mui-disabled': {
+      '& .MuiSlider-track': {
+        backgroundColor: '#666',
+      },
+      '& .MuiSlider-thumb': {
+        backgroundColor: '#666',
+      },
+    },
   },
   switch: {
     '& .MuiSwitch-switchBase.Mui-checked': {

@@ -19,7 +19,7 @@ pub trait IBeastSystems<T> {
     ) -> DataResult<(u64, u16, u16)>;
     fn get_collectable(self: @T, dungeon: ContractAddress, entity_hash: felt252, index: u64) -> CollectableEntity;
     fn get_collectable_count(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> u64;
-    fn is_beast_collectable(self: @T, dungeon: ContractAddress, beast_id: u8, prefix: u8, suffix: u8) -> bool;
+    fn is_beast_collectable(self: @T, adventurer_id: u64, entity_hash: felt252) -> bool;
     fn get_entity_stats(self: @T, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats;
     fn get_adventurer_killed(
         self: @T, dungeon: ContractAddress, entity_hash: felt252, kill_index: u64,
@@ -35,6 +35,7 @@ pub trait IBeastSystems<T> {
         special2_rnd: u8,
         special3_rnd: u8,
     ) -> Beast;
+    fn get_beast_hash(self: @T, id: u8, prefix: u8, suffix: u8) -> felt252;
 }
 
 #[dojo::contract]
@@ -190,12 +191,18 @@ mod beast_systems {
             collectable_count.count
         }
 
-        fn is_beast_collectable(
-            self: @ContractState, dungeon: ContractAddress, beast_id: u8, prefix: u8, suffix: u8,
-        ) -> bool {
+        fn is_beast_collectable(self: @ContractState, adventurer_id: u64, entity_hash: felt252) -> bool {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let entity_hash = ImplBeast::get_beast_hash(beast_id, prefix, suffix);
-            let collectable_entity: CollectableEntity = world.read_model((dungeon, entity_hash, 0));
+
+            let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
+            let game_token = IMinigameDispatcher { contract_address: game_token_systems_address };
+            let token_address = game_token.token_address();
+            let token_metadata = IMinigameTokenDispatcher { contract_address: token_address }
+                .token_metadata(adventurer_id);
+            let minted_by_address = IMinigameTokenMinterDispatcher { contract_address: token_address }
+                .get_minter_address(token_metadata.minted_by);
+
+            let collectable_entity: CollectableEntity = world.read_model((minted_by_address, entity_hash, 0));
             collectable_entity.id == 0
         }
 
@@ -226,6 +233,10 @@ mod beast_systems {
             special3_rnd: u8,
         ) -> Beast {
             ImplBeast::get_beast(adventurer_level, weapon_type, seed, health_rnd, level_rnd, special2_rnd, special3_rnd)
+        }
+
+        fn get_beast_hash(self: @ContractState, id: u8, prefix: u8, suffix: u8) -> felt252 {
+            ImplBeast::get_beast_hash(id, prefix, suffix)
         }
     }
 }

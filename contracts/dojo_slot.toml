@@ -4,26 +4,25 @@ description = "DNC"
 seed = "pg-slot-10"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/pg-slot-2/katana"
+rpc_url = "https://api.cartridge.gg/x/pg-slot-3/katana"
 # Default account for katana with seed = 0
-account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
-private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
-world_address = "0x038f6eb0186dfd1e072fa3b289b88e1c67b0baf1bd76cc6987f4a93258c69c4d"
+world_address = "0x51b471d552deb71dcc6122cc79efdb2ad8feffa57d33e6077fb3acd33496b4a"
 
 [namespace]
-default = "ls_0_0_4"
+default = "ls_0_0_6"
 
 [writers]
-"ls_0_0_4" = [
-    "ls_0_0_4-game_systems",
-    "ls_0_0_4-game_token_systems",
-    "ls_0_0_4-settings_systems",
-    "ls_0_0_4-beast_systems",
-    "ls_0_0_4-adventurer_systems"
+"ls_0_0_6" = [
+    "ls_0_0_6-game_systems",
+    "ls_0_0_6-game_token_systems",
+    "ls_0_0_6-settings_systems",
+    "ls_0_0_6-beast_systems",
+    "ls_0_0_6-adventurer_systems"
 ]
 
 [init_call_args]
-"ls_0_0_4-game_token_systems" = [
+"ls_0_0_6-game_token_systems" = [
     "0x0238df9Efd27Aba2ccB0bdC97a4cf440caA403e9ed3f1883294Ab6CDBA6C5282",
-    "0x004311c2b0845051fc5c703ec1792a36f99272e3400953632d62b3dac68f8598" # denshokan_address
+    "0x07fb67dae8765fe214b68fcd20d14b5d4784cedde759840559314f539aa04e32", # denshokan_address
+    "1" # Option::None for renderer address
 ]

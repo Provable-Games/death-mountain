@@ -50,6 +50,7 @@ export interface Bag {
 
 export interface Beast {
   id: number;
+  seed: bigint;
   baseName: string;
   name: string;
   health: number;
@@ -58,6 +59,7 @@ export interface Beast {
   tier: number;
   specialPrefix: string | null;
   specialSuffix: string | null;
+  isCollectable: boolean;
 }
 
 export interface Stats {
@@ -73,6 +75,7 @@ export interface Stats {
 export interface CombatStats {
   baseDamage: number;
   protection: number;
+  bestDamage: number;
   bestProtection: number;
   bestItems: Item[];
   critChance: number;
@@ -107,6 +110,20 @@ export interface GameAction {
   potions?: number;
   untilBeast?: boolean;
   untilDeath?: boolean;
+}
+
+export interface Payment {
+  paymentType: 'Ticket' | 'Golden Pass';
+  goldenPass?: {
+    address: string;
+    tokenId: number;
+  }
+}
+
+export interface Collectable {
+  beast: Beast;
+  showPopup: boolean;
+  tokenURI: string | null;
 }
 
 export interface Metadata {

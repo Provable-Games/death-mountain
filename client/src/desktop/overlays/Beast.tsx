@@ -1,10 +1,10 @@
 import BeastTooltip from '@/desktop/components/BeastTooltip';
 import { useGameStore } from '@/stores/gameStore';
-import { beastPowerPercent } from '@/utils/beast';
+import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
 import { calculateLevel } from '@/utils/game';
 import { beastNameSize } from '@/utils/utils';
-import { useStarknetApi } from '@/api/starknet';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 const pulseGold = keyframes`
@@ -20,12 +20,12 @@ const pulseGold = keyframes`
 `;
 
 export default function Beast() {
-  const { isBeastCollectable } = useStarknetApi();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
 
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
-  const collectable = beast ? isBeastCollectable(beast!.id) : false;
+  const collectable = beast ? beast!.isCollectable : false;
+  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
 
   useEffect(() => {
     if (battleEvent && battleEvent.type === "attack") {
@@ -41,7 +41,43 @@ export default function Beast() {
     <>
       {/* Beast Portrait */}
       <Box sx={collectable ? styles.collectablePortraitWrapper : styles.portraitWrapper}>
-        <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+        {collectable ? <Box sx={{ position: 'relative', overflow: 'hidden', width: '100%', height: '100%', borderRadius: '50%' }}>
+          <img src={`/images/beast_portraits/${beast!.baseName.toLowerCase()}.svg`}
+            alt="Beast" style={{
+              width: '64px',
+              height: '64px',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
+            }} />
+
+          {/* Shiny Effect */}
+          {collectableTraits?.shiny && (
+            <motion.div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '200%',
+                height: '100%',
+                borderRadius: '20%',
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%)',
+                pointerEvents: 'none',
+                zIndex: 5,
+              }}
+              animate={{
+                x: ['-100%', '200%'],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                repeatDelay: 1,
+              }}
+            />
+          )}
+        </Box> : <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
 
         <Box sx={[styles.beastLevelCircle, { left: -4 }, collectable && styles.collectableLevelCircle]}>
           <BeastTooltip beastType={beast!.type} beastId={beast!.id} />
@@ -58,7 +94,7 @@ export default function Beast() {
       {collectable && (
         <Box sx={styles.collectableIndicator}>
           <Typography sx={styles.collectableText}>
-            This beast can be collected
+            Defeat this beast to collect it
           </Typography>
         </Box>
       )}
@@ -106,7 +142,7 @@ export default function Beast() {
       {collectable && (
         <Box sx={styles.collectableIndicator}>
           <Typography sx={styles.collectableText}>
-            This beast can be collected
+            Defeat this beast to collect it
           </Typography>
         </Box>
       )}
@@ -122,7 +158,7 @@ const styles = {
     width: 80,
     height: 80,
     borderRadius: '50%',
-    background: 'rgba(24, 40, 24, 1)',
+    background: 'rgba(0, 0, 0, 1)',
     border: '3px solid #083e22',
     boxShadow: '0 0 8px rgba(0,0,0,0.6)',
     zIndex: 100,
@@ -134,7 +170,7 @@ const styles = {
     width: 80,
     height: 80,
     borderRadius: '50%',
-    background: 'rgba(24, 40, 24, 1)',
+    background: 'rgba(0, 0, 0, 1)',
     border: '3px solid #EDCF33',
     boxShadow: '0 0 8px rgba(0,0,0,0.6)',
     zIndex: 100,
@@ -206,7 +242,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     border: '2px solid #083e22',
-    zIndex: 1,
+    zIndex: 150,
   },
   collectableLevelCircle: {
     border: '2px solid #EDCF33',

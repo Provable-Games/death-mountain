@@ -1,10 +1,70 @@
 import { useDojoConfig } from "@/contexts/starknet";
 import { Adventurer } from "@/types/game";
+import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
+import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
   const dojoConfig = useDojoConfig();
+  const { address } = useAccount();
+
+  const getTokenBalances = async (tokens: any[]): Promise<Record<string, string>> => {
+    const calls = tokens.map((token, i) => ({
+      id: i + 1,
+      jsonrpc: "2.0",
+      method: "starknet_call",
+      params: [
+        {
+          contract_address: token.address,
+          entry_point_selector: "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
+          calldata: [address]
+        },
+        "pending"
+      ]
+    }));
+
+    const response = await fetch(dojoConfig.rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(calls),
+    });
+
+    const data = await response.json();
+    return parseBalances(data || [], tokens);
+  }
+
+  const goldenPassReady = async (goldenPassAddress: string, tokenIds: number[]): Promise<number[]> => {
+    try {
+      const calls = tokenIds.map((tokenId, i) => ({
+        id: i + 1,
+        jsonrpc: "2.0",
+        method: "starknet_call",
+        params: [
+          {
+            contract_address: import.meta.env.VITE_PUBLIC_DUNGEON_ADDRESS,
+            entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
+            calldata: [goldenPassAddress, num.toHex(tokenId)]
+          },
+          "pending"
+        ]
+      }));
+
+      const response = await fetch(dojoConfig.rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(calls),
+      });
+
+      const data = await response.json();
+
+      // Filter token IDs where the response is true (0x1)
+      return tokenIds.filter((_, index) => data[index]?.result?.[0] === "0x1");
+    } catch (error) {
+      console.error('Error in goldenPassReady:', error);
+      return [];
+    }
+  }
 
   const getAdventurer = async (adventurerId: number): Promise<Adventurer | null> => {
     try {
@@ -19,8 +79,8 @@ export const useStarknetApi = () => {
           params: [
             {
               contract_address: getContractByName(dojoConfig.manifest, dojoConfig.namespace, "adventurer_systems")?.address,
-              entry_point_selector: "0x3d3148be1dfdfcfcd22f79afe7aee5a3147ef412bfb2ea27949e7f8c8937a7",
-              calldata: [adventurerId.toString(16)],
+              entry_point_selector: "0x26f44ef7459c56b4f89ce027528afd605332b95a2875631deb3d1be2cbafea5",
+              calldata: [num.toHex(adventurerId)],
             },
             "pending",
           ],
@@ -81,7 +141,7 @@ export const useStarknetApi = () => {
           },
         },
         item_specials_seed: parseInt(data?.result[28], 16),
-        action_count: parseInt(data?.result[28], 16),
+        action_count: parseInt(data?.result[29], 16),
       }
 
       return adventurer;
@@ -92,9 +152,42 @@ export const useStarknetApi = () => {
     return null;
   };
 
-  const isBeastCollectable = (beastId: number): boolean => {
-    return false;
-  }
+  const getBeastTokenURI = async (beastId: number): Promise<string | null> => {
+    try {
+      const response = await fetch(dojoConfig.rpcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "starknet_call",
+          params: [
+            {
+              contract_address: import.meta.env.VITE_PUBLIC_BEASTS_ADDRESS,
+              entry_point_selector: "0x226ad7e84c1fe08eb4c525ed93cccadf9517670341304571e66f7c4f95cbe54",
+              calldata: [num.toHex(beastId), "0x0"],
+            },
+            "pending",
+          ],
+          id: 0,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data?.result && Array.isArray(data.result)) {
+        const decodedString = decodeHexByteArray(data.result);
+        return decodedString;
+      }
+
+      return data?.result;
+    } catch (error) {
+      console.log('error', error)
+    }
+
+    return null;
+  };
 
   const createBurnerAccount = async (rpcProvider: RpcProvider) => {
     const privateKey = stark.randomAddress();
@@ -128,5 +221,5 @@ export const useStarknetApi = () => {
     }
   };
 
-  return { getAdventurer, createBurnerAccount, isBeastCollectable };
+  return { getAdventurer, getBeastTokenURI, createBurnerAccount, getTokenBalances, goldenPassReady };
 };

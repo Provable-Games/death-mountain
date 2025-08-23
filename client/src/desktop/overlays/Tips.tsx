@@ -1,3 +1,4 @@
+import { STARTING_HEALTH } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
 import { CombatStats, Equipment } from '@/types/game';
 import { calculateLevel } from '@/utils/game';
@@ -16,7 +17,7 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
   });
   const [currentTip, setCurrentTip] = useState<string>('');
 
-  const maxHealth = gameSettings?.adventurer.health! + (adventurer!.stats.vitality * 15);
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
 
   // Save to localStorage whenever showTips changes

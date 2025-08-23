@@ -9,14 +9,18 @@ export const calculateLevel = (xp: number) => {
   return Math.floor(Math.sqrt(xp));
 };
 
-export const calculateNextLevelXP = (currentLevel: number) => {
-  return Math.min(400, Math.pow(currentLevel + 1, 2));
+export const calculateNextLevelXP = (currentLevel: number, item: boolean = false) => {
+  if (item) {
+    return Math.min(400, (currentLevel + 1) ** 2);
+  }
+
+  return (currentLevel + 1) ** 2;
 };
 
-export const calculateProgress = (xp: number) => {
+export const calculateProgress = (xp: number, item: boolean = false) => {
   const currentLevel = calculateLevel(xp);
-  const nextLevelXP = calculateNextLevelXP(currentLevel);
-  const currentLevelXP = Math.pow(currentLevel, 2);
+  const nextLevelXP = calculateNextLevelXP(currentLevel, item);
+  const currentLevelXP = currentLevel ** 2;
   return ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 };
 
@@ -43,11 +47,10 @@ const critical_hit_bonus = (base_damage: number, ring: Item | null): number => {
   total = base_damage;
 
   // Titanium Ring gives 3% bonus per level on critical hits
-  if (ring && ItemUtils.getItemName(ring.id) === "TitaniumRing" && total > 0) {
+  if (ring && ItemUtils.getItemName(ring.id) === "Titanium Ring" && total > 0) {
     const ringLevel = calculateLevel(ring.xp);
     total += Math.floor((total * 3 * ringLevel) / 100);
   }
-
   return total;
 };
 
@@ -68,7 +71,7 @@ const calculateWeaponSpecialBonus = (weaponId: number, weaponLevel: number, item
   }
 
   // Platinum Ring gives 3% bonus per level on special matches
-  if (ItemUtils.getItemName(ring.id) === "PlatinumRing" && bonus > 0) {
+  if (ItemUtils.getItemName(ring.id) === "Platinum Ring" && bonus > 0) {
     const ringLevel = calculateLevel(ring.xp);
     bonus += Math.floor((bonus * 3 * ringLevel) / 100);
   }
@@ -245,10 +248,25 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
   let bestProtection = 0;
   let bestItems: Item[] = [];
 
+  let bestWeapon = adventurer.equipment.weapon;
+  let bestDamage = baseDamage;
+
   if (beast) {
     let totalDefense = 0;
     let totalBestDefense = 0;
     let maxDamage = beast.level * (6 - Number(beast.tier)) * 1.5;
+
+    bagItems.filter((item) => ItemUtils.getItemSlot(item.id) === 'Weapon').forEach((item) => {
+      let itemDamage = calculateAttackDamage(item, adventurer, beast).baseDamage;
+      if (itemDamage > bestDamage) {
+        bestDamage = itemDamage;
+        bestWeapon = item;
+      }
+    });
+
+    if (bestWeapon) {
+      bestItems.push(bestWeapon)
+    }
 
     ['head', 'chest', 'waist', 'hand', 'foot'].forEach((slot) => {
       const armor = adventurer.equipment[slot as keyof Equipment];
@@ -301,6 +319,7 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
   return {
     baseDamage,
     protection,
+    bestDamage,
     bestProtection,
     bestItems,
     critChance: adventurer.stats.luck,

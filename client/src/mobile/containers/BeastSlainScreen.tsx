@@ -242,7 +242,7 @@ export default function BeastSlainScreen() {
                                 height: '100%',
                                 background: 'linear-gradient(90deg, #80FF00 0%, #9dff33 100%)',
                                 borderRadius: '2px',
-                                width: `${Math.min(100, calculateProgress(equippedItem.xp))}%`,
+                                width: `${Math.min(100, calculateProgress(equippedItem.xp, true))}%`,
                               }}
                             />
                           </Box>

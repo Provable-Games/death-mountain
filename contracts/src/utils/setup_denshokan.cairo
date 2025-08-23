@@ -100,6 +100,10 @@ pub fn deploy_optimized_token_contract(
     token_symbol.serialize(ref constructor_calldata);
     token_base_uri.serialize(ref constructor_calldata);
 
+    // set no royalty info
+    constructor_calldata.append(1);
+    constructor_calldata.append(1);
+
     // Serialize game_registry_address Option
     match game_registry_address {
         Option::Some(addr) => {

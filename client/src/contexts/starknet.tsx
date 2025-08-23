@@ -4,6 +4,7 @@ import ControllerConnector from "@cartridge/connector/controller";
 import { sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState, useEffect } from "react";
+import { Contract } from "starknet";
 
 interface DynamicConnectorContext {
   setCurrentNetworkConfig: (network: NetworkConfig) => void;
@@ -20,7 +21,7 @@ interface DynamicConnectorContext {
 
 const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(null);
 
-const controllerConfig = getNetworkConfig(ChainId.SN_SEPOLIA);
+const controllerConfig = getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN);
 const cartridgeController = typeof window !== "undefined" ? new ControllerConnector({
   policies: controllerConfig.policies,
   namespace: controllerConfig.namespace,

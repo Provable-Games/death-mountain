@@ -133,7 +133,7 @@ const ItemSlot = memo(({
 
 export default function CharacterScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, bag, newInventoryItems, setNewInventoryItems, equipItem } = useGameStore();
+  const { adventurer, beast, bag, newInventoryItems, setNewInventoryItems, equipItem } = useGameStore();
 
   const [dropInProgress, setDropInProgress] = useState(false);
   const [isDropMode, setIsDropMode] = useState(false);
@@ -272,45 +272,47 @@ export default function CharacterScreen() {
           </Box>
 
           {/* Drop Mode Controls */}
-          {!isDropMode ? (
-            <Button
-              variant="contained"
-              onClick={() => setIsDropMode(true)}
-              sx={styles.dropButton}
-            >
-              Drop Items
-            </Button>
-          ) : (
-            <Box sx={styles.dropControls}>
+          {!beast && <>
+            {!isDropMode ? (
               <Button
                 variant="contained"
-                color="error"
-                onClick={handleCancelDrop}
-                sx={styles.cancelDropButton}
-                disabled={dropInProgress}
+                onClick={() => setIsDropMode(true)}
+                sx={styles.dropButton}
               >
-                Cancel
+                Drop Items
               </Button>
-              <Button
-                variant="contained"
-                onClick={handleConfirmDrop}
-                sx={styles.dropControlButton}
-                disabled={dropInProgress || itemsToDrop.length === 0}
-              >
-                {dropInProgress
-                  ? <Box display={'flex'} alignItems={'baseline'}>
-                    <Typography>
-                      Dropping items
+            ) : (
+              <Box sx={styles.dropControls}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleCancelDrop}
+                  sx={styles.cancelDropButton}
+                  disabled={dropInProgress}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleConfirmDrop}
+                  sx={styles.dropControlButton}
+                  disabled={dropInProgress || itemsToDrop.length === 0}
+                >
+                  {dropInProgress
+                    ? <Box display={'flex'} alignItems={'baseline'}>
+                      <Typography>
+                        Dropping items
+                      </Typography>
+                      <div className='dotLoader green' />
+                    </Box>
+                    : <Typography>
+                      Confirm
                     </Typography>
-                    <div className='dotLoader green' />
-                  </Box>
-                  : <Typography>
-                    Confirm
-                  </Typography>
-                }
-              </Button>
-            </Box>
-          )}
+                  }
+                </Button>
+              </Box>
+            )}
+          </>}
         </Box>
       </Box>
     </Box>

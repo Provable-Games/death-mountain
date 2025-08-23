@@ -5,12 +5,14 @@ import { useGameStore } from "@/stores/gameStore";
 import { getShortNamespace } from "@/utils/utils";
 import { gql, request } from "graphql-request";
 import { GameTokenData } from "metagame-sdk";
+import { NETWORKS } from "@/utils/networkConfig";
 
 export const useGameTokens = () => {
   const dojoConfig = useDojoConfig();
 
   const namespace = dojoConfig.namespace;
   const NS_SHORT = getShortNamespace(namespace);
+  const SQL_ENDPOINT = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].torii;
 
   const fetchMetadata = async (gameTokens: any, tokenId: number) => {
     const gameToken = gameTokens?.find(
@@ -114,8 +116,44 @@ export const useGameTokens = () => {
     }
   };
 
+  const getGameTokens = async (accountAddress: string, tokenAddress: string) => {
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT token_id FROM token_balances
+      WHERE account_address = "${accountAddress.replace(/^0x0+/, "0x")}" AND contract_address = "${tokenAddress.replace(/^0x0+/, "0x")}"
+      LIMIT 10000`
+
+    const sql = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    let data = await sql.json()
+    return data.map((token: any) => parseInt(token.token_id.split(":")[1], 16))
+  }
+
+  const countBeasts = async () => {
+    let beast_address = import.meta.env.VITE_PUBLIC_BEASTS_ADDRESS;
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT COUNT(*) as count FROM token_balances
+      WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
+
+    const sql = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    let data = await sql.json()
+    return data[0].count
+  }
+
   return {
     fetchMetadata,
     fetchAdventurerData,
+    getGameTokens,
+    countBeasts,
   };
 };

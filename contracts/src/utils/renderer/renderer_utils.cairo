@@ -217,12 +217,16 @@ fn generate_logo() -> ByteArray {
 // @param adventurer_name The adventurer's name
 // @param bag The adventurer's bag
 // @return The generated adventurer metadata
-pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_name: ByteArray, bag: Bag) -> ByteArray {
+pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
     let rect = create_rect();
 
     let logo_element = generate_logo();
 
-    let _name = format!("{}", adventurer_name);
+    let mut _name = Default::default();
+
+    if adventurer_name != 0 {
+        _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+    }
 
     let _adventurer_id = format!("{}", adventurer_id);
     let _xp = format!("{}", adventurer.xp);
@@ -412,12 +416,16 @@ pub fn create_metadata(adventurer_id: u64, adventurer: Adventurer, adventurer_na
 // @param adventurer_name The adventurer's name
 // @param bag The adventurer's bag
 // @return The generated adventurer SVG
-pub fn generate_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: ByteArray, bag: Bag) -> ByteArray {
+pub fn generate_svg(adventurer_id: u64, adventurer: Adventurer, adventurer_name: felt252, bag: Bag) -> ByteArray {
     let rect = create_rect();
 
     let logo_element = generate_logo();
 
-    let _name = format!("{}", adventurer_name);
+    let mut _name = Default::default();
+
+    if adventurer_name != 0 {
+        _name.append_word(adventurer_name, U256BytesUsedTraitImpl::bytes_used(adventurer_name.into()).into());
+    }
 
     let _adventurer_id = format!("{}", adventurer_id);
     let _xp = format!("{}", adventurer.xp);
@@ -683,19 +691,19 @@ mod tests {
             mutated: false,
         };
 
-        let current_1 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_1 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let current_2 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_2 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let current_3 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_3 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_1 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_1 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_2 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_2 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_3 = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_3 = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let plain = create_metadata(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let plain = create_metadata(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
         println!("Current 1: {}", current_1);
         println!("Current 2: {}", current_2);
@@ -750,19 +758,19 @@ mod tests {
             mutated: false,
         };
 
-        let current_1 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_1 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let current_2 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_2 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let current_3 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let current_3 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_1 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_1 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_2 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_2 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let historical_3 = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let historical_3 = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
-        let plain = generate_svg(1000000, adventurer, "thisisareallyreallyreallongname", bag);
+        let plain = generate_svg(1000000, adventurer, 'thisisareallyreallyreallongname', bag);
 
         println!("Current 1: {}", current_1);
         println!("Current 2: {}", current_2);

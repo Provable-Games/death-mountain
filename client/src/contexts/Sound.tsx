@@ -16,27 +16,32 @@ const tracks: Record<string, string> = {
 
 interface SoundContextType {
   playing: boolean;
-  setPlaying: (playing: boolean) => void;
+  muted: boolean;
   volume: number;
-  setVolume: (volume: number) => void;
   hasInteracted: boolean;
+  setMuted: (muted: boolean) => void;
+  setPlaying: (playing: boolean) => void;
+  setVolume: (volume: number) => void;
 }
 
 const SoundContext = createContext<SoundContextType>({
   playing: true,
-  setPlaying: () => { },
+  muted: false,
   volume: 1,
-  setVolume: () => { },
   hasInteracted: false,
+  setMuted: () => { },
+  setPlaying: () => { },
+  setVolume: () => { },
 });
 
 export const SoundProvider = ({ children }: PropsWithChildren) => {
+  const { gameId, adventurer } = useGameStore();
   const audioRef = useRef(new Audio(tracks.Intro));
   audioRef.current.loop = true;
 
   const [playing, setPlaying] = useState(isMobile ? true : false);
   const [volume, setVolume] = useState(0.5);
-  const { gameId, adventurer } = useGameStore();
+  const [muted, setMuted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false)
 
   useEffect(() => {
@@ -96,10 +101,12 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   return (
     <SoundContext.Provider value={{
       playing,
-      setPlaying,
+      muted,
       volume,
-      setVolume,
       hasInteracted,
+      setMuted,
+      setPlaying,
+      setVolume,
     }}>
       {children}
     </SoundContext.Provider>

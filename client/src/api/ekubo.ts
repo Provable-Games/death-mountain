@@ -7,7 +7,7 @@ interface SwapQuote {
 }
 
 interface SwapSplit {
-  specifiedAmount: string;
+  amount_specified: string;
   route: RouteNode[];
 }
 
@@ -23,7 +23,7 @@ interface RouteNode {
   skip_ahead: string;
 }
 
-interface PotionQuote {
+interface TokenQuote {
   tokenAddress: string;
   minimumAmount: number;
   quote?: SwapQuote;
@@ -62,15 +62,13 @@ export const getSwapQuote = async (amount: number, token: string, otherToken: st
   }
 }
 
-export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken: string, potionQuotes: PotionQuote[]): SwapCall[] => {
-  let totalQuoteSum = potionQuotes.reduce((sum: bigint, potionQuote: PotionQuote) => {
-    if (potionQuote.quote && potionQuote.quote.splits.length > 0) {
-      const total = BigInt(potionQuote.quote.total);
-      return sum + (total < 0n ? -total : total);
-    }
+export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken: string, tokenQuote: TokenQuote): SwapCall[] => {
+  let totalQuoteSum = 0n;
 
-    return sum;
-  }, 0n);
+  if (tokenQuote.quote && tokenQuote.quote.splits.length > 0) {
+    const total = BigInt(tokenQuote.quote.total);
+    totalQuoteSum = total < 0n ? -total : total;
+  }
 
   const doubledTotal = totalQuoteSum * 2n;
   totalQuoteSum = doubledTotal < (totalQuoteSum + BigInt(1e19)) ? doubledTotal : (totalQuoteSum + BigInt(1e19));
@@ -87,63 +85,59 @@ export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken
     calldata: [purchaseToken],
   };
 
-  let swapCalls = potionQuotes.map((potionQuote: PotionQuote): SwapCall[] => {
-    let { tokenAddress, minimumAmount, quote } = potionQuote;
+  let { tokenAddress, minimumAmount, quote } = tokenQuote;
 
-    if (!quote || quote.splits.length === 0) {
-      return []
-    }
+  if (!quote || quote.splits.length === 0) {
+    return [transferCall, clearCall];
+  }
 
-    let { splits } = quote;
+  let { splits } = quote;
 
-    const clearProfitsCall = ROUTER_CONTRACT.populate("clear_minimum", [
-      { contract_address: tokenAddress },
-      minimumAmount * 1e18,
-    ]);
+  const clearProfitsCall = ROUTER_CONTRACT.populate("clear_minimum", [
+    { contract_address: tokenAddress },
+    minimumAmount * 1e18,
+  ]);
 
-    if (splits.length === 1) {
-      const split = splits[0];
+  let swapCalls: SwapCall[];
 
-      if (split.route.length === 1) {
-        throw new Error("unexpected single hop route");
-      }
+  if (splits.length === 1) {
+    const split = splits[0];
+    
+    swapCalls = [
+      {
+        contractAddress: ROUTER_CONTRACT.address,
+        entrypoint: "multihop_swap",
+        calldata: [
+          num.toHex(split.route.length),
+          ...split.route.reduce((memo: { token: string; encoded: string[] }, routeNode: RouteNode) => {
+            const isToken1 = BigInt(memo.token) === BigInt(routeNode.pool_key.token1);
 
-      return [
-        {
-          contractAddress: ROUTER_CONTRACT.address,
-          entrypoint: "multihop_swap",
-          calldata: [
-            num.toHex(split.route.length),
-            ...split.route.reduce((memo: { token: string; encoded: string[] }, routeNode: RouteNode) => {
-              const isToken1 = BigInt(memo.token) === BigInt(routeNode.pool_key.token1);
-
-              return {
-                token: isToken1 ? routeNode.pool_key.token0 : routeNode.pool_key.token1,
-                encoded: memo.encoded.concat([
-                  routeNode.pool_key.token0,
-                  routeNode.pool_key.token1,
-                  routeNode.pool_key.fee,
-                  num.toHex(routeNode.pool_key.tick_spacing),
-                  routeNode.pool_key.extension,
-                  num.toHex(BigInt(routeNode.sqrt_ratio_limit) % 2n ** 128n),
-                  num.toHex(BigInt(routeNode.sqrt_ratio_limit) >> 128n),
-                  routeNode.skip_ahead,
-                ]),
-              };
-            }, {
-              token: tokenAddress,
-              encoded: [],
-            }).encoded,
-            tokenAddress,
-            num.toHex(BigInt(split.specifiedAmount) < 0n ? -BigInt(split.specifiedAmount) : BigInt(split.specifiedAmount)),
-            "0x1",
-          ],
-        },
-        clearProfitsCall,
-      ]
-    }
-
-    return [
+            return {
+              token: isToken1 ? routeNode.pool_key.token0 : routeNode.pool_key.token1,
+              encoded: memo.encoded.concat([
+                routeNode.pool_key.token0,
+                routeNode.pool_key.token1,
+                routeNode.pool_key.fee,
+                num.toHex(routeNode.pool_key.tick_spacing),
+                routeNode.pool_key.extension,
+                num.toHex(BigInt(routeNode.sqrt_ratio_limit) % 2n ** 128n),
+                num.toHex(BigInt(routeNode.sqrt_ratio_limit) >> 128n),
+                routeNode.skip_ahead,
+              ]),
+            };
+          }, {
+            token: tokenAddress,
+            encoded: [],
+          }).encoded,
+          tokenAddress,
+          num.toHex(BigInt(split.amount_specified) < 0n ? -BigInt(split.amount_specified) : BigInt(split.amount_specified)),
+          "0x1",
+        ],
+      },
+      clearProfitsCall,
+    ];
+  } else {
+    swapCalls = [
       {
         contractAddress: ROUTER_CONTRACT.address,
         entrypoint: "multi_multihop_swap",
@@ -175,19 +169,19 @@ export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken
                 }
               ).encoded,
               tokenAddress,
-              num.toHex(BigInt(split.specifiedAmount) < 0n ? -BigInt(split.specifiedAmount) : BigInt(split.specifiedAmount)),
+              num.toHex(BigInt(split.amount_specified) < 0n ? -BigInt(split.amount_specified) : BigInt(split.amount_specified)),
               "0x1",
             ]);
           }, []),
         ],
       },
       clearProfitsCall
-    ]
-  })
+    ];
+  }
 
   return [
     transferCall,
-    ...swapCalls.flat(),
+    ...swapCalls,
     clearCall
-  ]
+  ];
 }
