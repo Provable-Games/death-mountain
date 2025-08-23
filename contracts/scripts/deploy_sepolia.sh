@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Namespace variables for easier maintenance
-LS_NAMESPACE="ls_0_0_5"
+LS_NAMESPACE="ls_0_0_6"
 
 #-----------------
 # build

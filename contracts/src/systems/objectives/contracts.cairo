@@ -11,7 +11,7 @@ mod objectives_systems {
     use death_mountain::systems::adventurer::contracts::IAdventurerSystemsDispatcherTrait;
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use game_components_minigame::extensions::objectives::interface::IMinigameObjectives;
+    use game_components_minigame::extensions::objectives::interface::{IMinigameObjectives, IMinigameObjectivesDetails};
     use game_components_minigame::extensions::objectives::objectives::ObjectivesComponent;
     use game_components_minigame::extensions::objectives::structs::GameObjective;
     use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
@@ -66,7 +66,11 @@ mod objectives_systems {
             let (mut adventurer, _) = game_libs.adventurer.load_assets(token_id);
             adventurer.xp.into() >= objective_score.score
         }
-        fn objectives(self: @ContractState, token_id: u64) -> Span<GameObjective> {
+    }
+
+    #[abi(embed_v0)]
+    impl ObjectivesDetailsImpl of IMinigameObjectivesDetails<ContractState> {
+        fn objectives_details(self: @ContractState, token_id: u64) -> Span<GameObjective> {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let (game_token_systems_address, _) = world.dns(@"game_token_systems").unwrap();
             let minigame_dispatcher = IMinigameDispatcher { contract_address: game_token_systems_address };

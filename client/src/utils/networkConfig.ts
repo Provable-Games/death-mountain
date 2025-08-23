@@ -53,34 +53,40 @@ export const NETWORKS = {
     namespace: "ls_0_0_6",
     slot: "pg-sepolia-3",
     rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-    torii: "https://api.cartridge.gg/x/pg-sepolia-3/torii",
+    torii: "https://api.cartridge.gg/x/pg-sepolia-4/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_sepolia,
     vrf: true,
-    goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+    goldenToken:
+      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter:
+      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
       {
         name: "ETH",
-        address: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        address:
+          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         displayDecimals: 4,
       },
       {
         name: "STRK",
-        address: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        address:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
         displayDecimals: 2,
       },
       {
         name: "USDC",
-        address: "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
+        address:
+          "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
         displayDecimals: 2,
         decimals: 6,
       },
       {
         name: "DNG40",
-        address: "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
+        address:
+          "0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f",
         displayDecimals: 0,
       },
     ],
@@ -99,8 +105,10 @@ export const NETWORKS = {
     manifest: manifest_slot,
     vrf: false,
     paymentTokens: [],
-    goldenToken: "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+    goldenToken:
+      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter:
+      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
   },
 };
 
@@ -170,7 +178,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     {
       target: DUNGEON_ADDRESS,
       method: "claim_beast",
-    }
+    },
   ];
 
   return {

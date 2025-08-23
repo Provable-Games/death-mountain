@@ -5,7 +5,7 @@ seed = "DNC"
 
 [env]
 rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
-world_address = "0x29f11cefb67df8a3962ba60816800ccf196f9497ae781bb4bc8589f8e245753"
+world_address = "0x04c9c7bba8c218c1ee2f9d95f5cecf8b4cafbe8cf072390b69651e48519c1ebb"
 
 [namespace]
 default = "ls_0_0_6"
@@ -16,12 +16,25 @@ default = "ls_0_0_6"
     "ls_0_0_6-game_token_systems", 
     "ls_0_0_6-settings_systems",
     "ls_0_0_6-beast_systems",
-    "ls_0_0_6-adventurer_systems"
+    "ls_0_0_6-adventurer_systems",
+    "ls_0_0_6-objectives_systems"
+]
+
+[migration]
+order_inits = [
+    "ls_0_0_6-game_systems",
+    "ls_0_0_6-loot_systems",
+    "ls_0_0_6-renderer_systems",
+    "ls_0_0_6-adventurer_systems",
+    "ls_0_0_6-beast_systems",
+    "ls_0_0_6-game_token_systems", 
+    "ls_0_0_6-settings_systems", 
+    "ls_0_0_6-objectives_systems"
 ]
 
 [init_call_args]
 "ls_0_0_6-game_token_systems" = [
     "0x065d2AB17338b5AffdEbAF95E2D79834B5f30Bac596fF55563c62C3c98700150", # account address
-    "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4", # denshokan address
+    "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899", # denshokan address
     "1" # Option::None for renderer address
 ]

@@ -39,7 +39,7 @@ mod settings_systems {
 
     use dojo::model::ModelStorage;
     use dojo::world::{WorldStorage, WorldStorageTrait};
-    use game_components_minigame::extensions::settings::interface::{IMinigameSettings};
+    use game_components_minigame::extensions::settings::interface::{IMinigameSettings, IMinigameSettingsDetails};
     use game_components_minigame::extensions::settings::settings::SettingsComponent;
     use game_components_minigame::extensions::settings::structs::{GameSetting, GameSettingDetails};
 
@@ -129,7 +129,11 @@ mod settings_systems {
             let settings: GameSettings = world.read_model(settings_id);
             settings.adventurer.health != 0
         }
-        fn settings(self: @ContractState, settings_id: u32) -> GameSettingDetails {
+    }
+
+    #[abi(embed_v0)]
+    impl GameSettingsDetailsImpl of IMinigameSettingsDetails<ContractState> {
+        fn settings_details(self: @ContractState, settings_id: u32) -> GameSettingDetails {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let settings: GameSettings = world.read_model(settings_id);
             let settings_details: GameSettingsMetadata = world.read_model(settings_id);
