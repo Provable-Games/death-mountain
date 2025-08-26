@@ -63,7 +63,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (account) {
       fetchTokenBalances();
-      identifyAddress({ address });
+      identifyAddress({ address: account.address });
     }
   }, [account]);
 
