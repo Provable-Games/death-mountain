@@ -13,6 +13,12 @@ import {
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
 import "./index.css";
+import { PostHogProvider } from "posthog-js/react";
+
+const options = {
+  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+  defaults: "2025-05-24" as const,
+};
 
 function DojoApp() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -48,7 +54,7 @@ function DojoApp() {
     <DojoSdkProvider
       sdk={sdk}
       dojoConfig={createDojoConfig(currentNetworkConfig)}
-      clientFn={() => { }}
+      clientFn={() => {}}
     >
       <MetagameProvider>
         <App />
@@ -59,9 +65,14 @@ function DojoApp() {
 
 async function main() {
   createRoot(document.getElementById("root")!).render(
-    <DynamicConnectorProvider>
-      <DojoApp />
-    </DynamicConnectorProvider>
+    <PostHogProvider
+      apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+      options={options}
+    >
+      <DynamicConnectorProvider>
+        <DojoApp />
+      </DynamicConnectorProvider>
+    </PostHogProvider>
   );
 }
 

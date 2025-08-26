@@ -5,7 +5,12 @@ import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { GameAction, Item } from "@/types/game";
-import { BattleEvents, ExplorerReplayEvents, GameEvent, processGameEvent } from "@/utils/events";
+import {
+  BattleEvents,
+  ExplorerReplayEvents,
+  GameEvent,
+  processGameEvent,
+} from "@/utils/events";
 import { getNewItemsEquipped } from "@/utils/game";
 import { delay } from "@/utils/utils";
 import {
@@ -16,6 +21,7 @@ import {
   useReducer,
   useState,
 } from "react";
+import { useAnalytics } from "@/utils/analytics";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -85,8 +91,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     claimBeast,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { getGameState, getSettingsDetails, getTokenMetadata } = useStarknetApi();
+  const { getGameState, getSettingsDetails, getTokenMetadata } =
+    useStarknetApi();
   const { getGameEvents } = useGameEvents();
+  const { gameStartedEvent } = useAnalytics();
 
   const {
     gameId,
@@ -107,7 +115,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setGameSettings,
     incrementBeastsCollected,
     setCollectable,
-    setMetadata
+    setMetadata,
   } = useGameStore();
 
   const [spectating, setSpectating] = useState(false);
@@ -133,7 +141,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       getSettingsDetails(metadata.settings_id).then((settings) => {
         setGameSettings(settings);
         setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
-        initializeGame(settings);
+        initializeGame(settings, currentNetworkConfig.name);
       });
     }
   }, [metadata, gameId]);
@@ -172,7 +180,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   }, [beastDefeated]);
 
-  const initializeGame = async (settings: Settings) => {
+  const initializeGame = async (settings: Settings, mode: string) => {
     if (spectating) return;
 
     const gameState = await getGameState(gameId!);
@@ -180,9 +188,14 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (gameState) {
       restoreGameState(gameState);
     } else {
-      executeGameAction({ type: 'start_game', gameId: gameId!, settings });
+      executeGameAction({ type: "start_game", gameId: gameId!, settings });
+      gameStartedEvent({
+        adventurerId: gameId!,
+        dungeon: mode,
+        settingsId: settings.settings_id,
+      });
     }
-  }
+  };
 
   const restoreGameState = async (gameState: any) => {
     const gameEvents = await getGameEvents(gameId!);
@@ -194,11 +207,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
 
     setAdventurer(gameState.adventurer);
-    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
+    setBag(
+      Object.values(gameState.bag).filter(
+        (item: any) => typeof item === "object" && item.id !== 0
+      ) as Item[]
+    );
     setMarketItemIds(gameState.market);
 
     if (gameState.adventurer.beast_health > 0) {
-      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
+      let beast = processGameEvent({
+        action_count: 0,
+        details: { beast: gameState.beast },
+      }).beast!;
       setBeast(beast);
       setCollectable(beast.isCollectable ? beast : null);
     }
@@ -246,7 +266,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBattleEvent(event);
     }
 
-    if (!skipDelay && (delayTimes[event.type] || replayDelayTimes[event.type])) {
+    if (
+      !skipDelay &&
+      (delayTimes[event.type] || replayDelayTimes[event.type])
+    ) {
       await delay(
         spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
       );
@@ -259,7 +282,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     let txs: any[] = [];
 
     if (action.type === "start_game") {
-      if (action.settings.game_seed === 0 && action.settings.adventurer.xp !== 0) {
+      if (
+        action.settings.game_seed === 0 &&
+        action.settings.adventurer.xp !== 0
+      ) {
         txs.push(requestRandom());
       }
       txs.push(startGame(action.gameId!));

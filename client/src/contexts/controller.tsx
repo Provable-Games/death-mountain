@@ -3,10 +3,7 @@ import { useGameTokens } from "@/dojo/useGameTokens";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { Payment } from "@/types/game";
-import {
-  ChainId,
-  NETWORKS
-} from "@/utils/networkConfig";
+import { ChainId, NETWORKS } from "@/utils/networkConfig";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import {
   createContext,
@@ -19,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
+import { useAnalytics } from "@/utils/analytics";
 
 export interface ControllerContext {
   account: any;
@@ -47,13 +45,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { createBurnerAccount, getTokenBalances, goldenPassReady } = useStarknetApi();
+  const { createBurnerAccount, getTokenBalances, goldenPassReady } =
+    useStarknetApi();
   const { getGameTokens } = useGameTokens();
   const [burner, setBurner] = useState<Account | null>(null);
   const [userName, setUserName] = useState<string>();
   const [creatingBurner, setCreatingBurner] = useState(false);
   const [tokenBalances, setTokenBalances] = useState({});
   const [goldenPassIds, setGoldenPassIds] = useState<number[]>([]);
+  const { identifyAddress } = useAnalytics();
 
   const demoRpcProvider = useMemo(
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
@@ -63,6 +63,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (address) {
       fetchTokenBalances();
+      identifyAddress({ address });
     }
   }, [address]);
 
@@ -95,9 +96,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   }, [connector]);
 
   const enterDungeon = async (payment: Payment, txs: any[]) => {
-    let gameId = await buyGame(account, payment, userName || "Adventurer", txs, () => {
-      navigate(`/survivor/play?mode=entering`);
-    });
+    let gameId = await buyGame(
+      account,
+      payment,
+      userName || "Adventurer",
+      txs,
+      () => {
+        navigate(`/survivor/play?mode=entering`);
+      }
+    );
 
     if (gameId) {
       navigate(`/survivor/play?id=${gameId}`, { replace: true });
@@ -106,7 +113,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     } else {
       navigate(`/`, { replace: true });
     }
-  }
+  };
 
   const createBurner = async () => {
     setCreatingBurner(true);
@@ -119,15 +126,23 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   async function fetchTokenBalances() {
-    const balances = await getTokenBalances(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].paymentTokens);
+    const balances = await getTokenBalances(
+      NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
+        .paymentTokens
+    );
     setTokenBalances(balances);
 
-    if (parseInt(balances.SLORDS) < 10 && import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA") {
+    if (
+      parseInt(balances.SLORDS) < 10 &&
+      import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"
+    ) {
       mintSepoliaLords(account);
       setTokenBalances({ ...balances, SLORDS: "100" });
     }
 
-    let goldenTokenAddress = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].goldenToken;
+    let goldenTokenAddress =
+      NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
+        .goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
     if (allTokens.length > 0) {
       const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
@@ -142,7 +157,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
           currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
             ? burner
             : account,
-        address: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? burner?.address : address,
+        address:
+          currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
+            ? burner?.address
+            : address,
         playerName: userName || "Adventurer",
         isPending: isConnecting || isPending || creatingBurner,
         tokenBalances,

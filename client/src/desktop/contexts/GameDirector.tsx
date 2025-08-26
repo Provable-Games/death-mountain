@@ -10,7 +10,8 @@ import {
   BattleEvents,
   ExplorerReplayEvents,
   GameEvent,
-  getVideoId, processGameEvent
+  getVideoId,
+  processGameEvent,
 } from "@/utils/events";
 import { getNewItemsEquipped } from "@/utils/game";
 import { delay } from "@/utils/utils";
@@ -20,8 +21,9 @@ import {
   useContext,
   useEffect,
   useReducer,
-  useState
+  useState,
 } from "react";
+import { useAnalytics } from "@/utils/analytics";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -76,8 +78,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     drop,
     claimBeast,
   } = useSystemCalls();
-  const { getSettingsDetails, getTokenMetadata, getGameState } = useStarknetApi();
+  const { getSettingsDetails, getTokenMetadata, getGameState } =
+    useStarknetApi();
   const { getGameEvents } = useGameEvents();
+  const { gameStartedEvent, playerDiedEvent } = useAnalytics();
 
   const {
     gameId,
@@ -100,7 +104,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setShowOverlay,
     setCollectable,
     incrementBeastsCollected,
-    setMetadata
+    setMetadata,
   } = useGameStore();
 
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
@@ -126,7 +130,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       getSettingsDetails(metadata.settings_id).then((settings) => {
         setGameSettings(settings);
         setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
-        initializeGame(settings);
+        initializeGame(settings, currentNetworkConfig.name);
       });
     }
   }, [metadata, gameId]);
@@ -165,7 +169,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   }, [beastDefeated]);
 
-  const initializeGame = async (settings: Settings) => {
+  const initializeGame = async (settings: Settings, mode: string) => {
     if (spectating) return;
 
     const gameState = await getGameState(gameId!);
@@ -173,9 +177,14 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     if (gameState) {
       restoreGameState(gameState);
     } else {
-      executeGameAction({ type: 'start_game', gameId: gameId!, settings });
+      executeGameAction({ type: "start_game", gameId: gameId!, settings });
+      gameStartedEvent({
+        adventurerId: gameId!,
+        dungeon: mode,
+        settingsId: settings.settings_id,
+      });
     }
-  }
+  };
 
   const restoreGameState = async (gameState: any) => {
     const gameEvents = await getGameEvents(gameId!);
@@ -187,11 +196,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     });
 
     setAdventurer(gameState.adventurer);
-    setBag(Object.values(gameState.bag).filter((item: any) => typeof item === "object" && item.id !== 0) as Item[]);
+    setBag(
+      Object.values(gameState.bag).filter(
+        (item: any) => typeof item === "object" && item.id !== 0
+      ) as Item[]
+    );
     setMarketItemIds(gameState.market);
 
     if (gameState.adventurer.beast_health > 0) {
-      let beast = processGameEvent({ action_count: 0, details: { beast: gameState.beast } }).beast!;
+      let beast = processGameEvent({
+        action_count: 0,
+        details: { beast: gameState.beast },
+      }).beast!;
       setBeast(beast);
       setCollectable(beast.isCollectable ? beast : null);
     }
@@ -208,6 +224,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       if (event.adventurer!.health === 0 && !skipDelay) {
         setShowOverlay(false);
         setVideoQueue((prev) => [...prev, streamIds.death]);
+        playerDiedEvent({
+          adventurerId: event.adventurer!.id,
+          xp: event.adventurer!.xp,
+        });
       }
 
       if (
@@ -283,7 +303,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     let txs: any[] = [];
 
     if (action.type === "start_game") {
-      if (action.settings.game_seed === 0 && action.settings.adventurer.xp !== 0) {
+      if (
+        action.settings.game_seed === 0 &&
+        action.settings.adventurer.xp !== 0
+      ) {
         txs.push(requestRandom());
       }
       txs.push(startGame(action.gameId!));
