@@ -1,12 +1,15 @@
 import { BEAST_NAMES } from '@/constants/beast';
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { screenVariants } from '@/utils/animations';
+import { ChainId } from '@/utils/networkConfig';
 import { Box, Button, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathScreen() {
+  const { currentNetworkConfig } = useDynamicConnector();
   const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
 
@@ -21,9 +24,11 @@ export default function DeathScreen() {
     battleMessage = `${BEAST_NAMES[beast?.id!]} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  const shareMessage = collectableCount > 0
-    ? `I fought bravely in Death Mountain and collected ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}! Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`
-    : `I fought bravely in Death Mountain but couldn't collect any beasts. Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
+  let link = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}` : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
+
+  const shareMessage = finalBattleEvent?.type === 'obstacle'
+    ? `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
+    : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -72,7 +77,7 @@ export default function DeathScreen() {
         </Box>
 
         <Box sx={styles.buttonContainer}>
-          {/* <Button
+          <Button
             variant="outlined"
             component="a"
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`}
@@ -80,7 +85,7 @@ export default function DeathScreen() {
             sx={styles.shareButton}
           >
             Share on X
-          </Button> */}
+          </Button>
           <Button
             variant="contained"
             onClick={backToMenu}

@@ -6,7 +6,7 @@ import { transitionVideos } from "@/utils/events";
 import { Stream, StreamPlayerApi } from "@cloudflare/stream-react";
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CUSTOMER_CODE = import.meta.env.VITE_PUBLIC_CLOUDFLARE_ID;
 
@@ -18,6 +18,12 @@ export default function VideoPlayer() {
   const playerRef = useRef<StreamPlayerApi | undefined>(undefined);
   const [videoReady, setVideoReady] = useState(false);
   const [nextVideoReady, setNextVideoReady] = useState(false);
+
+  useEffect(() => {
+    if (videoQueue[0] === streamIds.explore && nextVideoReady) {
+      handleEnded()
+    }
+  }, [nextVideoReady]);
 
   const handleEnded = () => {
     if (videoQueue[0] === streamIds.explore && !nextVideoReady) {

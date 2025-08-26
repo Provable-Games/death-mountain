@@ -61,16 +61,16 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
-    if (address) {
+    if (account) {
       fetchTokenBalances();
       identifyAddress({ address });
     }
-  }, [address]);
+  }, [account]);
 
   useEffect(() => {
     if (
       localStorage.getItem("burner") &&
-      localStorage.getItem("burner_version") === "3"
+      localStorage.getItem("burner_version") === "5"
     ) {
       let burner = JSON.parse(localStorage.getItem("burner") as string);
       setBurner(
@@ -126,7 +126,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   async function fetchTokenBalances() {
-    const balances = await getTokenBalances(
+    let balances = await getTokenBalances(
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
         .paymentTokens
     );
@@ -136,8 +136,12 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       parseInt(balances.SLORDS) < 10 &&
       import.meta.env.VITE_PUBLIC_CHAIN === "SN_SEPOLIA"
     ) {
-      mintSepoliaLords(account);
-      setTokenBalances({ ...balances, SLORDS: "100" });
+      await mintSepoliaLords(account);
+      balances = await getTokenBalances(
+        NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
+          .paymentTokens
+      );
+      setTokenBalances(balances);
     }
 
     let goldenTokenAddress =

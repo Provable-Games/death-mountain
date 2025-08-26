@@ -321,14 +321,12 @@ export const useSystemCalls = () => {
         },
       ]);
 
-      let receipt = await account!.waitForTransaction(
+      await account!.waitForTransaction(
         tx.transaction_hash,
-        { retryInterval: 500 }
+        { retryInterval: 200 }
       );
-      console.log("receipt", receipt);
     } catch (error) {
       console.error("Error minting sepolia lords:", error);
-      throw error;
     }
   }
 

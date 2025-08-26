@@ -72,6 +72,16 @@ export default function GamePage() {
   }, [account]);
 
   useEffect(() => {
+    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
+      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
+      return;
+    }
+
+    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      return;
+    }
+
     if (spectating) {
       setLoadingProgress(99);
       setGameId(game_id);
@@ -85,18 +95,8 @@ export default function GamePage() {
       return;
     }
 
-    if (mode === "real" && currentNetworkConfig.chainId !== import.meta.env.VITE_PUBLIC_CHAIN) {
-      setCurrentNetworkConfig(getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN) as NetworkConfig);
-      return;
-    }
-
     if (!controllerAddress && mode === "real") {
       login();
-      return;
-    }
-
-    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
 

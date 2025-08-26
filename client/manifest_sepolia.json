@@ -2123,7 +2123,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::felt252"
+                  "type": "core::byte_array::ByteArray"
                 }
               ],
               "state_mutability": "view"

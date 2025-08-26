@@ -139,15 +139,6 @@ export default function Beast() {
           </Box>
         </Box>
       </Box>
-
-      {/* Collectable Indicator */}
-      {collectable && (
-        <Box sx={styles.collectableIndicator}>
-          <Typography sx={styles.collectableText}>
-            Defeat this beast to collect it
-          </Typography>
-        </Box>
-      )}
     </>
   );
 }

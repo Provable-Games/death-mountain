@@ -1,9 +1,12 @@
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
+import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
+import { ChainId } from '@/utils/networkConfig';
 import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 export default function DeathOverlay() {
+  const { currentNetworkConfig } = useDynamicConnector();
   const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
 
@@ -18,9 +21,11 @@ export default function DeathOverlay() {
     battleMessage = `${beast?.name} ambushed your ${battleEvent?.attack?.location} for ${battleEvent?.attack?.damage} damage ${battleEvent?.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`;
   }
 
-  const shareMessage = collectableCount > 0 
-    ? `I fought bravely in Death Mountain and collected ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}! Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`
-    : `I fought bravely in Death Mountain but couldn't collect any beasts. Want to see my journey? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
+  let link = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? `https://lootsurvivor.io/survivor/watch?mode=practice&id=${gameId}` : `https://lootsurvivor.io/survivor/watch?mode=real&id=${gameId}`;
+
+  const shareMessage = finalBattleEvent?.type === 'obstacle'
+    ? `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`
+    : `I got a score of ${adventurer?.xp} in the Loot Survivor practice dungeon. A ${beast?.name} ended my journey. Watch my replay here: ${link} 🗡️⚔️ @provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     if (quest) {
@@ -55,7 +60,7 @@ export default function DeathOverlay() {
 
         <Box sx={styles.messageContainer}>
           <Typography sx={styles.message}>
-            {collectableCount > 0 
+            {collectableCount > 0
               ? `You've proven your worth in Death Mountain by collecting ${collectableCount} ${collectableCount === 1 ? 'beast' : 'beasts'}. Your victories will echo through the halls of the great adventurers.`
               : `Though you fought valiantly in Death Mountain, the beasts proved too elusive this time. The mountain awaits your return, adventurer.`
             }
@@ -63,7 +68,7 @@ export default function DeathOverlay() {
         </Box>
 
         <Box sx={styles.buttonContainer}>
-          {/* <Button
+          <Button
             variant="outlined"
             component="a"
             href={`https://x.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`}
@@ -71,7 +76,7 @@ export default function DeathOverlay() {
             sx={styles.shareButton}
           >
             Share on X
-          </Button> */}
+          </Button>
           <Button
             variant="contained"
             onClick={backToMenu}

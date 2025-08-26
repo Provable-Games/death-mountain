@@ -1,6 +1,7 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { Metadata } from "@/types/game";
+import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useAccount } from "@starknet-react/core";
@@ -25,7 +26,7 @@ export const useStarknetApi = () => {
       ]
     }));
 
-    const response = await fetch(currentNetworkConfig.rpcUrl, {
+    const response = await fetch(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(calls),
@@ -382,7 +383,7 @@ export const useStarknetApi = () => {
 
     if (receipt) {
       localStorage.setItem('burner', JSON.stringify({ address: contractAddress, privateKey }))
-      localStorage.setItem('burner_version', "3")
+      localStorage.setItem('burner_version', "5")
       return account
     }
   };

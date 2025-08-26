@@ -422,7 +422,7 @@ export default function PaymentOptionsModal({
       ) {
         setCurrentView("token");
       } else {
-        setCurrentView("credit");
+        setCurrentView("token");
       }
     }
   }, [currentView]);

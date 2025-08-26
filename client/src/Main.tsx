@@ -12,6 +12,7 @@ import {
 } from "@/contexts/starknet.tsx";
 import { createDojoConfig } from "@dojoengine/core";
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import { PostHogProvider } from "posthog-js/react";
 
@@ -70,6 +71,7 @@ async function main() {
       options={options}
     >
       <DynamicConnectorProvider>
+        <Analytics />
         <DojoApp />
       </DynamicConnectorProvider>
     </PostHogProvider>
