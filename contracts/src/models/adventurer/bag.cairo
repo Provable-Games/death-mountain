@@ -74,6 +74,9 @@ pub impl ImplBag of IBag {
         }
     }
 
+    // @notice Packs the bag into a felt252
+    // @param bag The instance of the Bag
+    // @return The packed bag
     fn pack(bag: Bag) -> felt252 {
         (bag.item_1.pack().into()
             + bag.item_2.pack().into() * TWO_POW_16
@@ -94,6 +97,9 @@ pub impl ImplBag of IBag {
             .unwrap()
     }
 
+    // @notice Unpacks a felt252 into a Bag
+    // @param value The packed bag
+    // @return The unpacked bag
     fn unpack(value: felt252) -> Bag {
         let packed = value.into();
         let (packed, item_1) = DivRem::div_rem(packed, TWO_POW_16.try_into().unwrap());
@@ -133,41 +139,41 @@ pub impl ImplBag of IBag {
     }
 
     // @notice Retrieves an item from the bag by its id
-    // @dev If the item with the specified id is not in the bag, it throws an error
     // @param self The instance of the Bag
     // @param item_id The id of the item to be retrieved
     // @return The item from the bag with the specified id
-    fn get_item(bag: Bag, item_id: u8) -> Item {
-        if bag.item_1.id == item_id {
-            bag.item_1
-        } else if bag.item_2.id == item_id {
-            bag.item_2
-        } else if bag.item_3.id == item_id {
-            bag.item_3
-        } else if bag.item_4.id == item_id {
-            bag.item_4
-        } else if bag.item_5.id == item_id {
-            bag.item_5
-        } else if bag.item_6.id == item_id {
-            bag.item_6
-        } else if bag.item_7.id == item_id {
-            bag.item_7
-        } else if bag.item_8.id == item_id {
-            bag.item_8
-        } else if bag.item_9.id == item_id {
-            bag.item_9
-        } else if bag.item_10.id == item_id {
-            bag.item_10
-        } else if bag.item_11.id == item_id {
-            bag.item_11
-        } else if bag.item_12.id == item_id {
-            bag.item_12
-        } else if bag.item_13.id == item_id {
-            bag.item_13
-        } else if bag.item_14.id == item_id {
-            bag.item_14
-        } else if bag.item_15.id == item_id {
-            bag.item_15
+    // @panics If the item is not in the bag
+    fn get_item(self: Bag, item_id: u8) -> Item {
+        if self.item_1.id == item_id {
+            self.item_1
+        } else if self.item_2.id == item_id {
+            self.item_2
+        } else if self.item_3.id == item_id {
+            self.item_3
+        } else if self.item_4.id == item_id {
+            self.item_4
+        } else if self.item_5.id == item_id {
+            self.item_5
+        } else if self.item_6.id == item_id {
+            self.item_6
+        } else if self.item_7.id == item_id {
+            self.item_7
+        } else if self.item_8.id == item_id {
+            self.item_8
+        } else if self.item_9.id == item_id {
+            self.item_9
+        } else if self.item_10.id == item_id {
+            self.item_10
+        } else if self.item_11.id == item_id {
+            self.item_11
+        } else if self.item_12.id == item_id {
+            self.item_12
+        } else if self.item_13.id == item_id {
+            self.item_13
+        } else if self.item_14.id == item_id {
+            self.item_14
+        } else if self.item_15.id == item_id {
+            self.item_15
         } else {
             panic_with_felt252('Item not in bag')
         }
@@ -176,120 +182,116 @@ pub impl ImplBag of IBag {
     // @notice Adds a new item to the bag
     // @param self The instance of the Bag
     // @param item_id The id of the item to be added
-    fn add_new_item(ref bag: Bag, item_id: u8) {
-        let mut item = ImplItem::new(item_id);
-        Self::add_item(ref bag, item);
+    fn add_new_item(ref self: Bag, item_id: u8) {
+        let item = ImplItem::new(item_id);
+        self.add_item(item);
     }
 
     // @notice Adds an item to the bag
-    // @dev If the bag is full, it throws an error
     // @param self The instance of the Bag
     // @param item The item to be added to the bag
-
-    fn add_item(ref bag: Bag, item: Item) {
-        // assert item id is not 0
+    // @panics If the item id is 0
+    // @panics If the bag is full
+    fn add_item(ref self: Bag, item: Item) {
         assert(item.id != 0, 'Item ID cannot be 0');
 
         // add item to next available slot
-        if bag.item_1.id == 0 {
-            bag.item_1 = item;
-        } else if bag.item_2.id == 0 {
-            bag.item_2 = item;
-        } else if bag.item_3.id == 0 {
-            bag.item_3 = item;
-        } else if bag.item_4.id == 0 {
-            bag.item_4 = item;
-        } else if bag.item_5.id == 0 {
-            bag.item_5 = item;
-        } else if bag.item_6.id == 0 {
-            bag.item_6 = item;
-        } else if bag.item_7.id == 0 {
-            bag.item_7 = item;
-        } else if bag.item_8.id == 0 {
-            bag.item_8 = item;
-        } else if bag.item_9.id == 0 {
-            bag.item_9 = item;
-        } else if bag.item_10.id == 0 {
-            bag.item_10 = item;
-        } else if bag.item_11.id == 0 {
-            bag.item_11 = item;
-        } else if bag.item_12.id == 0 {
-            bag.item_12 = item;
-        } else if bag.item_13.id == 0 {
-            bag.item_13 = item;
-        } else if bag.item_14.id == 0 {
-            bag.item_14 = item;
-        } else if bag.item_15.id == 0 {
-            bag.item_15 = item;
+        if self.item_1.id == 0 {
+            self.item_1 = item;
+        } else if self.item_2.id == 0 {
+            self.item_2 = item;
+        } else if self.item_3.id == 0 {
+            self.item_3 = item;
+        } else if self.item_4.id == 0 {
+            self.item_4 = item;
+        } else if self.item_5.id == 0 {
+            self.item_5 = item;
+        } else if self.item_6.id == 0 {
+            self.item_6 = item;
+        } else if self.item_7.id == 0 {
+            self.item_7 = item;
+        } else if self.item_8.id == 0 {
+            self.item_8 = item;
+        } else if self.item_9.id == 0 {
+            self.item_9 = item;
+        } else if self.item_10.id == 0 {
+            self.item_10 = item;
+        } else if self.item_11.id == 0 {
+            self.item_11 = item;
+        } else if self.item_12.id == 0 {
+            self.item_12 = item;
+        } else if self.item_13.id == 0 {
+            self.item_13 = item;
+        } else if self.item_14.id == 0 {
+            self.item_14 = item;
+        } else if self.item_15.id == 0 {
+            self.item_15 = item;
         } else {
             panic_with_felt252('Bag is full')
         }
 
-        // flag bag as being mutated
-        bag.mutated = true;
+        // flag bag as mutated
+        self.mutated = true;
     }
 
     // @notice Removes an item from the bag by its id
     // @param self The instance of the Bag
     // @param item_id The id of the item to be removed
     // @return The item that was removed from the bag
+    fn remove_item(ref self: Bag, item_id: u8) -> Item {
+        let removed_item = self.get_item(item_id);
 
-    fn remove_item(ref bag: Bag, item_id: u8) -> Item {
-        let removed_item = Self::get_item(bag, item_id);
-
-        if bag.item_1.id == item_id {
-            bag.item_1.id = 0;
-            bag.item_1.xp = 0;
-        } else if bag.item_2.id == item_id {
-            bag.item_2.id = 0;
-            bag.item_2.xp = 0;
-        } else if bag.item_3.id == item_id {
-            bag.item_3.id = 0;
-            bag.item_3.xp = 0;
-        } else if bag.item_4.id == item_id {
-            bag.item_4.id = 0;
-            bag.item_4.xp = 0;
-        } else if bag.item_5.id == item_id {
-            bag.item_5.id = 0;
-            bag.item_5.xp = 0;
-        } else if bag.item_6.id == item_id {
-            bag.item_6.id = 0;
-            bag.item_6.xp = 0;
-        } else if bag.item_7.id == item_id {
-            bag.item_7.id = 0;
-            bag.item_7.xp = 0;
-        } else if bag.item_8.id == item_id {
-            bag.item_8.id = 0;
-            bag.item_8.xp = 0;
-        } else if bag.item_9.id == item_id {
-            bag.item_9.id = 0;
-            bag.item_9.xp = 0;
-        } else if bag.item_10.id == item_id {
-            bag.item_10.id = 0;
-            bag.item_10.xp = 0;
-        } else if bag.item_11.id == item_id {
-            bag.item_11.id = 0;
-            bag.item_11.xp = 0;
-        } else if bag.item_12.id == item_id {
-            bag.item_12.id = 0;
-            bag.item_12.xp = 0;
-        } else if bag.item_13.id == item_id {
-            bag.item_13.id = 0;
-            bag.item_13.xp = 0;
-        } else if bag.item_14.id == item_id {
-            bag.item_14.id = 0;
-            bag.item_14.xp = 0;
-        } else if bag.item_15.id == item_id {
-            bag.item_15.id = 0;
-            bag.item_15.xp = 0;
+        if self.item_1.id == item_id {
+            self.item_1.id = 0;
+            self.item_1.xp = 0;
+        } else if self.item_2.id == item_id {
+            self.item_2.id = 0;
+            self.item_2.xp = 0;
+        } else if self.item_3.id == item_id {
+            self.item_3.id = 0;
+            self.item_3.xp = 0;
+        } else if self.item_4.id == item_id {
+            self.item_4.id = 0;
+            self.item_4.xp = 0;
+        } else if self.item_5.id == item_id {
+            self.item_5.id = 0;
+            self.item_5.xp = 0;
+        } else if self.item_6.id == item_id {
+            self.item_6.id = 0;
+            self.item_6.xp = 0;
+        } else if self.item_7.id == item_id {
+            self.item_7.id = 0;
+            self.item_7.xp = 0;
+        } else if self.item_8.id == item_id {
+            self.item_8.id = 0;
+            self.item_8.xp = 0;
+        } else if self.item_9.id == item_id {
+            self.item_9.id = 0;
+            self.item_9.xp = 0;
+        } else if self.item_10.id == item_id {
+            self.item_10.id = 0;
+            self.item_10.xp = 0;
+        } else if self.item_11.id == item_id {
+            self.item_11.id = 0;
+            self.item_11.xp = 0;
+        } else if self.item_12.id == item_id {
+            self.item_12.id = 0;
+            self.item_12.xp = 0;
+        } else if self.item_13.id == item_id {
+            self.item_13.id = 0;
+            self.item_13.xp = 0;
+        } else if self.item_14.id == item_id {
+            self.item_14.id = 0;
+            self.item_14.xp = 0;
+        } else if self.item_15.id == item_id {
+            self.item_15.id = 0;
+            self.item_15.xp = 0;
         } else {
             panic_with_felt252('item not in bag')
         }
 
-        // flag bag as being mutated
-        bag.mutated = true;
+        self.mutated = true;
 
-        // return the removed item
         removed_item
     }
 
@@ -297,40 +299,38 @@ pub impl ImplBag of IBag {
     // @dev A bag is considered full if all item slots are occupied (id of the item is non-zero)
     // @param self The instance of the Bag
     // @return A boolean value indicating whether the bag is full
-    fn is_full(bag: Bag) -> bool {
-        if bag.item_1.id == 0 {
+    fn is_full(self: Bag) -> bool {
+        if self.item_1.id == 0 {
             false
-        } else if bag.item_2.id == 0 {
+        } else if self.item_2.id == 0 {
             false
-        } else if bag.item_3.id == 0 {
+        } else if self.item_3.id == 0 {
             false
-        } else if bag.item_4.id == 0 {
+        } else if self.item_4.id == 0 {
             false
-        } else if bag.item_5.id == 0 {
+        } else if self.item_5.id == 0 {
             false
-        } else if bag.item_6.id == 0 {
+        } else if self.item_6.id == 0 {
             false
-        } else if bag.item_7.id == 0 {
+        } else if self.item_7.id == 0 {
             false
-        } else if bag.item_8.id == 0 {
+        } else if self.item_8.id == 0 {
             false
-        } else if bag.item_9.id == 0 {
+        } else if self.item_9.id == 0 {
             false
-        } else if bag.item_10.id == 0 {
+        } else if self.item_10.id == 0 {
             false
-        } else if bag.item_11.id == 0 {
+        } else if self.item_11.id == 0 {
             false
-        } else if bag.item_12.id == 0 {
+        } else if self.item_12.id == 0 {
             false
-        } else if bag.item_13.id == 0 {
+        } else if self.item_13.id == 0 {
             false
-        } else if bag.item_14.id == 0 {
+        } else if self.item_14.id == 0 {
             false
-        } else if bag.item_15.id == 0 {
+        } else if self.item_15.id == 0 {
             false
         } else {
-            // if the id of all item slots is non-zero
-            // bag is full, return true
             true
         }
     }
@@ -339,38 +339,38 @@ pub impl ImplBag of IBag {
     // @param self The Bag object in which to search for the item
     // @param item The id of the item to search for
     // @return A bool indicating whether the item is present in the bag
-    fn contains(bag: Bag, item_id: u8) -> (bool, Item) {
+    fn contains(self: Bag, item_id: u8) -> (bool, Item) {
         assert(item_id != 0, 'Item ID cannot be 0');
-        if bag.item_1.id == item_id {
-            return (true, bag.item_1);
-        } else if bag.item_2.id == item_id {
-            return (true, bag.item_2);
-        } else if bag.item_3.id == item_id {
-            return (true, bag.item_3);
-        } else if bag.item_4.id == item_id {
-            return (true, bag.item_4);
-        } else if bag.item_5.id == item_id {
-            return (true, bag.item_5);
-        } else if bag.item_6.id == item_id {
-            return (true, bag.item_6);
-        } else if bag.item_7.id == item_id {
-            return (true, bag.item_7);
-        } else if bag.item_8.id == item_id {
-            return (true, bag.item_8);
-        } else if bag.item_9.id == item_id {
-            return (true, bag.item_9);
-        } else if bag.item_10.id == item_id {
-            return (true, bag.item_10);
-        } else if bag.item_11.id == item_id {
-            return (true, bag.item_11);
-        } else if bag.item_12.id == item_id {
-            return (true, bag.item_12);
-        } else if bag.item_13.id == item_id {
-            return (true, bag.item_13);
-        } else if bag.item_14.id == item_id {
-            return (true, bag.item_14);
-        } else if bag.item_15.id == item_id {
-            return (true, bag.item_15);
+        if self.item_1.id == item_id {
+            return (true, self.item_1);
+        } else if self.item_2.id == item_id {
+            return (true, self.item_2);
+        } else if self.item_3.id == item_id {
+            return (true, self.item_3);
+        } else if self.item_4.id == item_id {
+            return (true, self.item_4);
+        } else if self.item_5.id == item_id {
+            return (true, self.item_5);
+        } else if self.item_6.id == item_id {
+            return (true, self.item_6);
+        } else if self.item_7.id == item_id {
+            return (true, self.item_7);
+        } else if self.item_8.id == item_id {
+            return (true, self.item_8);
+        } else if self.item_9.id == item_id {
+            return (true, self.item_9);
+        } else if self.item_10.id == item_id {
+            return (true, self.item_10);
+        } else if self.item_11.id == item_id {
+            return (true, self.item_11);
+        } else if self.item_12.id == item_id {
+            return (true, self.item_12);
+        } else if self.item_13.id == item_id {
+            return (true, self.item_13);
+        } else if self.item_14.id == item_id {
+            return (true, self.item_14);
+        } else if self.item_15.id == item_id {
+            return (true, self.item_15);
         } else {
             return (false, Item { id: 0, xp: 0 });
         }
@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected: ('Item ID cannot be 0',))]
-    #[available_gas(7500)]
+    #[available_gas(7400)]
     fn contains_invalid_zero() {
         let katana = Item { id: ItemId::Katana, xp: 1 };
         let demon_crown = Item { id: ItemId::DemonCrown, xp: 2 };
@@ -701,11 +701,11 @@ mod tests {
             item_15: Item { id: 0, xp: 0 },
             mutated: false,
         };
-        ImplBag::contains(bag, 0);
+        bag.contains(0);
     }
 
     #[test]
-    #[available_gas(84500)]
+    #[available_gas(83200)]
     fn contains() {
         let katana = Item { id: ItemId::Katana, xp: 1 };
         let demon_crown = Item { id: ItemId::DemonCrown, xp: 2 };
@@ -735,52 +735,52 @@ mod tests {
             mutated: false,
         };
 
-        let (contains, item) = ImplBag::contains(bag, katana.id);
+        let (contains, item) = bag.contains(katana.id);
         assert(contains == true, 'katans should be in bag');
         assert(item.id == katana.id, 'item id should be katana');
         assert(item.xp == katana.xp, 'item xp should be katana');
 
-        let (contains, item) = ImplBag::contains(bag, demon_crown.id);
+        let (contains, item) = bag.contains(demon_crown.id);
         assert(contains == true, 'demon crown should be in bag');
         assert(item.id == demon_crown.id, 'item id should be demon crown');
         assert(item.xp == demon_crown.xp, 'item xp should be demon crown');
 
-        let (contains, item) = ImplBag::contains(bag, silk_robe.id);
+        let (contains, item) = bag.contains(silk_robe.id);
         assert(contains == true, 'silk robe should be in bag');
         assert(item.id == silk_robe.id, 'item id should be silk robe');
         assert(item.xp == silk_robe.xp, 'item xp should be silk robe');
 
-        let (contains, item) = ImplBag::contains(bag, silver_ring.id);
+        let (contains, item) = bag.contains(silver_ring.id);
         assert(contains == true, 'silver ring should be in bag');
         assert(item.id == silver_ring.id, 'item id should be silver ring');
         assert(item.xp == silver_ring.xp, 'item xp should be silver ring');
 
-        let (contains, item) = ImplBag::contains(bag, ghost_wand.id);
+        let (contains, item) = bag.contains(ghost_wand.id);
         assert(contains == true, 'ghost wand should be in bag');
         assert(item.id == ghost_wand.id, 'item id should be ghost wand');
         assert(item.xp == ghost_wand.xp, 'item xp should be ghost wand');
 
-        let (contains, item) = ImplBag::contains(bag, leather_gloves.id);
+        let (contains, item) = bag.contains(leather_gloves.id);
         assert(contains == true, 'leather gloves should be in bag');
         assert(item.id == leather_gloves.id, 'leather gloves id');
         assert(item.xp == leather_gloves.xp, 'leather gloves xp');
 
-        let (contains, item) = ImplBag::contains(bag, silk_gloves.id);
+        let (contains, item) = bag.contains(silk_gloves.id);
         assert(contains == true, 'silk gloves should be in bag');
         assert(item.id == silk_gloves.id, 'item id should be silk gloves');
         assert(item.xp == silk_gloves.xp, 'item xp should be silk gloves');
 
-        let (contains, item) = ImplBag::contains(bag, linen_gloves.id);
+        let (contains, item) = bag.contains(linen_gloves.id);
         assert(contains == true, 'linen gloves should be in bag');
         assert(item.id == linen_gloves.id, 'item id should be linen gloves');
         assert(item.xp == linen_gloves.xp, 'item xp should be linen gloves');
 
-        let (contains, item) = ImplBag::contains(bag, crown.id);
+        let (contains, item) = bag.contains(crown.id);
         assert(contains == true, 'crown should be in bag');
         assert(item.id == crown.id, 'item id should be crown');
         assert(item.xp == crown.xp, 'item xp should be crown');
 
-        let (contains, item) = ImplBag::contains(bag, ItemId::Maul);
+        let (contains, item) = bag.contains(ItemId::Maul);
         assert(contains == false, 'maul should not be in bag');
         assert(item.id == 0, 'id should be 0');
         assert(item.xp == 0, 'xp should be 0');
@@ -880,7 +880,7 @@ mod tests {
         // try adding an empty item to the bag
         // this should panic with 'Item ID cannot be 0'
         // which this test is annotated to expect
-        ImplBag::add_item(ref bag, Item { id: 0, xp: 1 });
+        bag.add_item(Item { id: 0, xp: 1 });
     }
 
     #[test]
@@ -909,7 +909,7 @@ mod tests {
         // try adding an item to a full bag
         // this should panic with 'Bag is full'
         // which this test is annotated to expect
-        ImplBag::add_item(ref bag, Item { id: ItemId::Katana, xp: 1 });
+        bag.add_item(Item { id: ItemId::Katana, xp: 1 });
     }
 
     #[test]
@@ -948,17 +948,17 @@ mod tests {
         let warhammer = Item { id: ItemId::Warhammer, xp: 1 };
 
         // add items to bag
-        ImplBag::add_item(ref bag, katana);
-        ImplBag::add_item(ref bag, demon_crown);
-        ImplBag::add_item(ref bag, silk_robe);
-        ImplBag::add_item(ref bag, silver_ring);
-        ImplBag::add_item(ref bag, ghost_wand);
-        ImplBag::add_item(ref bag, leather_gloves);
-        ImplBag::add_item(ref bag, silk_gloves);
-        ImplBag::add_item(ref bag, linen_gloves);
-        ImplBag::add_item(ref bag, crown);
-        ImplBag::add_item(ref bag, divine_slippers);
-        ImplBag::add_item(ref bag, warhammer);
+        bag.add_item(katana);
+        bag.add_item(demon_crown);
+        bag.add_item(silk_robe);
+        bag.add_item(silver_ring);
+        bag.add_item(ghost_wand);
+        bag.add_item(leather_gloves);
+        bag.add_item(silk_gloves);
+        bag.add_item(linen_gloves);
+        bag.add_item(crown);
+        bag.add_item(divine_slippers);
+        bag.add_item(warhammer);
 
         // assert items are in bag
         assert(bag.item_1.id == ItemId::Katana, 'item 1 should be katana');
@@ -997,20 +997,20 @@ mod tests {
         };
 
         // assert bag is full
-        assert(ImplBag::is_full(bag) == true, 'Bag should be full');
+        assert(bag.is_full() == true, 'Bag should be full');
 
         // remove an item
-        ImplBag::remove_item(ref bag, 1);
+        bag.remove_item(1);
 
         // assert bag is not full
-        assert(ImplBag::is_full(bag) == false, 'Bag should be not full');
+        assert(bag.is_full() == false, 'Bag should be not full');
 
         // add a new item
-        let mut warhammer = Item { id: ItemId::Warhammer, xp: 1 };
-        ImplBag::add_item(ref bag, warhammer);
+        let warhammer = Item { id: ItemId::Warhammer, xp: 1 };
+        bag.add_item(warhammer);
 
         // assert bag is full again
-        assert(ImplBag::is_full(bag) == true, 'Bag should be full again');
+        assert(bag.is_full() == true, 'Bag should be full again');
     }
 
     #[test]
@@ -1048,10 +1048,8 @@ mod tests {
         };
 
         // try to get an item that is not in bag
-        // should panic with 'Item not in bag'
-        // this test is annotated to expect this panic
-        // and will fail if it not thrown
-        ImplBag::get_item(bag, 8);
+        // expect panic with 'Item not in bag'
+        bag.get_item(8);
     }
 
     #[test]
@@ -1091,49 +1089,49 @@ mod tests {
             mutated: false,
         };
 
-        let item1_from_bag = ImplBag::get_item(bag, 11);
+        let item1_from_bag = bag.get_item(11);
         assert(item1_from_bag.id == item_1.id, 'Item id should be 11');
 
-        let item2_from_bag = ImplBag::get_item(bag, 12);
+        let item2_from_bag = bag.get_item(12);
         assert(item2_from_bag.id == item_2.id, 'Item id should be 12');
 
-        let item3_from_bag = ImplBag::get_item(bag, 13);
+        let item3_from_bag = bag.get_item(13);
         assert(item3_from_bag.id == item_3.id, 'Item id should be 13');
 
-        let item4_from_bag = ImplBag::get_item(bag, 14);
+        let item4_from_bag = bag.get_item(14);
         assert(item4_from_bag.id == item_4.id, 'Item id should be 14');
 
-        let item5_from_bag = ImplBag::get_item(bag, 15);
+        let item5_from_bag = bag.get_item(15);
         assert(item5_from_bag.id == item_5.id, 'Item id should be 15');
 
-        let item6_from_bag = ImplBag::get_item(bag, 16);
+        let item6_from_bag = bag.get_item(16);
         assert(item6_from_bag.id == item_6.id, 'Item id should be 16');
 
-        let item7_from_bag = ImplBag::get_item(bag, 17);
+        let item7_from_bag = bag.get_item(17);
         assert(item7_from_bag.id == item_7.id, 'Item id should be 17');
 
-        let item8_from_bag = ImplBag::get_item(bag, 18);
+        let item8_from_bag = bag.get_item(18);
         assert(item8_from_bag.id == item_8.id, 'Item id should be 18');
 
-        let item9_from_bag = ImplBag::get_item(bag, 19);
+        let item9_from_bag = bag.get_item(19);
         assert(item9_from_bag.id == item_9.id, 'Item id should be 19');
 
-        let item10_from_bag = ImplBag::get_item(bag, 20);
+        let item10_from_bag = bag.get_item(20);
         assert(item10_from_bag.id == item_10.id, 'Item id should be 20');
 
-        let item11_from_bag = ImplBag::get_item(bag, 21);
+        let item11_from_bag = bag.get_item(21);
         assert(item11_from_bag.id == item_11.id, 'Item id should be 21');
 
-        let item12_from_bag = ImplBag::get_item(bag, 22);
+        let item12_from_bag = bag.get_item(22);
         assert(item12_from_bag.id == item_12.id, 'Item id should be 22');
 
-        let item13_from_bag = ImplBag::get_item(bag, 23);
+        let item13_from_bag = bag.get_item(23);
         assert(item13_from_bag.id == item_13.id, 'Item id should be 23');
 
-        let item14_from_bag = ImplBag::get_item(bag, 24);
+        let item14_from_bag = bag.get_item(24);
         assert(item14_from_bag.id == item_14.id, 'Item id should be 24');
 
-        let item15_from_bag = ImplBag::get_item(bag, 25);
+        let item15_from_bag = bag.get_item(25);
         assert(item15_from_bag.id == item_15.id, 'Item id should be 25');
     }
 
@@ -1159,7 +1157,7 @@ mod tests {
         };
 
         // remove item from bag
-        let removed_item = ImplBag::remove_item(ref bag, 6);
+        let removed_item = bag.remove_item(6);
 
         // verify it has been removed
         assert(bag.item_6.id == 0, 'id should be 0');
@@ -1193,7 +1191,7 @@ mod tests {
         // try to remove an item not in the bag
         // this should panic with 'item not in bag'
         // which this test is annotated to expect
-        ImplBag::remove_item(ref bag, 255);
+        bag.remove_item(255);
     }
 
     #[test]

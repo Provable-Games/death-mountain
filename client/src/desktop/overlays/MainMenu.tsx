@@ -24,6 +24,7 @@ import Network from "../components/Network";
 import PriceIndicator from "../../components/PriceIndicator";
 import WalletConnect from "../components/WalletConnect";
 import StatisticsModal from "./StatisticsModal";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 export default function MainMenu() {
   const navigate = useNavigate();
@@ -186,6 +187,18 @@ export default function MainMenu() {
                     Provable Games
                   </Typography>
                   <Box sx={styles.socialButtons}>
+                    <IconButton
+                      size="small"
+                      sx={styles.socialButton}
+                      onClick={() =>
+                        window.open(
+                          "https://docs.provable.games/lootsurvivor",
+                          "_blank"
+                        )
+                      }
+                    >
+                      <MenuBookIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
                     <IconButton
                       size="small"
                       sx={styles.socialButton}

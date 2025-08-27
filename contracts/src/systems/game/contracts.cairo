@@ -178,7 +178,7 @@ mod game_systems {
                 );
 
                 if game_settings.in_battle {
-                    let (beast, _, _) = _get_beast(ref adventurer, beast_seed, game_libs);
+                    let (beast, _, _) = _get_beast(adventurer, beast_seed, game_libs);
                     adventurer.beast_health = beast.starting_health;
 
                     // save seed to get correct beast
@@ -289,9 +289,7 @@ mod game_systems {
             let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
             // get beast
-            let (beast, beast_seed, beast_level_rnd) = _get_beast(
-                ref adventurer, adventurer_entropy.beast_seed, game_libs,
-            );
+            let (beast, beast_seed, beast_level_rnd) = _get_beast(adventurer, adventurer_entropy.beast_seed, game_libs);
 
             // get weapon details
             let weapon = game_libs.loot.get_item(adventurer.equipment.weapon.id);
@@ -372,7 +370,7 @@ mod game_systems {
             let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
             // get beast
-            let (beast, beast_seed, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
+            let (beast, beast_seed, _) = _get_beast(adventurer, adventurer_entropy.beast_seed, game_libs);
 
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
@@ -445,7 +443,7 @@ mod game_systems {
                 let adventurer_entropy: AdventurerEntropy = world.read_model(adventurer_id);
 
                 // get beast
-                let (beast, beast_seed, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
+                let (beast, beast_seed, _) = _get_beast(adventurer, adventurer_entropy.beast_seed, game_libs);
 
                 let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
 
@@ -652,7 +650,7 @@ mod game_systems {
                 .adventurer
                 .get_market(adventurer_id, adventurer_entropy.market_seed, game_settings.market_size)
                 .span();
-            let (beast, _, _) = _get_beast(ref adventurer, adventurer_entropy.beast_seed, game_libs);
+            let (beast, _, _) = _get_beast(adventurer, adventurer_entropy.beast_seed, game_libs);
 
             let is_collectable = if beast.combat_spec.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK.into() {
                 game_libs
@@ -688,7 +686,7 @@ mod game_systems {
         adventurer.health += adventurer.stats.get_max_health() - STARTING_HEALTH.into();
     }
 
-    fn _get_beast(ref adventurer: Adventurer, beast_seed: u64, game_libs: GameLibs) -> (Beast, u32, u16) {
+    fn _get_beast(adventurer: Adventurer, beast_seed: u64, game_libs: GameLibs) -> (Beast, u32, u16) {
         // generate xp based randomness seeds
         let (beast_seed, _, beast_health_rnd, beast_level_rnd, beast_specials1_rnd, beast_specials2_rnd, _, _) =
             game_libs
@@ -921,7 +919,7 @@ mod game_systems {
                 let slot_free = adventurer.equipment.is_slot_free_item_id(item_id, slot);
 
                 // if the bag is full and the slot is not free
-                let inventory_full = ImplBag::is_full(bag) && slot_free == false;
+                let inventory_full = bag.is_full() && slot_free == false;
 
                 // if item is in adventurers bag, is equipped or inventory is full
                 if item_in_bag || adventurer.equipment.is_equipped(item_id) || inventory_full {
@@ -1523,14 +1521,10 @@ mod game_systems {
                 // drop the item
                 adventurer.equipment.drop(item_id);
             } else {
-                // if item is not equipped, it must be in the bag
-                // but we double check and panic just in case
+                // if item is not equipped, check if it's in bag
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
-                    // get item from the bag
-                    item = ImplBag::get_item(bag, item_id);
-
-                    // remove item from the bag (sets mutated to true)
+                    item = bag.get_item(item_id);
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
                     bag = new_bag;
                 } else {

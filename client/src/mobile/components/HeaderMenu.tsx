@@ -18,6 +18,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import { useSound } from "@/contexts/Sound";
 import { useUIStore } from "@/stores/uiStore";
 import { isDesktop } from "react-device-detect";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 interface HeaderMenuProps {
   anchorEl: HTMLElement | null;
@@ -138,6 +139,15 @@ function HeaderMenu({ anchorEl, handleClose }: HeaderMenuProps) {
       )}
 
       <Divider sx={{ my: 1, borderColor: "rgba(255, 255, 255, 0.1)" }} />
+
+      <MenuItem onClick={() => { window.open("https://docs.provable.games/lootsurvivor", "_blank"); handleClose(); }}>
+        <ListItemIcon>
+          <MenuBookIcon fontSize="small" sx={{ color: "#80FF00" }} />
+        </ListItemIcon>
+        <ListItemText>
+          <Typography variant="h6">Docs</Typography>
+        </ListItemText>
+      </MenuItem>
 
       <MenuItem onClick={() => { window.open("https://discord.gg/DQa4z9jXnY", "_blank"); handleClose(); }}>
         <ListItemIcon>

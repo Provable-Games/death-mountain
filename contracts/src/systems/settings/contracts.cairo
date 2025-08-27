@@ -138,8 +138,14 @@ mod settings_systems {
             let settings: GameSettings = world.read_model(settings_id);
             let settings_details: GameSettingsMetadata = world.read_model(settings_id);
             let settings: Span<GameSetting> = generate_settings_array(settings);
+
+            let mut _settings_name = Default::default();
+            if settings_details.name != 0 {
+                _settings_name.append_word(settings_details.name, U256BytesUsedTraitImpl::bytes_used(settings_details.name.into()).into());
+            }
+
             GameSettingDetails {
-                name: format!("{}", settings_details.name), description: settings_details.description, settings,
+                name: _settings_name, description: settings_details.description, settings,
             }
         }
     }

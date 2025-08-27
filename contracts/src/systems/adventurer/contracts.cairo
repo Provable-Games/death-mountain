@@ -224,12 +224,12 @@ mod adventurer_systems {
         }
 
         fn remove_item_from_bag(self: @ContractState, mut bag: Bag, item_id: u8) -> (Bag, Item) {
-            let item = ImplBag::remove_item(ref bag, item_id);
+            let item = bag.remove_item(item_id);
             (bag, item)
         }
 
         fn add_new_item_to_bag(self: @ContractState, mut bag: Bag, item_id: u8) -> Bag {
-            ImplBag::add_new_item(ref bag, item_id);
+            bag.add_new_item(item_id);
             bag
         }
 

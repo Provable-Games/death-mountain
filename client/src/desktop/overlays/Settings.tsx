@@ -148,7 +148,7 @@ export default function SettingsOverlay() {
                   <IconButton
                     size="small"
                     sx={styles.socialButton}
-                    onClick={() => window.open('https://docs-git-feat-ls2-provable-games.vercel.app/lootsurvivor', '_blank')}
+                    onClick={() => window.open('https://docs.provable.games/lootsurvivor', '_blank')}
                   >
                     <MenuBookIcon sx={{ fontSize: 24, color: '#d0c98d' }} />
                   </IconButton>

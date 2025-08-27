@@ -18,7 +18,7 @@ mod game_token_systems {
     use game_components_minigame::minigame::MinigameComponent;
 
     use openzeppelin_introspection::src5::SRC5Component;
-    use starknet::{ContractAddress, get_contract_address};
+    use starknet::{ContractAddress};
 
     // Components
     component!(path: MinigameComponent, storage: minigame, event: MinigameEvent);
