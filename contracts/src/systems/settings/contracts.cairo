@@ -141,12 +141,13 @@ mod settings_systems {
 
             let mut _settings_name = Default::default();
             if settings_details.name != 0 {
-                _settings_name.append_word(settings_details.name, U256BytesUsedTraitImpl::bytes_used(settings_details.name.into()).into());
+                _settings_name
+                    .append_word(
+                        settings_details.name, U256BytesUsedTraitImpl::bytes_used(settings_details.name.into()).into(),
+                    );
             }
 
-            GameSettingDetails {
-                name: _settings_name, description: settings_details.description, settings,
-            }
+            GameSettingDetails { name: _settings_name, description: settings_details.description, settings }
         }
     }
 
