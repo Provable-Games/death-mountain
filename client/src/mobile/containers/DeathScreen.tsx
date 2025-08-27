@@ -73,10 +73,12 @@ export default function DeathScreen() {
   };
 
   useEffect(() => {
-    playerDiedEvent({
-      adventurerId: gameId!,
-      xp: adventurer!.xp,
-    });
+    if (gameId && adventurer) {
+      playerDiedEvent({
+        adventurerId: gameId,
+        xp: adventurer.xp,
+      });
+    }
   }, [gameId, adventurer]);
 
   return (
