@@ -25,7 +25,6 @@ export const useSystemCalls = () => {
   const { currentNetworkConfig } = useDynamicConnector();
   const { txRevertedEvent } = useAnalytics();
 
-  const TIP_AMOUNT = 10e18;
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
   const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
@@ -66,7 +65,7 @@ export const useSystemCalls = () => {
         await waitForGlobalState();
       }
 
-      let tx = await account!.execute(calls, { tip: TIP_AMOUNT });
+      let tx = await account!.execute(calls);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
@@ -89,7 +88,7 @@ export const useSystemCalls = () => {
   };
 
   const waitForPreConfirmedTransaction = async (txHash: string, retries: number) => {
-    if (retries > 2) {
+    if (retries > 5) {
       throw new Error("Transaction failed");
     }
 
@@ -101,6 +100,7 @@ export const useSystemCalls = () => {
 
       return receipt;
     } catch (error) {
+      console.error("Error waiting for pre confirmed transaction:", error);
       await delay(500);
       return waitForPreConfirmedTransaction(txHash, retries + 1);
     }
@@ -173,8 +173,7 @@ export const useSystemCalls = () => {
               false, // soulbound
             ]),
           },
-        ],
-        { tip: TIP_AMOUNT }
+        ]
       );
 
       callback();
@@ -219,7 +218,6 @@ export const useSystemCalls = () => {
             ]),
           },
         ],
-        { tip: TIP_AMOUNT }
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
@@ -387,7 +385,6 @@ export const useSystemCalls = () => {
             calldata: [gameId, beast.id, prefix, suffix],
           },
         ],
-        { tip: TIP_AMOUNT }
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
@@ -411,7 +408,7 @@ export const useSystemCalls = () => {
           entrypoint: "mint",
           calldata: [account.address, 100e18.toString(), "0x0"],
         },
-      ], { tip: TIP_AMOUNT });
+      ]);
 
       await waitForTransaction(tx.transaction_hash, 0, account!);
     } catch (error) {

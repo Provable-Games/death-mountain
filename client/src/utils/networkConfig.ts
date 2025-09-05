@@ -60,61 +60,68 @@ export const NETWORKS = {
     beasts: "",
     goldenToken: "",
     ekuboRouter: "",
-    paymentTokens: [],
-  },
-  SN_SEPOLIA: {
-    chainId: ChainId.SN_SEPOLIA,
-    name: "Beast Mode",
-    status: "online",
-    namespace: "ls_0_0_6",
-    slot: "pg-sepolia",
-    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
-    tokens: {
-      erc20: [],
-    },
-    manifest: manifest_sepolia,
-    vrf: true,
-    denshokan:
-      "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
-    dungeon:
-      "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
-    dungeonTicket:
-      "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-    beasts:
-      "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
-    goldenToken:
-      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter:
-      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
-      {
-        name: "ETH",
-        address:
-          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        displayDecimals: 4,
-      },
-      {
-        name: "STRK",
-        address:
-          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-        displayDecimals: 2,
-      },
-      {
-        name: "USDC",
-        address:
-          "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
-        displayDecimals: 2,
-        decimals: 6,
-      },
       {
         name: "TICKET",
         address:
-          "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+          "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
         displayDecimals: 0,
       },
     ],
   },
+  // SN_SEPOLIA: {
+  //   chainId: ChainId.SN_SEPOLIA,
+  //   name: "Beast Mode",
+  //   status: "online",
+  //   namespace: "ls_0_0_6",
+  //   slot: "pg-sepolia",
+  //   rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
+  //   torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
+  //   tokens: {
+  //     erc20: [],
+  //   },
+  //   manifest: manifest_sepolia,
+  //   vrf: true,
+  //   denshokan:
+  //     "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
+  //   dungeon:
+  //     "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
+  //   dungeonTicket:
+  //     "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+  //   beasts:
+  //     "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
+  //   goldenToken:
+  //     "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+  //   ekuboRouter:
+  //     "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+  //   paymentTokens: [
+  //     {
+  //       name: "ETH",
+  //       address:
+  //         "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+  //       displayDecimals: 4,
+  //     },
+  //     {
+  //       name: "STRK",
+  //       address:
+  //         "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+  //       displayDecimals: 2,
+  //     },
+  //     {
+  //       name: "USDC",
+  //       address:
+  //         "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
+  //       displayDecimals: 2,
+  //       decimals: 6,
+  //     },
+  //     {
+  //       name: "TICKET",
+  //       address:
+  //         "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+  //       displayDecimals: 0,
+  //     },
+  //   ],
+  // },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
     name: "Practice Mode",
@@ -205,19 +212,6 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
       target: network.dungeon,
       method: "claim_beast",
     },
-    {
-      target:
-        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-      method: "mint",
-    },
-    {
-      target: "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-      method: "approve",
-    },
-    {
-      target: "0x02b481049177d5947b7ac5b40ae231c14af517c8cdc5506fb2529f064fc47edd",
-      method: "buy_game",
-    }
   ];
 
   return {
