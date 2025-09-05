@@ -87,7 +87,7 @@ mod settings_systems {
             game_seed_until_xp: 0,
             in_battle: false,
             stats_mode: StatsMode::Dodge,
-            base_damage_reduction: 50,
+            base_damage_reduction: 25,
             market_size: 25,
         };
 

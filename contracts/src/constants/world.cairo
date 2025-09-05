@@ -7,7 +7,7 @@ const KATANA_CHAIN_ID: felt252 = 0x4b4154414e41;
 pub const VERSION: felt252 = '0.0.1';
 
 pub fn DEFAULT_NS() -> ByteArray {
-    "ls_0_0_6"
+    "ls_0_0_7"
 }
 
 pub fn SCORE_MODEL() -> ByteArray {
