@@ -1,4 +1,5 @@
 import { getContractByName } from "@dojoengine/core";
+import manifest_mainnet from "../../manifest_mainnet.json";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
 
@@ -37,6 +38,30 @@ export enum ChainId {
 }
 
 export const NETWORKS = {
+  SN_MAIN: {
+    chainId: ChainId.SN_MAIN,
+    name: "Beast Mode",
+    status: "online",
+    namespace: "ls_0_0_7",
+    slot: "pg-mainnet-3",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-3/torii",
+    tokens: {
+      erc20: [],
+    },
+    manifest: manifest_mainnet,
+    vrf: true,
+    denshokan:
+      "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
+    dungeon:
+      "0x003a82be975d420b81e80aec4b75306e0e7f48e6ce3ac549c9c46a630aaa8398",
+    dungeonTicket:
+      "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+    beasts: "",
+    goldenToken: "",
+    ekuboRouter: "",
+    paymentTokens: [],
+  },
   SN_SEPOLIA: {
     chainId: ChainId.SN_SEPOLIA,
     name: "Beast Mode",
