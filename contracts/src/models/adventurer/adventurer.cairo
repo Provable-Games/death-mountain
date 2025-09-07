@@ -46,7 +46,7 @@ pub struct Adventurer {
 }
 
 // for clients and renderers
-#[derive(Introspect, Drop, Serde)]
+#[derive(Introspect, Drop, Clone, Serde)]
 pub struct AdventurerVerbose {
     pub name: felt252,
     pub packed_adventurer: felt252,
