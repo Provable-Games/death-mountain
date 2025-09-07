@@ -1,12 +1,17 @@
+import BeastsCollected from "@/components/BeastsCollected";
+import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import discordIcon from "@/desktop/assets/images/discord.png";
 import AdventurersList from "@/desktop/components/AdventurersList";
-import BeastsCollected from "@/components/BeastsCollected";
-import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import Settings from "@/desktop/components/Settings";
+import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
+import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import GitHubIcon from "@mui/icons-material/GitHub";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TokenIcon from "@mui/icons-material/Token";
@@ -20,19 +25,16 @@ import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Network from "../components/Network";
 import PriceIndicator from "../../components/PriceIndicator";
+import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
 import StatisticsModal from "./StatisticsModal";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import Leaderboard from "../components/Leaderboard";
-import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 
 export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -71,6 +73,14 @@ export default function MainMenu() {
     }
 
     setShowAdventurers(true);
+  };
+
+  const switchMode = () => {
+    if (currentNetworkConfig.name === "Beast Mode") {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    } else {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig);
+    }
   };
 
   return (
@@ -119,7 +129,7 @@ export default function MainMenu() {
                       color: "#d0c98d",
                     }}
                   >
-                    New Game
+                    {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
                   </Typography>
                 </Box>
               </Button>
@@ -140,7 +150,31 @@ export default function MainMenu() {
                     color: "#d0c98d",
                   }}
                 >
-                  My Adventurers
+                  My Games
+                </Typography>
+              </Button>
+
+              <Button
+                variant="outlined"
+                fullWidth
+                size="large"
+                onClick={switchMode}
+                sx={{ pl: 1, height: "36px" }}
+              >
+                {currentNetworkConfig.name === "Beast Mode"
+                  ? <img src="/images/practice.png" alt="practice" style={{ width: 20, height: 20 }} />
+                  : <AttachMoneyIcon sx={{ fontSize: 20 }} />
+                }
+                <Typography
+                  sx={{
+                    ml: 1,
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    letterSpacing: 0.5,
+                    color: "#d0c98d",
+                  }}
+                >
+                  {currentNetworkConfig.name === "Beast Mode" ? 'Practice for Free' : 'Play for Real'}
                 </Typography>
               </Button>
 
@@ -205,7 +239,6 @@ export default function MainMenu() {
                   <BeastsCollected />
                 )}
 
-                <Network />
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
@@ -274,6 +307,10 @@ export default function MainMenu() {
           onClose={() => setShowPaymentOptions(false)}
         />
       )}
+
+      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+        <DungeonRewards />
+      </Box>
     </>
   );
 }
@@ -295,6 +332,10 @@ const styles = {
     py: 1,
     zIndex: 10,
     gap: 1,
+  },
+  rewardsContainer: {
+    position: "absolute",
+    top: 32,
   },
   headerBox: {
     display: "flex",

@@ -129,7 +129,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                 flex: 1,
               }}
             >
-              <Box textAlign={'center'} width='20px'>
+              <Box textAlign={'center'} px={1}>
                 <Typography>{currentPage * 10 + index + 1}.</Typography>
               </Box>
 
@@ -163,16 +163,18 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
             </Box>
 
             <Box textAlign={'center'} display={'flex'} alignItems={'center'} gap={1}>
-              <Typography>{game.score} xp</Typography>
+              <Typography>{game.score || 0} xp</Typography>
 
               <Box textAlign={'center'}>
-                {game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
-                  <TheatersIcon fontSize='small' color='primary' />
-                </IconButton>}
-
-                {!game.game_over && <IconButton onClick={() => watchGame(game.token_id)}>
-                  <VisibilityIcon fontSize='small' color='primary' />
-                </IconButton>}
+                {game.game_over ? (
+                  <IconButton onClick={() => watchGame(game.token_id)}>
+                    <TheatersIcon fontSize='small' color='primary' />
+                  </IconButton>
+                ) : (
+                  <IconButton onClick={() => watchGame(game.token_id)}>
+                    <VisibilityIcon fontSize='small' color='primary' />
+                  </IconButton>
+                )}
               </Box>
             </Box>
           </Box>

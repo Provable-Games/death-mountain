@@ -28,10 +28,6 @@ function Header() {
 
 
       <Box sx={styles.headerButtons}>
-        <Box sx={styles.networkContainer}>
-          <Network />
-        </Box>
-
         <WalletConnect />
 
         <IconButton

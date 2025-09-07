@@ -111,7 +111,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
           sx={styles.backButton}
           startIcon={<ArrowBackIcon />}
         >
-          My Adventurers
+          My Games
         </Button>
       </Box>
 

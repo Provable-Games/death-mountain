@@ -84,7 +84,7 @@ export default function LandingPage() {
                 }
               >
                 <Typography variant="h5" color="#111111">
-                  New Game
+                  {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
                 </Typography>
               </Button>
 
@@ -97,7 +97,7 @@ export default function LandingPage() {
                 sx={{ height: "36px", mt: 1, mb: 1 }}
               >
                 <Typography variant="h5" color="#111111">
-                  My Adventurers
+                  My Games
                 </Typography>
               </Button>
 
@@ -147,7 +147,7 @@ export default function LandingPage() {
                     }
                   >
                     <Typography variant="h4" color="primary">
-                      My Adventurers
+                      My Games
                     </Typography>
                   </Button>
                 </Box>
