@@ -473,4 +473,105 @@ mod renderer_tests {
         assert(svg.len() > 0, 'should not be empty');
         assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
     }
+
+    // Test functions for SVG generation script
+    #[test]
+    fn test_output_normal_state_svg() {
+        let mut adventurer = create_test_adventurer_verbose();
+        adventurer.health = 100; // Alive
+        adventurer.beast_health = 0; // Not in combat
+
+        let svg = generate_svg(adventurer);
+
+        println!("=== NORMAL STATE SVG ===");
+        println!("{}", svg);
+        println!("=== END NORMAL STATE SVG ===");
+
+        assert(svg.len() > 0, 'svg should not be empty');
+        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+    }
+
+    #[test]
+    fn test_output_death_state_svg() {
+        let mut adventurer = create_test_adventurer_verbose();
+        adventurer.health = 0; // Dead
+        adventurer.beast_health = 0;
+
+        let svg = generate_svg(adventurer);
+
+        println!("=== DEATH STATE SVG ===");
+        println!("{}", svg);
+        println!("=== END DEATH STATE SVG ===");
+
+        assert(svg.len() > 0, 'svg should not be empty');
+        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+    }
+
+    #[test]
+    fn test_output_battle_state_svg() {
+        let mut adventurer = create_test_adventurer_verbose();
+        adventurer.health = 80; // Alive
+        adventurer.beast_health = 50; // In combat
+
+        let svg = generate_svg(adventurer);
+
+        println!("=== BATTLE STATE SVG ===");
+        println!("{}", svg);
+        println!("=== END BATTLE STATE SVG ===");
+
+        assert(svg.len() > 0, 'svg should not be empty');
+        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+    }
+
+    #[test]
+    fn test_output_death_in_battle_svg() {
+        let mut adventurer = create_test_adventurer_verbose();
+        adventurer.health = 0; // Dead
+        adventurer.beast_health = 75; // Beast still alive (died during combat)
+
+        let svg = generate_svg(adventurer);
+
+        println!("=== DEATH IN BATTLE SVG ===");
+        println!("{}", svg);
+        println!("=== END DEATH IN BATTLE SVG ===");
+
+        assert(svg.len() > 0, 'svg should not be empty');
+        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+    }
+
+    #[test]
+    fn test_svg_size_comparison() {
+        let mut normal_adventurer = create_test_adventurer_verbose();
+        normal_adventurer.health = 100;
+        normal_adventurer.beast_health = 0;
+
+        let mut dead_adventurer = create_test_adventurer_verbose();
+        dead_adventurer.health = 0;
+        dead_adventurer.beast_health = 0;
+
+        let mut battle_adventurer = create_test_adventurer_verbose();
+        battle_adventurer.health = 80;
+        battle_adventurer.beast_health = 50;
+
+        let mut death_in_battle_adventurer = create_test_adventurer_verbose();
+        death_in_battle_adventurer.health = 0;
+        death_in_battle_adventurer.beast_health = 75;
+
+        let normal_svg = generate_svg(normal_adventurer);
+        let death_svg = generate_svg(dead_adventurer);
+        let battle_svg = generate_svg(battle_adventurer);
+        let death_in_battle_svg = generate_svg(death_in_battle_adventurer);
+
+        println!("=== SVG SIZE COMPARISON ===");
+        println!("Normal State SVG: {} characters", normal_svg.len());
+        println!("Death State SVG: {} characters", death_svg.len());
+        println!("Battle State SVG: {} characters", battle_svg.len());
+        println!("Death In Battle SVG: {} characters", death_in_battle_svg.len());
+        println!("=== END COMPARISON ===");
+
+        assert(normal_svg.len() > 0, 'normal svg should not be empty');
+        assert(death_svg.len() > 0, 'death svg should not be empty');
+        assert(battle_svg.len() > 0, 'battle svg should not be empty');
+        assert(death_in_battle_svg.len() > 0, 'death in battle svg not empty');
+    }
 }
