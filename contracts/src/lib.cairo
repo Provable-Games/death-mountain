@@ -48,10 +48,6 @@ pub mod models {
 
 pub mod utils {
     pub mod loot;
-
-    pub mod encoding {
-        pub mod encoding;
-    }
     pub mod renderer {
         pub mod pages {
             pub mod battle;

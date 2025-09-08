@@ -6,7 +6,6 @@
 
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 use death_mountain::models::renderer::{BattleState, PageMode};
-use death_mountain::utils::encoding::encoding::{U256BytesUsedTraitImpl};
 
 use death_mountain::utils::renderer::components::headers::{
     generate_animated_svg_footer, generate_dynamic_animated_svg_header, generate_svg_footer, generate_svg_header,
@@ -14,6 +13,7 @@ use death_mountain::utils::renderer::components::headers::{
 use death_mountain::utils::renderer::core::svg_builder::{
     generate_border_for_page, generate_sliding_container_end, generate_sliding_container_start,
 };
+use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl};
 use death_mountain::utils::renderer::pages::page_generators::{
     // generate_battle_page_content, // TEMPORARILY DISABLED
     generate_death_page_content, generate_inventory_page_content, generate_item_bag_page_content, generate_page_content,

@@ -5,7 +5,7 @@
 // @dev Integrates with mock adventurer contracts to fetch data and create on-chain NFT metadata
 
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
-use death_mountain::utils::encoding::encoding::bytes_base64_encode;
+use death_mountain::utils::renderer::encoding::bytes_base64_encode;
 use death_mountain::utils::renderer::renderer_utils::{generate_details, generate_svg, generate_svg_with_page};
 use death_mountain::utils::string::string_utils::u64_to_string;
 use game_components_minigame::structs::GameDetail;
