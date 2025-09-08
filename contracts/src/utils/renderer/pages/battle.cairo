@@ -5,7 +5,7 @@
 // @dev Implements the modular battle interface matching Frame 4191 reference design
 // @author Built for the Loot Survivor ecosystem
 
-use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
+use death_mountain::models::adventurer::adventurer::{AdventurerVerbose, ImplAdventurer};
 
 // Import UI components
 use death_mountain::utils::renderer::core::text_utils::{
@@ -66,9 +66,8 @@ pub fn generate_battle_page_content(adventurer: AdventurerVerbose) -> ByteArray 
     let has_weapon = adventurer.equipment.weapon.id != 0;
     content += generate_player_sprite(260, 620, has_weapon);
 
-    // Add player health bar - use safe health calculation
-    let vitality_bonus: u64 = (adventurer.stats.vitality * 15).into();
-    let max_health: u64 = 100 + vitality_bonus;
+    // Add player health bar - use proper max health calculation
+    let max_health: u64 = adventurer.stats.get_max_health().into();
     content += generate_health_bar(235, 740, adventurer.health.into(), max_health, "#78E846");
 
     content

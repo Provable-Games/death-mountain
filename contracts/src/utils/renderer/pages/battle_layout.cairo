@@ -7,6 +7,7 @@
 
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 use death_mountain::utils::renderer::components::icons::{dexterity_icon, level_icon, power_icon};
+use death_mountain::utils::renderer::components::ui_components::generate_health_bar_generic;
 use death_mountain::utils::string::string_utils::u64_to_string;
 
 // Layout constants
@@ -191,60 +192,15 @@ pub fn generate_player_battle_row(adventurer: AdventurerVerbose) -> ByteArray {
     row
 }
 
-/// @notice Generate health bar component for characters
-/// @dev Creates color-coded health bar (green/yellow/red based on percentage)
+/// @notice Generate health bar component for battle layouts
+/// @dev Wrapper for the unified health bar component using solid rect style
 /// @param x X position of health bar
 /// @param y Y position of health bar
 /// @param current_health Current health value
 /// @param max_health Maximum health value
-/// @param color_theme Color theme for the health bar
+/// @param color_theme Color theme for the health bar text
 /// @return SVG content for the health bar
 pub fn generate_health_bar(x: u32, y: u32, current_health: u64, max_health: u64, color_theme: ByteArray) -> ByteArray {
-    let mut health_bar = "";
-
-    // Health bar background
-    health_bar += "<rect x=\"";
-    health_bar += format!("{}", x);
-    health_bar += "\" y=\"";
-    health_bar += format!("{}", y);
-    health_bar += "\" width=\"150\" height=\"8\" fill=\"#333\" rx=\"4\"/>";
-
-    // Calculate health percentage and bar width
-    let health_percentage = (current_health * 100) / max_health;
-    let bar_width = (health_percentage * 150) / 100;
-
-    // Color based on health percentage
-    let health_color = if health_percentage > 66 {
-        "#4CAF50" // Green
-    } else if health_percentage > 33 {
-        "#FFC107" // Yellow  
-    } else {
-        "#F44336" // Red
-    };
-
-    // Health bar fill
-    health_bar += "<rect x=\"";
-    health_bar += format!("{}", x);
-    health_bar += "\" y=\"";
-    health_bar += format!("{}", y);
-    health_bar += "\" width=\"";
-    health_bar += format!("{}", bar_width);
-    health_bar += "\" height=\"8\" fill=\"";
-    health_bar += health_color;
-    health_bar += "\" rx=\"4\"/>";
-
-    // Health text
-    health_bar += "<text x=\"";
-    health_bar += format!("{}", x + 75);
-    health_bar += "\" y=\"";
-    health_bar += format!("{}", y + 25);
-    health_bar += "\" fill=\"";
-    health_bar += color_theme;
-    health_bar += "\" class=\"s16\" text-anchor=\"middle\">";
-    health_bar += u64_to_string(current_health);
-    health_bar += "/";
-    health_bar += u64_to_string(max_health);
-    health_bar += " HP</text>";
-
-    health_bar
+    // Use solid rect style (false) with fixed width of 150px for battle layout
+    generate_health_bar_generic(current_health, max_health, x, y, 150_u32, color_theme, false)
 }

@@ -8,7 +8,7 @@
 use death_mountain::models::adventurer::adventurer::{IAdventurer, ImplAdventurer};
 use death_mountain::models::adventurer::stats::Stats;
 use death_mountain::utils::renderer::components::theme::{get_gold_background_color, get_theme_color};
-use death_mountain::utils::string::string_utils::{u256_to_string, u8_to_string};
+use death_mountain::utils::string::string_utils::{u256_to_string, u64_to_string, u8_to_string};
 
 /// @notice Generate dynamic adventurer stats text elements for the 7 core stats
 /// @dev Creates themed stat display with default green theme
@@ -193,19 +193,42 @@ pub fn generate_health_bar(stats: Stats, health: u16) -> ByteArray {
 /// @param page Page number determining theme color for text elements
 /// @return Complete SVG markup for health bar with background, filled bar, and HP display
 pub fn generate_health_bar_with_page(stats: Stats, health: u16, page: u8) -> ByteArray {
+    // Use page-specific positioning for backward compatibility
+    let bar_x_position = if page == 1 {
+        213_u32
+    } else {
+        286_u32
+    };
+    let bar_y_position = 234_u32;
+    let bar_width = 300_u32;
+    let text_color = get_theme_color(page);
+
+    generate_health_bar_generic(
+        health.into(), stats.get_max_health().into(), bar_x_position, bar_y_position, bar_width, text_color, true,
+    )
+}
+
+/// @notice Generate configurable health bar component for any use case
+/// @dev Unified health bar component supporting both dashed and solid styles
+/// @param current_health Current health value
+/// @param max_health Maximum health value
+/// @param x X position of health bar
+/// @param y Y position of health bar
+/// @param width Width of health bar
+/// @param text_color Color for the HP text
+/// @param use_dashed_style Whether to use dashed path style (true) or solid rect style (false)
+/// @return Complete SVG markup for health bar with background, filled bar, and HP display
+pub fn generate_health_bar_generic(
+    current_health: u64, max_health: u64, x: u32, y: u32, width: u32, text_color: ByteArray, use_dashed_style: bool,
+) -> ByteArray {
     let mut health_bar = "";
-    let max_health = stats.get_max_health();
-    let MAX_BAR_WIDTH: u256 = 300; // Maximum bar width in pixels
-    let MIN_FILLED_WIDTH: u256 = 2; // Minimum visible width when HP > 0
-    let theme_color = get_theme_color(page);
+    let MIN_FILLED_WIDTH: u64 = 2; // Minimum visible width when HP > 0
 
     // Calculate dynamic filled width
     let filled_width = if max_health > 0 {
-        let health_u256: u256 = health.into();
-        let max_health_u256: u256 = max_health.into();
-        let calculated = (health_u256 * MAX_BAR_WIDTH) / max_health_u256;
+        let calculated = (current_health * width.into()) / max_health;
         // Ensure minimum visibility when health > 0
-        if health > 0 && calculated < MIN_FILLED_WIDTH {
+        if current_health > 0 && calculated < MIN_FILLED_WIDTH {
             MIN_FILLED_WIDTH
         } else {
             calculated
@@ -216,9 +239,7 @@ pub fn generate_health_bar_with_page(stats: Stats, health: u16, page: u8) -> Byt
 
     // Determine health bar color based on HP percentage
     let health_percentage = if max_health > 0 {
-        let health_u256: u256 = health.into();
-        let max_health_u256: u256 = max_health.into();
-        (health_u256 * 100) / max_health_u256
+        (current_health * 100) / max_health
     } else {
         0
     };
@@ -227,45 +248,85 @@ pub fn generate_health_bar_with_page(stats: Stats, health: u16, page: u8) -> Byt
         "#78E846" // Green (healthy - 75-100%)
     } else if health_percentage >= 25 {
         "#FFD700" // Yellow/Gold (wounded - 25-74%)
-    } else if health > 0 {
+    } else if current_health > 0 {
         "#FF4444" // Red (critical - 1-24%)
     } else {
         "#FF4444" // Red for zero health
     };
 
-    // Generate background bar (full width, dark color)
-    // Adjust x position based on page: page 1 uses x="213" to align with updated layout
-    let bar_x_position = if page == 1 {
-        "213"
+    if use_dashed_style {
+        // Generate dashed path style (original ui_components style)
+        health_bar +=
+            "<path stroke=\"#171D10\" stroke-dasharray=\"42 4\" stroke-linecap=\"square\" stroke-linejoin=\"round\" stroke-width=\"9\" d=\"M";
+        health_bar += format!("{}", x);
+        health_bar += " ";
+        health_bar += format!("{}", y);
+        health_bar += "h";
+        health_bar += format!("{}", width);
+        health_bar += "\"/>";
+
+        // Generate filled health bar (dynamic width, color-coded)
+        health_bar += "<path stroke=\"";
+        health_bar += bar_color;
+        health_bar +=
+            "\" stroke-dasharray=\"42 4\" stroke-linecap=\"square\" stroke-linejoin=\"round\" stroke-width=\"9\" d=\"M";
+        health_bar += format!("{}", x);
+        health_bar += " ";
+        health_bar += format!("{}", y);
+        health_bar += "h";
+        health_bar += format!("{}", filled_width);
+        health_bar += "\"/>";
+
+        // HP text positioned below the dashed bar
+        health_bar += "<text x=\"";
+        health_bar += format!("{}", x);
+        health_bar += "\" y=\"";
+        health_bar += format!("{}", y + 36);
+        health_bar += "\" fill=\"";
+        health_bar += text_color;
+        health_bar += "\" class=\"s16\">";
     } else {
-        "286"
-    };
-    health_bar +=
-        "<path stroke=\"#171D10\" stroke-dasharray=\"42 4\" stroke-linecap=\"square\" stroke-linejoin=\"round\" stroke-width=\"9\" d=\"M";
-    health_bar += bar_x_position.clone();
-    health_bar += " 234h";
-    health_bar += u256_to_string(MAX_BAR_WIDTH);
-    health_bar += "\"/>";
+        // Generate solid rect style (original battle_layout style)
+        let bar_height = 8_u32;
 
-    // Generate filled health bar (dynamic width, color-coded)
-    health_bar += "<path stroke=\"";
-    health_bar += bar_color;
-    health_bar +=
-        "\" stroke-dasharray=\"42 4\" stroke-linecap=\"square\" stroke-linejoin=\"round\" stroke-width=\"9\" d=\"M";
-    health_bar += bar_x_position.clone();
-    health_bar += " 234h";
-    health_bar += u256_to_string(filled_width);
-    health_bar += "\"/>";
+        // Health bar background
+        health_bar += "<rect x=\"";
+        health_bar += format!("{}", x);
+        health_bar += "\" y=\"";
+        health_bar += format!("{}", y);
+        health_bar += "\" width=\"";
+        health_bar += format!("{}", width);
+        health_bar += "\" height=\"";
+        health_bar += format!("{}", bar_height);
+        health_bar += "\" fill=\"#333\" rx=\"4\"/>";
 
-    // Add HP display (current HP / max HP) with theme color
-    health_bar += "<text x=\"";
-    health_bar += bar_x_position;
-    health_bar += "\" y=\"270\" fill=\"";
-    health_bar += theme_color;
-    health_bar += "\" class=\"s16\">";
-    health_bar += u256_to_string(health.into());
+        // Health bar fill
+        health_bar += "<rect x=\"";
+        health_bar += format!("{}", x);
+        health_bar += "\" y=\"";
+        health_bar += format!("{}", y);
+        health_bar += "\" width=\"";
+        health_bar += format!("{}", filled_width);
+        health_bar += "\" height=\"";
+        health_bar += format!("{}", bar_height);
+        health_bar += "\" fill=\"";
+        health_bar += bar_color;
+        health_bar += "\" rx=\"4\"/>";
+
+        // HP text positioned below the solid bar
+        health_bar += "<text x=\"";
+        health_bar += format!("{}", x + width / 2);
+        health_bar += "\" y=\"";
+        health_bar += format!("{}", y + bar_height + 17);
+        health_bar += "\" fill=\"";
+        health_bar += text_color;
+        health_bar += "\" class=\"s16\" text-anchor=\"middle\">";
+    }
+
+    // Add HP display (current HP / max HP)
+    health_bar += u64_to_string(current_health);
     health_bar += "/";
-    health_bar += u256_to_string(max_health.into());
+    health_bar += u64_to_string(max_health);
     health_bar += " HP</text>";
 
     health_bar

@@ -12,7 +12,7 @@
 set -e
 
 OUTPUT_DIR="output"
-TEMP_DIR="temp_svg_generation"
+TEMP_DIR=$(mktemp -d)
 
 # Create directories
 mkdir -p "$OUTPUT_DIR"
@@ -62,7 +62,7 @@ convert_svg_to_png() {
     # Try multiple conversion methods
     if command -v inkscape >/dev/null 2>&1; then
         echo -e "${BLUE}   Using Inkscape for conversion${NC}"
-        inkscape "$svg_file" --export-type=png --export-filename="$png_file" --export-width=862 --export-height=1270 2>/dev/null
+        inkscape "$svg_file" --export-type=png --export-filename="$png_file" --export-width=862 --export-height=1270
     elif command -v rsvg-convert >/dev/null 2>&1; then
         echo -e "${BLUE}   Using rsvg-convert for conversion${NC}"
         rsvg-convert -w 862 -h 1270 "$svg_file" -o "$png_file"
