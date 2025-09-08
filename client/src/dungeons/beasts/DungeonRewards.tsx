@@ -131,7 +131,7 @@ export default function DungeonRewards() {
         <Box sx={styles.rewardHeader}>
           <Box sx={{ flex: 1 }}>
             <Typography fontWeight={700}>"Armageddon Moon" Dragon</Typography>
-            <Typography fontWeight={500} color="secondary" mt={0.5} letterSpacing={0.2}>First to collect this beast wins a 10.000$ jackpot!</Typography>
+            <Typography fontWeight={500} color="secondary" mt={0.5} letterSpacing={0.2}>First to collect this beast wins a $10.000 jackpot!</Typography>
           </Box>
         </Box>
       </Box>

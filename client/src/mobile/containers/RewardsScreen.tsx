@@ -153,15 +153,6 @@ const tokenGlow = keyframes`
   }
 `;
 
-const buttonPulse = keyframes`
-  0%, 100% { 
-    box-shadow: 0 0 8px rgba(255, 224, 130, 0.3);
-  }
-  50% { 
-    box-shadow: 0 0 16px rgba(255, 224, 130, 0.6);
-  }
-`;
-
 const styles = {
   container: {
     width: "100%",
