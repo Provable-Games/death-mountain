@@ -7,13 +7,11 @@
 
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 
-// Import bag rendering functions
 use death_mountain::utils::renderer::bag::bag_renderer::{
     generate_bag_header, generate_bag_item_icons, generate_bag_item_level_badges, generate_bag_item_names,
     generate_bag_item_slots,
 };
 
-// Import UI components
 use death_mountain::utils::renderer::components::ui_components::{
     generate_gold_display_with_page, generate_health_bar_with_page, generate_level_display_with_page,
 };

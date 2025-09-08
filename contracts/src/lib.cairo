@@ -46,16 +46,6 @@ pub mod models {
     pub mod renderer;
 }
 
-// pub mod utils {
-//     pub mod loot;
-//     pub mod renderer {
-//         pub mod encoding;
-//         pub mod renderer_utils;
-//     }
-//     #[cfg(test)]
-//     pub mod setup_denshokan;
-//     pub mod vrf;
-// }
 pub mod utils {
     pub mod loot;
 
@@ -63,9 +53,6 @@ pub mod utils {
         pub mod encoding;
     }
     pub mod renderer {
-        pub mod page {
-            pub mod page_renderer;
-        }
         pub mod pages {
             pub mod battle;
             pub mod battle_layout;
@@ -105,10 +92,6 @@ pub mod utils {
     }
     pub mod string {
         pub mod string_utils;
-    }
-
-    pub mod test {
-        pub mod test_utils;
     }
 
     #[cfg(test)]

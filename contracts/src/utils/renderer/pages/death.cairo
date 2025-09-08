@@ -8,7 +8,6 @@
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 use death_mountain::utils::renderer::components::icons::grave_icon;
 
-// Import UI components
 use death_mountain::utils::renderer::components::ui_components::{
     generate_gold_display_with_page, generate_level_display_with_page, generate_stats_text_with_page,
 };
@@ -59,7 +58,6 @@ pub fn generate_grave_icon_positioned() -> ByteArray {
 pub fn generate_death_message(adventurer_xp: u16) -> ByteArray {
     let mut message = "";
 
-    // Extract only XP for the death message
     let xp_str = u64_to_string(adventurer_xp.into());
 
     message += "<text x=\"440\" y=\"655\" fill=\"#888888\" class=\"s16\" text-anchor=\"middle\">";

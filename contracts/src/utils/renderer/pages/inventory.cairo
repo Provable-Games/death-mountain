@@ -7,7 +7,6 @@
 
 use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 
-// Import UI components
 use death_mountain::utils::renderer::components::ui_components::{
     generate_gold_display_with_page, generate_health_bar_with_page, generate_level_display_with_page,
     generate_stats_text_with_page,
@@ -16,7 +15,6 @@ use death_mountain::utils::renderer::core::text_utils::{
     generate_adventurer_name_text_with_page, generate_logo_with_page,
 };
 
-// Import equipment rendering functions
 use death_mountain::utils::renderer::equipment::{
     badges::generate_equipment_level_badges, names::generate_equipment_names, positioning::generate_equipment_icons,
     slots::generate_equipment_slots,

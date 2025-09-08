@@ -366,9 +366,8 @@ pub fn contains_byte(haystack: @ByteArray, needle: u8) -> bool {
 #[cfg(test)]
 mod string_utils_tests {
     use super::{
-        u8_to_string, u64_to_string, u256_to_string, felt252_to_string, felt252_length,
-        contains_pattern, starts_with_pattern, ends_with_pattern, byte_array_eq, is_all_digits,
-        count_byte_occurrences, contains_byte
+        byte_array_eq, contains_byte, contains_pattern, count_byte_occurrences, ends_with_pattern, felt252_length,
+        felt252_to_string, is_all_digits, starts_with_pattern, u256_to_string, u64_to_string, u8_to_string,
     };
 
     #[test]
@@ -407,10 +406,10 @@ mod string_utils_tests {
     fn test_u256_to_string_simple() {
         let zero: u256 = 0;
         assert(u256_to_string(zero) == "0", 'should be 0');
-        
+
         let small: u256 = 123;
         assert(u256_to_string(small) == "123", 'should be 123');
-        
+
         let medium: u256 = 1000000;
         assert(u256_to_string(medium) == "1000000", 'should be 1000000');
     }
@@ -419,11 +418,11 @@ mod string_utils_tests {
     fn test_u256_to_string_edge_case() {
         let one: u256 = 1;
         assert(u256_to_string(one) == "1", '1 should be 1');
-        
+
         let large: u256 = u256 { low: 0xffffffffffffffffffffffffffffffff, high: 0 };
         let large_str = u256_to_string(large);
         assert(large_str.len() > 0, 'large number should convert');
-        
+
         let very_large: u256 = u256 { low: 1000000000000000000000000000000000000, high: 1 };
         let very_large_str = u256_to_string(very_large);
         assert(very_large_str.len() > 30, 'should be long');
@@ -432,7 +431,7 @@ mod string_utils_tests {
     #[test]
     fn test_felt252_to_string_simple() {
         assert(felt252_to_string(0) == "", 'zero felt should be empty');
-        
+
         // Test with ASCII values that form readable strings
         let hello_felt: felt252 = 'hello';
         let result = felt252_to_string(hello_felt);
@@ -445,7 +444,7 @@ mod string_utils_tests {
         let a_felt: felt252 = 'a';
         let a_result = felt252_to_string(a_felt);
         assert(a_result.len() > 0, 'should not be empty');
-        
+
         // Test longer string
         let long_felt: felt252 = 'test_string';
         let long_result = felt252_to_string(long_felt);
@@ -455,7 +454,7 @@ mod string_utils_tests {
     #[test]
     fn test_felt252_length_simple() {
         assert(felt252_length(0) == 0, 'should be 0');
-        
+
         let hello_felt: felt252 = 'hello';
         let length = felt252_length(hello_felt);
         assert(length > 0, 'should not be empty');
@@ -465,7 +464,7 @@ mod string_utils_tests {
     fn test_felt252_length_edge_case() {
         let a_felt: felt252 = 'a';
         assert(felt252_length(a_felt) >= 1, 'should have length >= 1');
-        
+
         let long_felt: felt252 = 'test_string_longer';
         let long_length = felt252_length(long_felt);
         assert(long_length > 10, 'should have length > 10');
@@ -476,10 +475,10 @@ mod string_utils_tests {
         let haystack = "hello world";
         let needle = "world";
         assert(contains_pattern(@haystack, @needle), 'not found');
-        
+
         let needle2 = "hello";
         assert(contains_pattern(@haystack, @needle2), 'not found');
-        
+
         let needle3 = "xyz";
         assert(!contains_pattern(@haystack, @needle3), 'should not find xyz');
     }
@@ -489,11 +488,11 @@ mod string_utils_tests {
         let haystack = "test";
         let empty_needle = "";
         assert(contains_pattern(@haystack, @empty_needle), 'empty pattern should match');
-        
+
         let haystack2 = "";
         let needle = "test";
         assert(!contains_pattern(@haystack2, @needle), 'should not match non-empty');
-        
+
         let single_char = "a";
         let single_needle = "a";
         assert(contains_pattern(@single_char, @single_needle), 'should match itself');
@@ -504,7 +503,7 @@ mod string_utils_tests {
         let text = "hello world";
         let prefix = "hello";
         assert(starts_with_pattern(@text, @prefix), 'should start with hello');
-        
+
         let prefix2 = "world";
         assert(!starts_with_pattern(@text, @prefix2), 'should not start with world');
     }
@@ -514,11 +513,11 @@ mod string_utils_tests {
         let text = "test";
         let empty_prefix = "";
         assert(starts_with_pattern(@text, @empty_prefix), 'should start with empty prefix');
-        
+
         let text2 = "";
         let prefix = "test";
         assert(!starts_with_pattern(@text2, @prefix), 'starts with non-empty prefix');
-        
+
         let same = "test";
         assert(starts_with_pattern(@same, @same), 'text should start with itself');
     }
@@ -528,7 +527,7 @@ mod string_utils_tests {
         let text = "hello world";
         let suffix = "world";
         assert(ends_with_pattern(@text, @suffix), 'should end with world');
-        
+
         let suffix2 = "hello";
         assert(!ends_with_pattern(@text, @suffix2), 'should not end with hello');
     }
@@ -538,11 +537,11 @@ mod string_utils_tests {
         let text = "test";
         let empty_suffix = "";
         assert(ends_with_pattern(@text, @empty_suffix), 'should end with empty suffix');
-        
+
         let text2 = "";
         let suffix = "test";
         assert(!ends_with_pattern(@text2, @suffix), 'ends with non-empty suffix');
-        
+
         let same = "test";
         assert(ends_with_pattern(@same, @same), 'should end with itself');
     }
@@ -552,7 +551,7 @@ mod string_utils_tests {
         let a = "hello";
         let b = "hello";
         assert(byte_array_eq(@a, @b), 'should be equal');
-        
+
         let c = "world";
         assert(!byte_array_eq(@a, @c), 'should not be equal');
     }
@@ -562,11 +561,11 @@ mod string_utils_tests {
         let empty1 = "";
         let empty2 = "";
         assert(byte_array_eq(@empty1, @empty2), 'should be equal');
-        
+
         let empty = "";
         let non_empty = "test";
         assert(!byte_array_eq(@empty, @non_empty), 'should not be equal');
-        
+
         let different_length1 = "test";
         let different_length2 = "testing";
         assert(!byte_array_eq(@different_length1, @different_length2), 'should not be equal');
@@ -576,10 +575,10 @@ mod string_utils_tests {
     fn test_is_all_digits_simple() {
         let digits = "12345";
         assert(is_all_digits(@digits), 'hould be all digits');
-        
+
         let mixed = "123abc";
         assert(!is_all_digits(@mixed), 'should not be all digits');
-        
+
         let zero = "0";
         assert(is_all_digits(@zero), 'should be all digits');
     }
@@ -588,13 +587,13 @@ mod string_utils_tests {
     fn test_is_all_digits_edge_case() {
         let empty = "";
         assert(!is_all_digits(@empty), 'should not be all digits');
-        
+
         let single_digit = "5";
         assert(is_all_digits(@single_digit), 'should be all digits');
-        
+
         let letters = "abc";
         assert(!is_all_digits(@letters), 'should not be all digits');
-        
+
         let with_space = "1 2 3";
         assert(!is_all_digits(@with_space), 'should not be all digits');
     }
@@ -604,10 +603,10 @@ mod string_utils_tests {
         let text = "hello world";
         let l_byte = 'l';
         assert(count_byte_occurrences(@text, l_byte) == 3, 'should find 3 l characters');
-        
+
         let o_byte = 'o';
         assert(count_byte_occurrences(@text, o_byte) == 2, 'should find 2 o characters');
-        
+
         let z_byte = 'z';
         assert(count_byte_occurrences(@text, z_byte) == 0, 'should find 0 z characters');
     }
@@ -617,11 +616,11 @@ mod string_utils_tests {
         let empty = "";
         let any_byte = 'a';
         assert(count_byte_occurrences(@empty, any_byte) == 0, 'should have 0 occurrences');
-        
+
         let single = "a";
         let a_byte = 'a';
         assert(count_byte_occurrences(@single, a_byte) == 1, 'should have 1 occurrence');
-        
+
         let repeated = "aaaa";
         assert(count_byte_occurrences(@repeated, a_byte) == 4, 'should find 4 a characters');
     }
@@ -631,10 +630,10 @@ mod string_utils_tests {
         let text = "hello world";
         let h_byte = 'h';
         assert(contains_byte(@text, h_byte), 'should contain h');
-        
+
         let space_byte = ' ';
         assert(contains_byte(@text, space_byte), 'should contain space');
-        
+
         let z_byte = 'z';
         assert(!contains_byte(@text, z_byte), 'should not contain z');
     }
@@ -644,11 +643,11 @@ mod string_utils_tests {
         let empty = "";
         let any_byte = 'a';
         assert(!contains_byte(@empty, any_byte), 'should not contain any byte');
-        
+
         let single = "x";
         let x_byte = 'x';
         assert(contains_byte(@single, x_byte), 'should contain itself');
-        
+
         let y_byte = 'y';
         assert(!contains_byte(@single, y_byte), 'should not contain different');
     }

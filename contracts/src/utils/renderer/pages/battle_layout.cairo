@@ -9,7 +9,7 @@ use death_mountain::models::adventurer::adventurer::AdventurerVerbose;
 use death_mountain::utils::renderer::components::icons::{dexterity_icon, level_icon, power_icon};
 use death_mountain::utils::string::string_utils::u64_to_string;
 
-// Layout constants based on Frame 4191 reference design
+// Layout constants
 const BATTLE_ROW_Y: u32 = 220_u32; // Top row (beast) Y position
 const BATTLE_ROW_HEIGHT: u32 = 222_u32; // Height of top/bottom rows
 const MESSAGE_ROW_Y: u32 = 470_u32; // Middle message row Y position  
