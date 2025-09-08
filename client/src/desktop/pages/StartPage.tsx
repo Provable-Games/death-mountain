@@ -37,36 +37,3 @@ export default function LandingPage() {
     </>
   );
 }
-
-const styles = {
-  contentContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    width: '100%',
-  },
-  walletContainer: {
-    position: 'absolute',
-    top: '1rem',
-    right: '1rem',
-    zIndex: 2,
-  },
-  playButton: {
-    fontSize: '1.4rem',
-    padding: '8px 3rem',
-    borderRadius: '1rem',
-    boxShadow: 3,
-  },
-  title: {
-    color: '#1aff5c',
-    fontWeight: 'bold',
-    textShadow: '0 2px 8px #003311',
-    marginBottom: '2.5rem',
-    textAlign: 'center',
-    letterSpacing: '0.08em',
-    fontSize: { xs: '2.2rem', sm: '3rem', md: '3.5rem' },
-    lineHeight: 1.1,
-  },
-};

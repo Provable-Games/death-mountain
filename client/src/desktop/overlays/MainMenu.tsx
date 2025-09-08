@@ -104,8 +104,6 @@ export default function MainMenu() {
                 </Typography>
               </Box>
 
-              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
-
               <Button
                 variant="outlined"
                 fullWidth
@@ -234,11 +232,11 @@ export default function MainMenu() {
                 </Typography>
               </Button> */}
 
-              <Box sx={styles.bottom}>
-                {currentNetworkConfig.name === "Beast Mode" && (
-                  <BeastsCollected />
-                )}
+              {currentNetworkConfig.name === "Beast Mode" &&
+                <PriceIndicator />
+              }
 
+              <Box sx={styles.bottom}>
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
@@ -336,6 +334,17 @@ const styles = {
   rewardsContainer: {
     position: "absolute",
     top: 32,
+    width: 300,
+    bgcolor: "rgba(24, 40, 24, 0.6)",
+    border: "1px solid rgba(208, 201, 141, 0.3)",
+    borderRadius: "10px",
+    backdropFilter: "blur(10px)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    p: 2.5,
+    zIndex: 10,
   },
   headerBox: {
     display: "flex",

@@ -121,15 +121,20 @@ export const useGameTokens = () => {
       SELECT COUNT(*) as count FROM token_balances
       WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
 
-    const sql = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
+    try {
+      const sql = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
 
-    let data = await sql.json()
-    return data[0].count
+      let data = await sql.json()
+      return data[0].count
+    } catch (error) {
+      console.error("Error counting beasts:", error);
+      return 0;
+    }
   }
 
   return {

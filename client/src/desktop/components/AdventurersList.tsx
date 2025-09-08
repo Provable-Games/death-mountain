@@ -2,6 +2,7 @@ import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { calculateLevel } from "@/utils/game";
+import { ChainId } from "@/utils/networkConfig";
 import { getContractByName } from "@dojoengine/core";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -14,6 +15,7 @@ import {
 } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { addAddressPadding } from "starknet";
 
 interface AdventurersListProps {
   onBack: () => void;
@@ -31,7 +33,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     "game_token_systems"
   )?.address;
   const { games: gamesData, loading: gamesLoading } = useMetagameTokens({
-    gameAddresses: [GAME_TOKEN_ADDRESS],
+    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
     owner: address,
   });
   const [gameTokens, setGameTokens] = useState<any[]>([]);

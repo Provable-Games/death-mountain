@@ -164,3 +164,12 @@ export const formatAmount = (value: number): string => {
     return Math.round(value).toString();
   }
 };
+
+export function formatRewardNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(2) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toLocaleString();
+}

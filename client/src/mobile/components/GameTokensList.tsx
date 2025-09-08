@@ -1,16 +1,18 @@
 import { useController } from "@/contexts/controller";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { calculateLevel } from "@/utils/game";
+import { ChainId } from "@/utils/networkConfig";
+import { getContractByName } from "@dojoengine/core";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WatchIcon from "@mui/icons-material/Watch";
 import { Box, Button, Stack, Typography } from "@mui/material";
+import { motion } from "framer-motion";
+import { useGameTokens as useMetagameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getContractByName } from "@dojoengine/core";
-import { useDynamicConnector } from "@/contexts/starknet";
-import { useGameTokens as useMetagameTokens } from "metagame-sdk/sql";
-import { motion } from "framer-motion";
+import { addAddressPadding } from "starknet";
 
 export default function GameTokensList() {
   const { fetchAdventurerData } = useGameTokens();
@@ -30,7 +32,7 @@ export default function GameTokensList() {
   )?.address;
 
   const { games: gamesData } = useMetagameTokens({
-    gameAddresses: [GAME_TOKEN_ADDRESS],
+    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
     owner: account?.address,
   });
 
@@ -228,7 +230,7 @@ export default function GameTokensList() {
 const styles = {
   listContainer: {
     width: "100%",
-    maxHeight: "345px",
+    maxHeight: "365px",
     display: "flex",
     flexDirection: "column",
     gap: "6px",

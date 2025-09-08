@@ -206,7 +206,7 @@ const styles = {
   },
   listContainer: {
     width: "100%",
-    maxHeight: "345px",
+    maxHeight: "365px",
     display: "flex",
     flexDirection: "column",
     gap: "6px",
