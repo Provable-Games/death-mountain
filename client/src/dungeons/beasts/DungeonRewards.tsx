@@ -1,50 +1,25 @@
-import { useStarknetApi } from "@/api/starknet";
-import { useGameTokens } from "@/dojo/useGameTokens";
+import { totalCollectableBeasts, totalSurvivorTokens } from "@/contexts/Statistics";
 import { useUIStore } from "@/stores/uiStore";
 import { formatRewardNumber } from "@/utils/utils";
 import { Box, Divider, LinearProgress, Link, Skeleton, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
-
-const totalSurvivorTokens = 2000000;
-const totalCollectableBeasts = 93150;
 
 export default function DungeonRewards() {
   const { useMobileClient } = useUIStore();
-  const mobile = isMobile || useMobileClient;
-
-  const { countBeasts } = useGameTokens();
-  const { getRewardTokensClaimed } = useStarknetApi();
-  const [collectedBeasts, setCollectedBeasts] = useState(0);
-  const [remainingSurvivorTokens, setRemainingSurvivorTokens] = useState<number | null>(null);
-
-  const fetchBeasts = async () => {
-    const result = await countBeasts();
-    setCollectedBeasts((result - 75) || 0);
-  };
-
-  const fetchRewardTokensClaimed = async () => {
-    const result = await getRewardTokensClaimed();
-    setRemainingSurvivorTokens(result ? totalSurvivorTokens - result : null);
-  };
-
-  useEffect(() => {
-    fetchBeasts();
-    fetchRewardTokensClaimed();
-  }, []);
-
-  const beastPercentage = (collectedBeasts / totalCollectableBeasts) * 100;
+  // const { remainingSurvivorTokens, beastsCollected } = useStatistics();
+  const remainingSurvivorTokens = 1920302;
+  const beastsRemaining = totalCollectableBeasts - (4302 - 75);
 
   return (
     <>
-      {!mobile && <Box sx={styles.header}>
+      {!(isMobile || useMobileClient) && <Box sx={styles.header}>
         <Typography sx={styles.title}>DUNGEON REWARDS</Typography>
         <Box sx={styles.divider} />
       </Box>}
 
       <Box sx={styles.rewardSection}>
         <Box mb={0.5}>
-          <img src="/images/survivor_token.png" alt="beast" height={52} style={{ opacity: 0.8 }} />
+          <img src="/images/survivor_token.png" alt="beast" height={52} />
         </Box>
 
         <Box sx={styles.rewardHeader}>
@@ -64,7 +39,7 @@ export default function DungeonRewards() {
                 height: '100%',
                 background: 'transparent',
                 '& .MuiLinearProgress-bar': {
-                  background: '#1a5c02',
+                  background: '#656217',
                   borderRadius: 4,
                 },
               }}
@@ -86,7 +61,7 @@ export default function DungeonRewards() {
           sx={styles.learnMoreLink}
           onClick={(e) => {
             e.preventDefault();
-            window.open('https://docs.provable.games/lootsurvivor/survivor-token', '_blank');
+            window.open('https://docs.provable.games/lootsurvivor/token', '_blank');
           }}
         >
           Learn more about Survivor Tokens
@@ -102,22 +77,22 @@ export default function DungeonRewards() {
 
         <Box sx={styles.rewardHeader}>
           <Box sx={{ flex: 1 }}>
-            <Typography sx={styles.rewardTitle}>Collectable Beasts</Typography>
+            <Typography sx={styles.rewardTitle}>Collectable Beast</Typography>
             <Typography sx={styles.rewardSubtitle}>Defeat beasts to collect NFTs</Typography>
           </Box>
         </Box>
 
-        {collectedBeasts > 0 ? <Box sx={styles.progressContainer}>
+        {beastsRemaining > 0 ? <Box sx={styles.progressContainer}>
           <Box sx={styles.progressBar}>
             <LinearProgress
               variant="determinate"
-              value={beastPercentage}
+              value={(beastsRemaining / totalCollectableBeasts) * 100}
               sx={{
                 width: '100%',
                 height: '100%',
                 background: 'transparent',
                 '& .MuiLinearProgress-bar': {
-                  background: '#1a5c02',
+                  background: '#656217',
                   borderRadius: 4,
                 },
               }}
@@ -125,13 +100,13 @@ export default function DungeonRewards() {
           </Box>
           <Box sx={styles.progressOverlay}>
             <Typography sx={styles.progressText}>
-              {formatRewardNumber(collectedBeasts)} / {totalCollectableBeasts.toLocaleString()}
+              {formatRewardNumber(beastsRemaining)} / {totalCollectableBeasts.toLocaleString()}
             </Typography>
           </Box>
         </Box> : <Skeleton variant="rectangular" sx={{ height: 18, borderRadius: 4 }} />}
 
-        {collectedBeasts > 0 && <Typography sx={styles.remainingText}>
-          {collectedBeasts.toLocaleString()} beast remaining
+        {beastsRemaining > 0 && <Typography sx={styles.remainingText}>
+          {beastsRemaining.toLocaleString()} beast remaining
         </Typography>}
 
         <Link
@@ -145,16 +120,32 @@ export default function DungeonRewards() {
           Learn more about Collectable Beasts
         </Link>
       </Box>
+
+      <Divider sx={{ width: "100%", my: 1.5 }} />
+
+      <Box sx={styles.rewardSection}>
+        <Box mb={0.5}>
+          <img src="/images/jackpot_dragon.png" alt="beast" height={64} />
+        </Box>
+
+        <Box sx={styles.rewardHeader}>
+          <Box sx={{ flex: 1 }}>
+            <Typography fontWeight={700}>"Armageddon Moon" Dragon</Typography>
+            <Typography fontWeight={500} color="secondary" mt={0.5} letterSpacing={0.2}>First to collect this beast wins a 10.000$ jackpot!</Typography>
+          </Box>
+        </Box>
+      </Box>
     </>
   );
 }
 
 const styles = {
   progressBar: {
-    width: '100%',
+    width: '95%',
+    maxWidth: '80dvw',
     height: 18,
     borderRadius: 4,
-    border: '1px solid #1a5c02',
+    border: '1px solid #656217',
     background: '#16281a',
     display: 'flex',
     alignItems: 'center',
@@ -186,12 +177,12 @@ const styles = {
     flexDirection: 'column',
     justifyContent: 'center',
     textAlign: 'center',
+    width: '100%',
   },
   rewardHeader: {
     display: 'flex',
     justifyContent: 'center',
     gap: 1,
-    mb: 1,
   },
   rewardTitle: {
     fontSize: "1rem",
@@ -207,6 +198,9 @@ const styles = {
   },
   progressContainer: {
     position: 'relative',
+    display: 'flex',
+    justifyContent: 'center',
+    mt: 1,
     mb: 0.5
   },
   progressOverlay: {

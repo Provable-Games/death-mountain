@@ -400,6 +400,14 @@ export const useSystemCalls = () => {
     }
   };
 
+  const claimSurvivorTokens = async (gameId: number) => {
+    await executeAction([{
+      contractAddress: DUNGEON_ADDRESS,
+      entrypoint: "claim_reward_token",
+      calldata: [gameId],
+    }], () => { });
+  };
+
   const mintSepoliaLords = async (account: any) => {
     try {
       let tx = await account!.execute([
@@ -506,5 +514,6 @@ export const useSystemCalls = () => {
     requestRandom,
     executeAction,
     mintSepoliaLords,
+    claimSurvivorTokens,
   };
 };

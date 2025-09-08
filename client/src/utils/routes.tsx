@@ -2,6 +2,7 @@ import GamePage from "@/desktop/pages/GamePage";
 import LandingPage from "@/desktop/pages/StartPage";
 import NotFoundPage from "@/desktop/pages/NotFoundPage";
 import WatchPage from "@/desktop/pages/WatchPage";
+import ClaimPage from "@/desktop/pages/ClaimPage";
 
 import { default as MobileCampaignPage } from "@/mobile/pages/CampaignPage";
 import { default as MobileGamePage } from "@/mobile/pages/GamePage";
@@ -25,6 +26,10 @@ export const desktopRoutes = [
   {
     path: '/survivor/watch',
     content: <WatchPage />
+  },
+  {
+    path: '/survivor/claim',
+    content: <ClaimPage />
   },
   {
     path: '*',

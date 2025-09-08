@@ -218,7 +218,10 @@ export default function LandingPage() {
                   </Button>
                 </Box>
               </Box>
-              <DungeonRewards />
+
+              <Box sx={{ width: "100%", maxHeight: "365px", overflowY: "auto" }}>
+                <DungeonRewards />
+              </Box>
             </>
           )}
         </Box>

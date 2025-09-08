@@ -69,11 +69,11 @@ export default function PriceIndicator() {
                     </Typography>
 
                     <Typography sx={styles.feeHighlightText}>
-                      - 50% to survivor token holders
+                      - 80% to survivor token holders
                     </Typography>
 
                     <Typography sx={styles.feeHighlightText}>
-                      - 50% to veLords
+                      - 20% to lords token holders
                     </Typography>
                   </Box>
                 </Box>
@@ -174,11 +174,11 @@ export default function PriceIndicator() {
                   </Typography>
 
                   <Typography sx={styles.feeHighlightText}>
-                    - 50% to survivor token holders
+                    - 80% to survivor token holders
                   </Typography>
 
                   <Typography sx={styles.feeHighlightText}>
-                    - 50% to veLords
+                    - 20% to lords token holders
                   </Typography>
                 </Box>
               </Box>

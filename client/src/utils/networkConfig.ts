@@ -212,6 +212,10 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
       target: network.dungeon,
       method: "claim_beast",
     },
+    {
+      target: network.dungeon,
+      method: "claim_reward_token",
+    },
   ];
 
   return {
