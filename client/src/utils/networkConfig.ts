@@ -54,13 +54,32 @@ export const NETWORKS = {
     denshokan:
       "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
     dungeon:
-      "0x003a82be975d420b81e80aec4b75306e0e7f48e6ce3ac549c9c46a630aaa8398",
+      "0x0129aab3a09bb946a9076108d8ba7400054c33a7f06e29415c78cc82d7d77804",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     beasts: "",
-    goldenToken: "",
-    ekuboRouter: "",
+    goldenToken: "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
+    ekuboRouter: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
     paymentTokens: [
+      {
+        name: "ETH",
+        address:
+          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        displayDecimals: 4,
+      },
+      {
+        name: "STRK",
+        address:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        displayDecimals: 2,
+      },
+      {
+        name: "USDC",
+        address:
+          "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+        displayDecimals: 2,
+        decimals: 6,
+      },
       {
         name: "TICKET",
         address:

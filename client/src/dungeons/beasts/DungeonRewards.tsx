@@ -1,4 +1,4 @@
-import { totalCollectableBeasts, totalSurvivorTokens } from "@/contexts/Statistics";
+import { totalCollectableBeasts, totalSurvivorTokens, useStatistics } from "@/contexts/Statistics";
 import { useUIStore } from "@/stores/uiStore";
 import { formatRewardNumber } from "@/utils/utils";
 import { Box, Divider, LinearProgress, Link, Skeleton, Typography } from "@mui/material";
@@ -6,9 +6,8 @@ import { isMobile } from "react-device-detect";
 
 export default function DungeonRewards() {
   const { useMobileClient } = useUIStore();
-  // const { remainingSurvivorTokens, beastsCollected } = useStatistics();
-  const remainingSurvivorTokens = 1920302;
-  const beastsRemaining = totalCollectableBeasts - (4302 - 75);
+  const { remainingSurvivorTokens, collectedBeasts } = useStatistics();
+  const beastsRemaining = totalCollectableBeasts - (collectedBeasts - 75);
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { getPriceChart, getSwapQuote } from "@/api/ekubo";
 import { useStarknetApi } from "@/api/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
+import { NETWORKS } from "@/utils/networkConfig";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
 export interface StatisticsContext {
@@ -15,13 +16,13 @@ export interface StatisticsContext {
 // Create a context
 const StatisticsContext = createContext<StatisticsContext>({} as StatisticsContext);
 
-export const OPENING_TIME = 1757410824;
-export const totalSurvivorTokens = 2000000;
+export const OPENING_TIME = 1757420824;
+export const totalSurvivorTokens = 20000;
 export const totalCollectableBeasts = 93150;
 
-const DungeonTicket = '0x0468ce7715f7aea17b1632736877c36371c3b1354eb9611e8bb9035c0563963f'
-const STRK = '0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D'
-const USDC = '0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080'
+const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;
+const STRK = NETWORKS.SN_MAIN.paymentTokens.find(token => token.name === 'STRK')?.address!;
+const USDC = NETWORKS.SN_MAIN.paymentTokens.find(token => token.name === 'USDC')?.address!;
 
 // Create a provider component
 export const StatisticsProvider = ({ children }: PropsWithChildren) => {
@@ -50,7 +51,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
 
   const fetchRewardTokensClaimed = async () => {
     const result = await getRewardTokensClaimed();
-    setRemainingSurvivorTokens(result ? totalSurvivorTokens - result : null);
+    setRemainingSurvivorTokens(result !== null ? totalSurvivorTokens - result : null);
   };
 
   useEffect(() => {

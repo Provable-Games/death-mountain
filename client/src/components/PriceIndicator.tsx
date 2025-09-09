@@ -218,6 +218,7 @@ export default function PriceIndicator() {
         width: '100%',
         height: 8,
         borderRadius: 4,
+        mt: 1,
         background: 'linear-gradient(90deg, #4caf50 0%, #ff9800 50%, #f44336 100%)',
         position: 'relative',
       }}>

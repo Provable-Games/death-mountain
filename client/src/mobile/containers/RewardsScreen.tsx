@@ -27,7 +27,8 @@ export default function RewardsScreen({ gameId, adventurerLevel, onClose }: Rewa
 
   const handleClaimReward = async () => {
     if (!gameId) return;
-
+    
+    claimSurvivorTokens(gameId);
     setIsClaiming(true);
     setCountdown(rewardAmount);
 
@@ -56,8 +57,6 @@ export default function RewardsScreen({ gameId, adventurerLevel, onClose }: Rewa
 
     updateCountdown();
 
-    // Call the actual claim function
-    // claimSurvivorTokens(gameId);
   };
 
   const handleContinue = () => {

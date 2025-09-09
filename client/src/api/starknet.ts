@@ -81,7 +81,7 @@ export const useStarknetApi = () => {
           params: [
             {
               contract_address: currentNetworkConfig.dungeon,
-              entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
+              entry_point_selector: "0x00f35723a44bb7019f945d4e33d732e4c70779272d603c301add5c3edc68ff06",
               calldata: []
             },
             "latest"
@@ -90,7 +90,7 @@ export const useStarknetApi = () => {
       });
 
       const data = await response.json();
-      return data.result[0] || null;
+      return parseInt(data.result[0], 16);
     } catch (error) {
       console.error('Error in getRewardTokensClaimed:', error);
       return null;

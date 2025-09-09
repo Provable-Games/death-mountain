@@ -31,7 +31,7 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
   const handleClaimReward = async () => {
     if (!gameId) return;
 
-    // claimSurvivorTokens(gameId);
+    claimSurvivorTokens(gameId);
 
     setIsAnimating(true);
     setShowMovingToken(true);
