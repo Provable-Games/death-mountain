@@ -15,7 +15,7 @@ export interface StatisticsContext {
 // Create a context
 const StatisticsContext = createContext<StatisticsContext>({} as StatisticsContext);
 
-export const OPENING_TIME = 1757500824;
+export const OPENING_TIME = 1757410824;
 export const totalSurvivorTokens = 2000000;
 export const totalCollectableBeasts = 93150;
 

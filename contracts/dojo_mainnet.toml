@@ -8,32 +8,32 @@ rpc_url = "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_8"
 world_address = "0x6f32bbc0defe926365f4b43d758453e3daae99e92dcd062bcb4c0eaa2b5c3e4"
 
 [namespace]
-default = "ls_0_0_7"
+default = "ls_0_0_8"
 
 [writers]
-"ls_0_0_7" = [
-    "ls_0_0_7-game_systems", 
-    "ls_0_0_7-game_token_systems", 
-    "ls_0_0_7-settings_systems",
-    "ls_0_0_7-beast_systems",
-    "ls_0_0_7-adventurer_systems",
-    "ls_0_0_7-objectives_systems"
+"ls_0_0_8" = [
+    "ls_0_0_8-game_systems", 
+    "ls_0_0_8-game_token_systems", 
+    "ls_0_0_8-settings_systems",
+    "ls_0_0_8-beast_systems",
+    "ls_0_0_8-adventurer_systems",
+    "ls_0_0_8-objectives_systems"
 ]
 
 [migration]
 order_inits = [
-    "ls_0_0_7-game_systems",
-    "ls_0_0_7-loot_systems",
-    "ls_0_0_7-renderer_systems",
-    "ls_0_0_7-adventurer_systems",
-    "ls_0_0_7-beast_systems",
-    "ls_0_0_7-game_token_systems", 
-    "ls_0_0_7-settings_systems", 
-    "ls_0_0_7-objectives_systems"
+    "ls_0_0_8-game_systems",
+    "ls_0_0_8-loot_systems",
+    "ls_0_0_8-renderer_systems",
+    "ls_0_0_8-adventurer_systems",
+    "ls_0_0_8-beast_systems",
+    "ls_0_0_8-game_token_systems", 
+    "ls_0_0_8-settings_systems", 
+    "ls_0_0_8-objectives_systems"
 ]
 
 [init_call_args]
-"ls_0_0_7-game_token_systems" = [
+"ls_0_0_8-game_token_systems" = [
     "0x1aebeb03d574e1b6c1c6d4e988b3cc3914705de9ec76b62d49967f26e616d4e", # account address
     "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc", # denshokan address
     "1" # Option::None for renderer address
