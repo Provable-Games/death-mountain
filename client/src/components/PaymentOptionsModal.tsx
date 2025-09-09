@@ -421,8 +421,6 @@ export default function PaymentOptionsModal({
         userTokens.some((t: any) => parseFloat(t.balance) > 0)
       ) {
         setCurrentView("token");
-      } else {
-        setCurrentView("token");
       }
     }
   }, [currentView]);
@@ -673,7 +671,7 @@ export default function PaymentOptionsModal({
                       >
                         Use dungeon ticket instead
                       </Link>
-                    ) : userTokens.length > 0 ? (
+                    ) : true ? (
                       <Link
                         component="button"
                         onClick={() => setCurrentView("token")}
@@ -693,7 +691,7 @@ export default function PaymentOptionsModal({
 
                   {/* Dungeon ticket view - show next available option */}
                   {currentView === "dungeon" &&
-                    (userTokens.length > 0 ? (
+                    (true ? (
                       <Link
                         component="button"
                         onClick={() => setCurrentView("token")}

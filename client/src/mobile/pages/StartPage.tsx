@@ -1,13 +1,15 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { OPENING_TIME } from "@/contexts/Statistics";
 import BeastsCollected from "@/components/BeastsCollected";
 import PriceIndicator from "@/components/PriceIndicator";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Box, Button, Divider, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import GameTokensList from "../components/GameTokensList";
+import CountdownMobile from "../components/CountdownMobile";
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import Leaderboard from "../components/Leaderboard";
 import { ChainId } from "@/utils/networkConfig";
@@ -23,6 +25,19 @@ export default function LandingPage() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDungeonRewards, setShowDungeonRewards] = useState(false);
+  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
+
+  useEffect(() => {
+    const checkDungeonOpen = () => {
+      const now = Math.floor(Date.now() / 1000);
+      setIsDungeonOpen(now >= OPENING_TIME);
+    };
+
+    checkDungeonOpen();
+    const interval = setInterval(checkDungeonOpen, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStartGame = () => {
     if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
@@ -57,6 +72,9 @@ export default function LandingPage() {
     }
   };
 
+
+  let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+
   return (
     <>
       <Box sx={styles.container}>
@@ -79,20 +97,30 @@ export default function LandingPage() {
                 </Typography>
               </Box>
 
+              {!isDungeonOpen && <CountdownMobile />}
+
               <Button
                 fullWidth
                 variant="contained"
                 size="large"
                 onClick={handleStartGame}
+                disabled={disableGameButtons}
                 startIcon={
                   <img
                     src={"/images/mobile/dice.png"}
                     alt="dice"
                     height="20px"
+                    style={{ opacity: disableGameButtons ? 0.3 : 1 }}
                   />
                 }
+                sx={{
+                  '&.Mui-disabled': {
+                    backgroundColor: 'rgba(208, 201, 141, 0.12)',
+                    color: 'rgba(208, 201, 141, 0.4)',
+                  }
+                }}
               >
-                <Typography variant="h5" color="#111111">
+                <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
                   {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
                 </Typography>
               </Button>
@@ -103,9 +131,17 @@ export default function LandingPage() {
                 size="large"
                 color="secondary"
                 onClick={handleShowAdventurers}
-                sx={{ height: "36px", mt: 1 }}
+                disabled={disableGameButtons}
+                sx={{
+                  height: "36px",
+                  mt: 1,
+                  '&.Mui-disabled': {
+                    backgroundColor: 'rgba(208, 201, 141, 0.12)',
+                    color: 'rgba(208, 201, 141, 0.4)',
+                  }
+                }}
               >
-                <Typography variant="h5" color="#111111">
+                <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
                   My Games
                 </Typography>
               </Button>

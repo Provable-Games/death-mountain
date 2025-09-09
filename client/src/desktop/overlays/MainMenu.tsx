@@ -1,7 +1,7 @@
-import BeastsCollected from "@/components/BeastsCollected";
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { OPENING_TIME } from "@/contexts/Statistics";
 import discordIcon from "@/desktop/assets/images/discord.png";
 import AdventurersList from "@/desktop/components/AdventurersList";
 import Settings from "@/desktop/components/Settings";
@@ -41,6 +41,7 @@ export default function MainMenu() {
   const [showStats, setShowStats] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
+  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -48,6 +49,18 @@ export default function MainMenu() {
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const checkDungeonOpen = () => {
+      const now = Math.floor(Date.now() / 1000);
+      setIsDungeonOpen(now >= OPENING_TIME);
+    };
+
+    checkDungeonOpen();
+    const interval = setInterval(checkDungeonOpen, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleStartGame = () => {
@@ -83,6 +96,8 @@ export default function MainMenu() {
     }
   };
 
+  let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+
   return (
     <>
       <Box sx={{ ...styles.container, left: `${left + 32}px` }}>
@@ -109,6 +124,7 @@ export default function MainMenu() {
                 fullWidth
                 size="large"
                 onClick={handleStartGame}
+                disabled={disableGameButtons}
                 sx={{
                   px: 1,
                   display: "flex",
@@ -124,7 +140,7 @@ export default function MainMenu() {
                       fontSize: "0.85rem",
                       fontWeight: 500,
                       letterSpacing: 0.5,
-                      color: "#d0c98d",
+                      color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
                     }}
                   >
                     {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
@@ -137,6 +153,7 @@ export default function MainMenu() {
                 fullWidth
                 size="large"
                 onClick={handleShowAdventurers}
+                disabled={disableGameButtons}
                 sx={{ pl: 1, height: "36px" }}
               >
                 <ShieldOutlinedIcon sx={{ fontSize: 20, mr: 1 }} />
@@ -145,7 +162,7 @@ export default function MainMenu() {
                     fontSize: "0.85rem",
                     fontWeight: 500,
                     letterSpacing: 0.5,
-                    color: "#d0c98d",
+                    color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
                   }}
                 >
                   My Games

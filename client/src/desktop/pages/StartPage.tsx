@@ -1,4 +1,5 @@
 import MainMenu from '@/desktop/overlays/MainMenu';
+import Countdown from '@/desktop/overlays/Countdown';
 import { gameAssets, prefetchStream, preloadAssets } from '@/utils/assetLoader';
 import { streamIds } from '@/utils/cloudflare';
 import { motion } from 'framer-motion';
@@ -32,6 +33,7 @@ export default function LandingPage() {
           backgroundColor: '#000', // Fallback color while loading
         }}
       >
+        <Countdown />
         <MainMenu />
       </motion.div>
     </>
