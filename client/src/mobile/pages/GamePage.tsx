@@ -53,7 +53,7 @@ export default function GamePage() {
   >("GAME");
 
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [showRewards, setShowRewards] = useState(true);
+  const [showRewards, setShowRewards] = useState(currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -77,7 +77,7 @@ export default function GamePage() {
   }, [account]);
 
   useEffect(() => {
-    if ((game_id === 0 || mode === "practice") && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
@@ -129,18 +129,18 @@ export default function GamePage() {
   const isLoading = !gameId || !adventurer;
   const isDead = adventurer && adventurer.health === 0;
   const isBeastDefeated = showBeastRewards && adventurer?.beast_health === 0;
-  const isQuestCompleted =
-    quest && adventurer && adventurer.xp >= quest.targetScore;
+  const isQuestCompleted = quest && adventurer && adventurer.xp >= quest.targetScore;
+
 
   return (
     <Box className="container" sx={styles.container}>
       {isLoading ? (
         <LoadingContainer loadingProgress={loadingProgress} />
-      ) : isDead && !spectating && showRewards && remainingSurvivorTokens !== null && remainingSurvivorTokens > 0 ? (
-        <RewardsScreen 
-          gameId={gameId!} 
-          adventurerLevel={calculateLevel(adventurer?.xp!)} 
-          onClose={handleRewardsClose} 
+      ) : isDead && !spectating && showRewards && remainingSurvivorTokens !== null && remainingSurvivorTokens > 0 && adventurer?.xp! >= 9 ? (
+        <RewardsScreen
+          gameId={gameId!}
+          adventurerLevel={calculateLevel(adventurer?.xp!)}
+          onClose={handleRewardsClose}
         />
       ) : isDead ? (
         <DeathScreen />

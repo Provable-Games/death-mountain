@@ -1,9 +1,10 @@
+import { OPENING_TIME, useStatistics } from '@/contexts/Statistics';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
+import { screenVariants } from '@/utils/animations';
 import { formatRewardNumber } from '@/utils/utils';
-import { Box, Button, Typography, Link, keyframes } from '@mui/material';
+import { Box, Button, Link, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { screenVariants } from '@/utils/animations';
 
 interface RewardsScreenProps {
   gameId: number;
@@ -13,21 +14,39 @@ interface RewardsScreenProps {
 
 export default function RewardsScreen({ gameId, adventurerLevel, onClose }: RewardsScreenProps) {
   const { claimSurvivorTokens } = useSystemCalls();
+  const { fetchRewardTokensClaimed } = useStatistics();
   const [isClaiming, setIsClaiming] = useState(false);
   const [countdown, setCountdown] = useState(-1);
   const [rewardAmount, setRewardAmount] = useState(0);
   const [isClaimed, setIsClaimed] = useState(false);
 
-  const levelMultiplier = 4;
+  const now = Math.floor(Date.now() / 1000);
+  let levelMultiplier;
+
+  // if (now < OPENING_TIME + 1209600) {
+  //   levelMultiplier = 2;
+  // } else if (now < OPENING_TIME + 3456000) {
+  //   levelMultiplier = 4;
+  // } else {
+  //   levelMultiplier = 1;
+  // }
+
+  if (now < OPENING_TIME + 21600) {
+    levelMultiplier = 2;
+  } else if (now < OPENING_TIME + 43200) {
+    levelMultiplier = 4;
+  } else {
+    levelMultiplier = 1;
+  }
 
   // Calculate reward based on level with multiplier
   useEffect(() => {
-    setRewardAmount(adventurerLevel * levelMultiplier);
+    setRewardAmount(Math.min(50, adventurerLevel) * levelMultiplier);
   }, [adventurerLevel]);
 
   const handleClaimReward = async () => {
     if (!gameId) return;
-    
+
     claimSurvivorTokens(gameId);
     setIsClaiming(true);
     setCountdown(rewardAmount);
@@ -60,6 +79,7 @@ export default function RewardsScreen({ gameId, adventurerLevel, onClose }: Rewa
   };
 
   const handleContinue = () => {
+    fetchRewardTokensClaimed();
     onClose();
   };
 

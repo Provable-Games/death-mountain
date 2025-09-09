@@ -294,6 +294,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setVideoQueue((prev) => [...prev, getVideoId(event)!]);
     }
 
+    // Jackpot video
+    if (event.type === "beast" && event.beast!.isCollectable && event.beast!.specialPrefix === "Armageddon" && event.beast!.specialSuffix === "Moon") {
+      setShowOverlay(false);
+      setVideoQueue((prev) => [...prev, streamIds["Armageddon Moon Dragon"]]);
+    }
+
     if (delayTimes[event.type] && !skipDelay) {
       await delay(delayTimes[event.type]);
     }

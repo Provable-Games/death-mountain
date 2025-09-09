@@ -13,7 +13,7 @@ use death_mountain::utils::renderer::components::headers::{
 use death_mountain::utils::renderer::core::svg_builder::{
     generate_border_for_page, generate_sliding_container_end, generate_sliding_container_start,
 };
-use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl};
+use death_mountain::utils::renderer::encoding::{U256BytesUsedTraitImpl, bytes_base64_encode};
 use death_mountain::utils::renderer::pages::page_generators::{
     // generate_battle_page_content, // TEMPORARILY DISABLED
     generate_death_page_content, generate_inventory_page_content, generate_item_bag_page_content, generate_page_content,
@@ -108,7 +108,16 @@ pub fn generate_svg(adventurer: AdventurerVerbose) -> ByteArray {
 
     svg += generate_animated_svg_footer();
 
-    svg
+    format!("data:image/svg+xml;base64,{}", bytes_base64_encode(svg))
+}
+
+// @notice Helper function to encode item names using U256BytesUsedTraitImpl
+// @param name The felt252 name to encode
+// @return ByteArray containing the encoded name
+pub fn encode_item_name(name: felt252) -> ByteArray {
+    let mut encoded_name = Default::default();
+    encoded_name.append_word(name, U256BytesUsedTraitImpl::bytes_used(name.into()).into());
+    encoded_name
 }
 
 // @notice Generates adventurer details for the adventurer
@@ -155,14 +164,14 @@ pub fn generate_details(adventurer: AdventurerVerbose) -> Span<GameDetail> {
     let packed_adventurer = format!("{}", adventurer.packed_adventurer);
     let packed_bag = format!("{}", adventurer.packed_bag);
 
-    let weapon_name = format!("{}", adventurer.equipment.weapon.name);
-    let chest_name = format!("{}", adventurer.equipment.chest.name);
-    let head_name = format!("{}", adventurer.equipment.head.name);
-    let waist_name = format!("{}", adventurer.equipment.waist.name);
-    let foot_name = format!("{}", adventurer.equipment.foot.name);
-    let hand_name = format!("{}", adventurer.equipment.hand.name);
-    let neck_name = format!("{}", adventurer.equipment.neck.name);
-    let ring_name = format!("{}", adventurer.equipment.ring.name);
+    let weapon_name = encode_item_name(adventurer.equipment.weapon.name);
+    let chest_name = encode_item_name(adventurer.equipment.chest.name);
+    let head_name = encode_item_name(adventurer.equipment.head.name);
+    let waist_name = encode_item_name(adventurer.equipment.waist.name);
+    let foot_name = encode_item_name(adventurer.equipment.foot.name);
+    let hand_name = encode_item_name(adventurer.equipment.hand.name);
+    let neck_name = encode_item_name(adventurer.equipment.neck.name);
+    let ring_name = encode_item_name(adventurer.equipment.ring.name);
 
     array![
         GameDetail { name: "XP", value: xp },

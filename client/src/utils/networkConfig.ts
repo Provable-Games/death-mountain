@@ -54,7 +54,7 @@ export const NETWORKS = {
     denshokan:
       "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
     dungeon:
-      "0x0129aab3a09bb946a9076108d8ba7400054c33a7f06e29415c78cc82d7d77804",
+      "0x07dbdbce4cbfcf21958e11c206eca21c9d9fdb85c554bf2a05583f93fadbed78",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     beasts: "",
@@ -84,6 +84,12 @@ export const NETWORKS = {
         name: "TICKET",
         address:
           "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+        displayDecimals: 0,
+      },
+      {
+        name: "SURVIVOR",
+        address:
+          "0x051c4B1fe3BF6774b87AD0B15ef5D1472759076e42944Fff9b9F641Ff13E5BBe",
         displayDecimals: 0,
       },
     ],
@@ -234,6 +240,10 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     {
       target: network.dungeon,
       method: "claim_reward_token",
+    },
+    {
+      target: network.dungeon,
+      method: "claim_jackpot",
     },
   ];
 

@@ -152,6 +152,7 @@ export default function BeastScreen() {
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const collectable = beast ? beast!.isCollectable : false;
   const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
+  const isJackpot = beast?.baseName === "Dragon" && beast?.specialPrefix === "Armageddon" && beast?.specialSuffix === "Moon";
 
   const hasNewItemsEquipped = useMemo(() => {
     if (!adventurer?.equipment || !adventurerState?.equipment) return false;
@@ -216,6 +217,11 @@ export default function BeastScreen() {
                   <Typography sx={styles.collectableText}>
                     {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
                   </Typography>
+                  {isJackpot && (
+                    <Typography sx={styles.traitBox}>
+                      {"$10.000 jackpot!"}
+                    </Typography>
+                  )}
                   {collectableTraits && (
                     <Box sx={styles.traitIndicators}>
                       {collectableTraits.shiny && (

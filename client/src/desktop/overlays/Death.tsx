@@ -21,7 +21,7 @@ export default function DeathOverlay() {
   const { gameId, exploreLog, battleEvent, beast, quest, collectableCount, adventurer } = useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
-  const [showRewards, setShowRewards] = useState(true);
+  const [showRewards, setShowRewards] = useState(currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT);
 
   const finalBattleEvent = battleEvent || exploreLog.find(event => event.type === 'obstacle');
 
@@ -74,7 +74,13 @@ export default function DeathOverlay() {
     setShowRewards(false);
   };
 
-  if (!spectating && showRewards && remainingSurvivorTokens !== null && remainingSurvivorTokens > 0) {
+  if (
+    !spectating &&
+    showRewards &&
+    remainingSurvivorTokens !== null &&
+    remainingSurvivorTokens > 0 &&
+    adventurer?.xp! >= 9
+  ) {
     return <RewardsOverlay gameId={gameId!} adventurerLevel={calculateLevel(adventurer?.xp!)} onClose={handleRewardsClose} />;
   }
 
@@ -129,7 +135,7 @@ export default function DeathOverlay() {
             onClick={backToMenu}
             sx={styles.restartButton}
           >
-            Skip Reward
+            Play Again
           </Button>
         </Box>
       </Box>

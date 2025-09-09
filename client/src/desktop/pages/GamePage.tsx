@@ -79,7 +79,7 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if ((game_id === 0 || mode === "practice") && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
       setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }

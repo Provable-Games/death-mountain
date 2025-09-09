@@ -95,9 +95,13 @@ export default function CombatOverlay() {
     return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
   }, [adventurer?.equipment]);
 
+  const isJackpot = useMemo(() => {
+    return beast?.baseName === "Dragon" && beast?.specialPrefix === "Armageddon" && beast?.specialSuffix === "Moon";
+  }, [beast]);
+
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${beast!.baseName.toLowerCase()}.png')` }]} />
+      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? "jackpot" : beast!.baseName.toLowerCase()}.png')` }]} />
 
       {/* Adventurer */}
       <Adventurer combatStats={combatStats} />

@@ -388,8 +388,12 @@ export const useSystemCalls = () => {
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
-
       const tokenId = parseInt(receipt.events[1].data[2], 16);
+
+      if (beast.id === 29 && prefix === 3 && suffix === 18) {
+        await claimJackpot(tokenId);
+      }
+
       const tokenURI = await getBeastTokenURI(tokenId);
       setCollectableTokenURI(tokenURI);
 
@@ -405,6 +409,14 @@ export const useSystemCalls = () => {
       contractAddress: DUNGEON_ADDRESS,
       entrypoint: "claim_reward_token",
       calldata: [gameId],
+    }], () => { });
+  };
+
+  const claimJackpot = async (tokenId: number) => {
+    await executeAction([{
+      contractAddress: DUNGEON_ADDRESS,
+      entrypoint: "claim_jackpot",
+      calldata: [tokenId],
     }], () => { });
   };
 
@@ -508,6 +520,7 @@ export const useSystemCalls = () => {
     buyItems,
     selectStatUpgrades,
     claimBeast,
+    claimJackpot,
     createSettings,
     buyGame,
     mintGame,

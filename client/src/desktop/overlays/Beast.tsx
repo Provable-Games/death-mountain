@@ -103,6 +103,9 @@ export default function Beast() {
           <Typography sx={styles.collectableText}>
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
+          <Typography sx={styles.collectableText}>
+            {"$10.000 jackpot!"}
+          </Typography>
         </Box>
       )}
 

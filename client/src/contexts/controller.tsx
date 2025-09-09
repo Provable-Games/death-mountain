@@ -18,6 +18,7 @@ import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
 import { useAnalytics } from "@/utils/analytics";
 import { useUIStore } from "@/stores/uiStore";
+import { useMediaQuery } from "@mui/material";
 
 export interface ControllerContext {
   account: any;
@@ -30,6 +31,8 @@ export interface ControllerContext {
   login: () => void;
   logout: () => void;
   enterDungeon: (payment: Payment, txs: any[]) => void;
+  showTermsOfService: boolean;
+  acceptTermsOfService: () => void;
 }
 
 // Create a context
@@ -55,7 +58,9 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const [creatingBurner, setCreatingBurner] = useState(false);
   const [tokenBalances, setTokenBalances] = useState({});
   const [goldenPassIds, setGoldenPassIds] = useState<number[]>([]);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const { identifyAddress } = useAnalytics();
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const demoRpcProvider = useMemo(
     () => new RpcProvider({ nodeUrl: NETWORKS.WP_PG_SLOT.rpcUrl }),
@@ -66,6 +71,15 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (account) {
       fetchTokenBalances();
       identifyAddress({ address: account.address });
+      
+      // Check if terms have been accepted
+      const termsAccepted = typeof window !== 'undefined' 
+        ? localStorage.getItem('termsOfServiceAccepted') 
+        : null;
+      
+      if (!termsAccepted) {
+        setShowTermsOfService(true);
+      }
     }
   }, [account]);
 
@@ -161,6 +175,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   }
 
+  const acceptTermsOfService = () => {
+    setShowTermsOfService(false);
+  };
+
   return (
     <ControllerContext.Provider
       value={{
@@ -176,6 +194,8 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         isPending: isConnecting || isPending || creatingBurner,
         tokenBalances,
         goldenPassIds,
+        showTermsOfService,
+        acceptTermsOfService,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         login: () =>

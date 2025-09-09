@@ -234,7 +234,7 @@ export default function PaymentOptionsModal({
       }))
       .filter(
         (token: any) =>
-          Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS
+          Number(token.balance) > 0 && token.address !== DUNGEON_TICKET_ADDRESS && token.name !== "SURVIVOR"
       );
   }, [paymentTokens, tokenBalances]);
 

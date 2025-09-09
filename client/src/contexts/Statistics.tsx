@@ -17,7 +17,7 @@ export interface StatisticsContext {
 const StatisticsContext = createContext<StatisticsContext>({} as StatisticsContext);
 
 export const OPENING_TIME = 1757420824;
-export const totalSurvivorTokens = 20000;
+export const totalSurvivorTokens = 2000000;
 export const totalCollectableBeasts = 93150;
 
 const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;

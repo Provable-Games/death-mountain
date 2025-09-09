@@ -212,6 +212,7 @@ export default function ExploreOverlay() {
         <BeastCollectedPopup
           onClose={() => setCollectable(null)}
           tokenURI={collectableTokenURI}
+          tier={collectable.tier}
         />
       )}
     </Box>

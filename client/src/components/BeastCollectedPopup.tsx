@@ -3,15 +3,30 @@ import { Box, IconButton, Paper, Typography, Link } from '@mui/material';
 import { motion } from 'framer-motion';
 import { extractImageFromTokenURI } from '@/utils/utils';
 import { useController } from '@/contexts/controller';
+import { Beast } from '@/types/game';
 
 export interface BeastCollectedPopupProps {
   onClose: () => void;
   tokenURI: string;
+  beast: Beast;
 }
 
-export default function BeastCollectedPopup({ onClose, tokenURI }: BeastCollectedPopupProps) {
+export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastCollectedPopupProps) {
   const imageSrc = extractImageFromTokenURI(tokenURI);
   const { openProfile } = useController();
+
+  const isJackpot = beast.baseName === "Dragon" && beast.specialPrefix === "Armageddon" && beast.specialSuffix === "Moon";
+
+  const getSurvivorTokens = (tier: number): number => {
+    switch (tier) {
+      case 1: return 14;
+      case 2: return 12;
+      case 3: return 10;
+      case 4: return 8;
+      case 5: return 6;
+      default: return 0;
+    }
+  };
 
   return (
     <Box sx={styles.overlay}>
@@ -26,6 +41,22 @@ export default function BeastCollectedPopup({ onClose, tokenURI }: BeastCollecte
             <CloseIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <Typography sx={styles.collected}>Beast Collected!</Typography>
+          <Box sx={styles.survivorTokensContainer}>
+            {!isJackpot && <>
+              <Box
+                component="img"
+                src="/images/survivor_token.png"
+                alt="Survivor Token"
+                sx={styles.tokenImage}
+              />
+              <Typography sx={styles.survivorTokens}>
+                +{getSurvivorTokens(beast.tier)} Survivor Tokens
+              </Typography>
+            </>}
+            {isJackpot && <Typography sx={styles.survivorTokens}>
+              +$10.000 jackpot!
+            </Typography>}
+          </Box>
           <Box sx={styles.imageWrap}>
             {imageSrc ? (
               <Box
@@ -157,7 +188,7 @@ const styles = {
     justifyContent: 'center',
   },
   collected: {
-    mb: 2,
+    mb: 1,
     color: '#ffe082',
     fontWeight: 700,
     fontSize: 24,
@@ -165,6 +196,32 @@ const styles = {
     textShadow: '0 1px 4px #232526',
     fontFamily: 'Cinzel, Georgia, serif',
     textAlign: 'center',
+  },
+  survivorTokensContainer: {
+    mb: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+    background: 'rgba(76, 175, 80, 0.1)',
+    border: '1px solid rgba(76, 175, 80, 0.3)',
+    borderRadius: 2,
+    padding: '8px 16px',
+  },
+  tokenImage: {
+    width: 24,
+    height: 24,
+    objectFit: 'contain',
+  },
+  survivorTokens: {
+    color: '#4caf50',
+    fontWeight: 600,
+    fontSize: 18,
+    letterSpacing: 0.5,
+    textShadow: '0 1px 3px #232526',
+    fontFamily: 'Cinzel, Georgia, serif',
+    textAlign: 'center',
+    margin: 0,
   },
   fallbackImage: {
     width: 250,

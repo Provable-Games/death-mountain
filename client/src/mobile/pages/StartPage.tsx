@@ -4,6 +4,10 @@ import { OPENING_TIME } from "@/contexts/Statistics";
 import BeastsCollected from "@/components/BeastsCollected";
 import PriceIndicator from "@/components/PriceIndicator";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { Box, Button, Divider, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { useState, useEffect } from "react";
@@ -132,6 +136,7 @@ export default function LandingPage() {
                 color="secondary"
                 onClick={handleShowAdventurers}
                 disabled={disableGameButtons}
+                startIcon={<SportsEsportsIcon sx={{ opacity: disableGameButtons ? 0.4 : 1 }} />}
                 sx={{
                   height: "36px",
                   mt: 1,
@@ -169,6 +174,7 @@ export default function LandingPage() {
                 size="large"
                 color="secondary"
                 onClick={() => setShowLeaderboard(true)}
+                startIcon={<LeaderboardIcon />}
                 sx={{ height: "36px", mt: 1 }}
               >
                 <Typography variant="h5" color="#111111">
@@ -182,6 +188,7 @@ export default function LandingPage() {
                 size="large"
                 color="secondary"
                 onClick={() => setShowDungeonRewards(true)}
+                startIcon={<EmojiEventsIcon />}
                 sx={{ height: "36px", mt: 1, mb: 2 }}
               >
                 <Typography variant="h5" color="#111111">

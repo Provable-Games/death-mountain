@@ -87,6 +87,7 @@ export const streamIds = {
   "Ogre": "923a8565e8926025ff90d6114513918a",
   "Orc": "181a4ae107ba701d5672e99d33b803fa",
   "Skeleton": "70b9d0bb4ae661bb2c548a11bfaad174",
+  "Armageddon Moon Dragon": "24a8fbcb677d3783c6deeb12b40412b1",
 
   // Obstacles
   "Demonic Altar": "f326ce8a56dfa31d73c043a9dddff1eb",

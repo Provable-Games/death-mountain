@@ -1,4 +1,5 @@
-import { totalSurvivorTokens } from '@/contexts/Statistics';
+import { useController } from '@/contexts/controller';
+import { OPENING_TIME, useStatistics } from '@/contexts/Statistics';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
 import { formatRewardNumber } from '@/utils/utils';
 import { keyframes } from '@emotion/react';
@@ -14,18 +15,39 @@ interface RewardsOverlayProps {
 
 export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: RewardsOverlayProps) {
   const { claimSurvivorTokens } = useSystemCalls();
+  const { tokenBalances } = useController();
+  const { remainingSurvivorTokens, fetchRewardTokensClaimed } = useStatistics();
+
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentBalance, setCurrentBalance] = useState(1250); // Dummy current balance
+  const [currentBalance] = useState(Number(tokenBalances.SURVIVOR || 0));
   const [rewardAmount, setRewardAmount] = useState(0);
   const [showRewardDetails, setShowRewardDetails] = useState(false);
-  const [animatedDungeonTotal, setAnimatedDungeonTotal] = useState(totalSurvivorTokens);
-  const [animatedWalletBalance, setAnimatedWalletBalance] = useState(1250);
+  const [animatedDungeonTotal, setAnimatedDungeonTotal] = useState(remainingSurvivorTokens);
+  const [animatedWalletBalance, setAnimatedWalletBalance] = useState(Number(tokenBalances.SURVIVOR || 0));
   const [showMovingToken, setShowMovingToken] = useState(false);
 
-  let levelMultiplier = 4;
+  const now = Math.floor(Date.now() / 1000);
+  let levelMultiplier;
+
+  // if (now < OPENING_TIME + 1209600) {
+  //   levelMultiplier = 2;
+  // } else if (now < OPENING_TIME + 3456000) {
+  //   levelMultiplier = 4;
+  // } else {
+  //   levelMultiplier = 1;
+  // }
+
+  if (now < OPENING_TIME + 21600) {
+    levelMultiplier = 2;
+  } else if (now < OPENING_TIME + 43200) {
+    levelMultiplier = 4;
+  } else {
+    levelMultiplier = 1;
+  }
+
   // Calculate reward based on level with multiplier
   useEffect(() => {
-    setRewardAmount(adventurerLevel * levelMultiplier);
+    setRewardAmount(Math.min(50, adventurerLevel) * levelMultiplier);
   }, [adventurerLevel]);
 
   const handleClaimReward = async () => {
@@ -51,12 +73,13 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
   };
 
   const handleContinue = () => {
+    fetchRewardTokensClaimed();
     onClose();
   };
 
   const animateVaultCountdown = () => {
-    const startDungeonTotal = totalSurvivorTokens;
-    const endDungeonTotal = totalSurvivorTokens - rewardAmount;
+    const startDungeonTotal = remainingSurvivorTokens || 0;
+    const endDungeonTotal = (remainingSurvivorTokens || 0) - rewardAmount;
     const duration = 1000;
     const startTime = Date.now();
 
@@ -147,7 +170,7 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
                 />
               </Box>
               <Typography sx={styles.tokenCount}>
-                {animatedDungeonTotal.toLocaleString()}
+                {animatedDungeonTotal?.toLocaleString()}
               </Typography>
             </Box>
 

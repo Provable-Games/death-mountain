@@ -185,6 +185,7 @@ export default function ExploreScreen() {
         <BeastCollectedPopup
           onClose={() => setCollectable(null)}
           tokenURI={collectableTokenURI}
+          tier={collectable.tier}
         />
       )}
     </Box>
