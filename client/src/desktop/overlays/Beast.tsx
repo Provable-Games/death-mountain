@@ -29,6 +29,7 @@ export default function Beast() {
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const collectable = beast ? beast!.isCollectable : false;
   const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
+  const isJackpot = beast?.baseName === "Dragon" && beast?.specialPrefix === "Armageddon" && beast?.specialSuffix === "Moon";
 
   useEffect(() => {
     if (battleEvent && battleEvent.type === "attack") {
@@ -103,9 +104,9 @@ export default function Beast() {
           <Typography sx={styles.collectableText}>
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
-          <Typography sx={styles.collectableText}>
-            {"$10.000 jackpot!"}
-          </Typography>
+          {isJackpot && <Typography sx={styles.collectableText}>
+            {"$10.000 JACKPOT!"}
+          </Typography>}
         </Box>
       )}
 

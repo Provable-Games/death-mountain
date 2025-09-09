@@ -59,14 +59,14 @@ export default function ExploreScreen() {
                 }}
               >
                 <Box sx={styles.encounterIcon}>
-                  <img 
-                    src={getEventIcon(event)} 
-                    alt={'encounter'} 
-                    style={{ 
-                      width: '100%', 
+                  <img
+                    src={getEventIcon(event)}
+                    alt={'encounter'}
+                    style={{
+                      width: '100%',
                       height: '100%',
                       filter: event.type === 'obstacle' ? 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8))' : 'none'
-                    }} 
+                    }}
                   />
                 </Box>
 
@@ -185,7 +185,7 @@ export default function ExploreScreen() {
         <BeastCollectedPopup
           onClose={() => setCollectable(null)}
           tokenURI={collectableTokenURI}
-          tier={collectable.tier}
+          beast={collectable}
         />
       )}
     </Box>

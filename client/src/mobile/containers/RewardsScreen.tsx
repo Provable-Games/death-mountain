@@ -24,19 +24,19 @@ export default function RewardsScreen({ gameId, adventurerLevel, onClose }: Rewa
   let levelMultiplier;
 
   // if (now < OPENING_TIME + 1209600) {
-  //   levelMultiplier = 2;
+  //   levelMultiplier = 1;
   // } else if (now < OPENING_TIME + 3456000) {
   //   levelMultiplier = 4;
   // } else {
-  //   levelMultiplier = 1;
+  //   levelMultiplier = 2;
   // }
 
   if (now < OPENING_TIME + 21600) {
-    levelMultiplier = 2;
+    levelMultiplier = 1;
   } else if (now < OPENING_TIME + 43200) {
     levelMultiplier = 4;
   } else {
-    levelMultiplier = 1;
+    levelMultiplier = 2;
   }
 
   // Calculate reward based on level with multiplier

@@ -41,7 +41,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
             <CloseIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <Typography sx={styles.collected}>Beast Collected!</Typography>
-          <Box sx={styles.survivorTokensContainer}>
+          <Box sx={isJackpot ? styles.jackpotContainer : styles.survivorTokensContainer}>
             {!isJackpot && <>
               <Box
                 component="img"
@@ -53,9 +53,17 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
                 +{getSurvivorTokens(beast.tier)} Survivor Tokens
               </Typography>
             </>}
-            {isJackpot && <Typography sx={styles.survivorTokens}>
-              +$10.000 jackpot!
-            </Typography>}
+            {isJackpot && <>
+              <Box
+                component="img"
+                src="/images/jackpot_dragon.png"
+                alt="Jackpot Dragon"
+                sx={styles.tokenImage}
+              />
+              <Typography sx={styles.jackpotText}>
+                +$10.000 jackpot!
+              </Typography>
+            </>}
           </Box>
           <Box sx={styles.imageWrap}>
             {imageSrc ? (
@@ -88,6 +96,14 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
 }
 
 const styles = {
+  '@keyframes jackpotGlow': {
+    '0%': {
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.5)',
+    },
+    '100%': {
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 215, 0, 0.8), 0 0 24px rgba(255, 193, 7, 0.6)',
+    },
+  },
   overlay: {
     position: 'fixed',
     top: 0,
@@ -188,7 +204,7 @@ const styles = {
     justifyContent: 'center',
   },
   collected: {
-    mb: 1,
+    mb: 1.5,
     color: '#ffe082',
     fontWeight: 700,
     fontSize: 24,
@@ -198,7 +214,7 @@ const styles = {
     textAlign: 'center',
   },
   survivorTokensContainer: {
-    mb: 2,
+    mb: 1.5,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -206,7 +222,7 @@ const styles = {
     background: 'rgba(76, 175, 80, 0.1)',
     border: '1px solid rgba(76, 175, 80, 0.3)',
     borderRadius: 2,
-    padding: '8px 16px',
+    padding: '6px 12px',
   },
   tokenImage: {
     width: 24,
@@ -216,12 +232,51 @@ const styles = {
   survivorTokens: {
     color: '#4caf50',
     fontWeight: 600,
-    fontSize: 18,
+    fontSize: 14,
     letterSpacing: 0.5,
     textShadow: '0 1px 3px #232526',
     fontFamily: 'Cinzel, Georgia, serif',
     textAlign: 'center',
     margin: 0,
+  },
+  jackpotContainer: {
+    mb: 1.5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+    background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 193, 7, 0.15) 50%, rgba(255, 152, 0, 0.2) 100%)',
+    border: '2px solid rgba(255, 215, 0, 0.6)',
+    borderRadius: 3,
+    padding: '8px 16px',
+    boxShadow: '0 0 20px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+    position: 'relative',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%)',
+      borderRadius: 3,
+      pointerEvents: 'none',
+    },
+  },
+  jackpotText: {
+    color: '#ffd700',
+    fontWeight: 700,
+    fontSize: 16,
+    letterSpacing: 1,
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.5)',
+    fontFamily: 'Cinzel, Georgia, serif',
+    textAlign: 'center',
+    margin: 0,
+    background: 'linear-gradient(45deg, #ffd700, #ffed4e, #ffd700)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    animation: 'jackpotGlow 2s ease-in-out infinite alternate',
   },
   fallbackImage: {
     width: 250,
