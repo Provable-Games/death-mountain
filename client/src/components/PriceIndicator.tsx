@@ -73,7 +73,7 @@ export default function PriceIndicator() {
                     </Typography>
 
                     <Typography sx={styles.feeHighlightText}>
-                      - 20% to lords token holders
+                      - 20% to veLords
                     </Typography>
                   </Box>
                 </Box>
@@ -178,7 +178,7 @@ export default function PriceIndicator() {
                   </Typography>
 
                   <Typography sx={styles.feeHighlightText}>
-                    - 20% to lords token holders
+                    - 20% to veLords
                   </Typography>
                 </Box>
               </Box>
