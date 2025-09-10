@@ -23,8 +23,10 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
+import { useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { addAddressPadding } from "starknet";
 import PriceIndicator from "../../components/PriceIndicator";
 import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
@@ -98,6 +100,15 @@ export default function MainMenu() {
 
   let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
+  const { games } = useGameTokens({
+    owner: account?.address,
+    limit: 101,
+    sortBy: "minted_at",
+    sortOrder: "desc",
+    mintedByAddress: currentNetworkConfig.dungeon ? addAddressPadding(currentNetworkConfig.dungeon) : "0",
+  });
+  const gameCount = games.filter((game: any) => !game.game_over && game.score === 0).length;
+
   return (
     <>
       <Box sx={{ ...styles.container, left: `${left + 32}px` }}>
@@ -157,16 +168,19 @@ export default function MainMenu() {
                 sx={{ pl: 1, height: "36px" }}
               >
                 <ShieldOutlinedIcon sx={{ fontSize: 20, mr: 1 }} />
-                <Typography
-                  sx={{
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                    letterSpacing: 0.5,
-                    color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
-                  }}
-                >
-                  My Games
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.85rem",
+                      fontWeight: 500,
+                      letterSpacing: 0.5,
+                      color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
+                    }}
+                  >
+                    My Games
+                  </Typography>
+                  {gameCount > 0 && <Typography color="secondary" fontWeight={500}>{gameCount} NEW</Typography>}
+                </Box>
               </Button>
 
               <Button

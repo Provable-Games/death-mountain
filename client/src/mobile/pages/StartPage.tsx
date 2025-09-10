@@ -19,6 +19,8 @@ import Leaderboard from "../components/Leaderboard";
 import { ChainId } from "@/utils/networkConfig";
 import { NetworkConfig, getNetworkConfig } from "@/utils/networkConfig";
 import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
+import { addAddressPadding } from "starknet";
+import { useGameTokens } from "metagame-sdk/sql";
 
 export default function LandingPage() {
   const { account } = useAccount();
@@ -79,6 +81,15 @@ export default function LandingPage() {
 
   let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
+  const { games } = useGameTokens({
+    owner: account?.address,
+    limit: 101,
+    sortBy: "minted_at",
+    sortOrder: "desc",
+    mintedByAddress: currentNetworkConfig.dungeon ? addAddressPadding(currentNetworkConfig.dungeon) : "0",
+  });
+  const gameCount = games.filter((game: any) => !game.game_over && game.score === 0).length;
+
   return (
     <>
       <Box sx={styles.container}>
@@ -136,7 +147,6 @@ export default function LandingPage() {
                 color="secondary"
                 onClick={handleShowAdventurers}
                 disabled={disableGameButtons}
-                startIcon={<SportsEsportsIcon sx={{ opacity: disableGameButtons ? 0.4 : 1 }} />}
                 sx={{
                   height: "36px",
                   mt: 1,
@@ -146,9 +156,16 @@ export default function LandingPage() {
                   }
                 }}
               >
-                <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
-                  My Games
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: gameCount > 0 ? "space-between" : "center", width: "100%" }}>
+                  {gameCount > 0 && <Typography color="black" fontWeight={500} visibility={"hidden"}>{gameCount} NEW</Typography>}
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <SportsEsportsIcon sx={{ opacity: disableGameButtons ? 0.4 : 1, mr: 1 }} />
+                    <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
+                      My Games
+                    </Typography>
+                  </Box>
+                  {gameCount > 0 && <Typography variant="h5" color="black" fontWeight={500}>{gameCount} NEW</Typography>}
+                </Box>
               </Button>
 
               <Button

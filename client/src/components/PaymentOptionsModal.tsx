@@ -171,10 +171,10 @@ const TokenSelectionContent = memo(
             {tokenQuote.loading
               ? "Loading quote..."
               : tokenQuote.error
-              ? `Error: ${tokenQuote.error}`
-              : tokenQuote.amount
-              ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-              : "Loading..."}
+                ? `Error: ${tokenQuote.error}`
+                : tokenQuote.amount
+                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+                  : "Loading..."}
           </Typography>
         </Box>
 
@@ -420,6 +420,8 @@ export default function PaymentOptionsModal({
         userTokens.length > 0 &&
         userTokens.some((t: any) => parseFloat(t.balance) > 0)
       ) {
+        setCurrentView("token");
+      } else {
         setCurrentView("token");
       }
     }
@@ -685,7 +687,7 @@ export default function PaymentOptionsModal({
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
                       >
-                        Pay with credit card or other wallet
+                        {/* Pay with credit card or other wallet */}
                       </Link>
                     ))}
 
@@ -705,7 +707,7 @@ export default function PaymentOptionsModal({
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
                       >
-                        Pay with credit card or other wallet
+                        {/* Pay with credit card or other wallet */}
                       </Link>
                     ))}
 
@@ -716,7 +718,7 @@ export default function PaymentOptionsModal({
                       onClick={() => setCurrentView("credit")}
                       sx={styles.footerLink}
                     >
-                      Pay with credit card or other wallet
+                      {/* Pay with credit card or other wallet */}
                     </Link>
                   )}
 

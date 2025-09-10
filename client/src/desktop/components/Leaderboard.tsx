@@ -1,3 +1,4 @@
+import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from "@dojoengine/core";
@@ -10,8 +11,6 @@ import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
-import { useController } from "@/contexts/controller";
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 interface LeaderboardProps {
   onBack: () => void;
