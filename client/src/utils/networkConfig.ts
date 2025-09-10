@@ -54,7 +54,7 @@ export const NETWORKS = {
     denshokan:
       "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
     dungeon:
-      "0x07dbdbce4cbfcf21958e11c206eca21c9d9fdb85c554bf2a05583f93fadbed78",
+      "0x06271ec2464b80ed35e6e0d8457c66534510c6d88f23a2164dd4cf997cfd4479",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     beasts: "",

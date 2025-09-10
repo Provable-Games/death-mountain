@@ -12,7 +12,7 @@ use death_mountain::utils::string::string_utils::u256_to_string;
 /// @return SVG opening tags with container structure and filter references
 pub fn generate_svg_header() -> ByteArray {
     let mut header = "";
-    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"1270\" fill=\"none\">";
+    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"950\" fill=\"none\">";
     header += "<g filter=\"url(#a)\"><g clip-path=\"url(#b)\">";
     header += "<rect width=\"567\" height=\"862\" x=\"147.2\" y=\"27\" fill=\"#000\" rx=\"10\"/>";
     header
@@ -23,7 +23,7 @@ pub fn generate_svg_header() -> ByteArray {
 /// @return SVG header with embedded CSS animations for 20-second 4-page cycle
 pub fn generate_animated_svg_header() -> ByteArray {
     let mut header = "";
-    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"1270\" fill=\"none\">";
+    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"950\" fill=\"none\">";
     header += "<style>";
     header += ".page{opacity:0;animation:pageTransition 20s infinite;}";
     header += ".page:nth-child(1){animation-delay:0s;}";
@@ -45,7 +45,7 @@ pub fn generate_animated_svg_header() -> ByteArray {
 /// @return SVG header with dynamic CSS animations or static layout
 pub fn generate_dynamic_animated_svg_header(page_count: u8) -> ByteArray {
     let mut header = "";
-    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"1270\" fill=\"none\">";
+    header += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"862\" height=\"950\" fill=\"none\">";
     header += "<style>";
 
     // Only add animation CSS if more than 1 page

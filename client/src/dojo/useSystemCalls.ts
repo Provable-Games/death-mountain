@@ -154,15 +154,18 @@ export const useSystemCalls = () => {
         ? [0]
         : [1, payment.goldenPass!.address, payment.goldenPass!.tokenId];
 
+    if (payment.paymentType === "Ticket") {
+      preCalls.push({
+        contractAddress: DUNGEON_TICKET,
+        entrypoint: "approve",
+        calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+      });
+    }
+
     try {
       let tx = await account!.execute(
         [
           ...preCalls,
-          {
-            contractAddress: DUNGEON_TICKET,
-            entrypoint: "approve",
-            calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
-          },
           {
             contractAddress: DUNGEON_ADDRESS,
             entrypoint: "buy_game",
