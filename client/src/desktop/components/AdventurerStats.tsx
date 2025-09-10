@@ -30,7 +30,13 @@ export default function AdventurerStats() {
 
   useEffect(() => {
     setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
-  }, [beast]);
+  }, [adventurer?.beast_health!]);
+
+  useEffect(() => {
+    if (adventurer?.stat_upgrades_available! > 0) {
+      setViewMode('stats');
+    }
+  }, [adventurer?.stat_upgrades_available]);
 
   const combatStats = useMemo(() => {
     return calculateCombatStats(adventurer!, bag, beast);

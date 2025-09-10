@@ -156,7 +156,7 @@ export default function ExploreOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay />
+      <InventoryOverlay disabledEquip={isExploring || isSelectingStats || inProgress} />
       <TipsOverlay />
       <SettingsOverlay />
 
