@@ -15,6 +15,7 @@ pub trait IAdventurerSystems<T> {
     fn load_assets(self: @T, adventurer_id: u64) -> (Adventurer, Bag);
     fn get_adventurer(self: @T, adventurer_id: u64) -> Adventurer;
     fn get_adventurer_level(self: @T, adventurer_id: u64) -> u8;
+    fn get_adventurer_health(self: @T, adventurer_id: u64) -> u16;
     fn get_adventurer_dungeon(self: @T, adventurer_id: u64) -> ContractAddress;
     fn get_adventurer_verbose(self: @T, adventurer_id: u64) -> AdventurerVerbose;
     fn get_adventurer_entropy(self: @T, adventurer_id: u64) -> AdventurerEntropy;
@@ -103,6 +104,11 @@ mod adventurer_systems {
         fn get_adventurer_level(self: @ContractState, adventurer_id: u64) -> u8 {
             let (adventurer, _) = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
             adventurer.get_level()
+        }
+
+        fn get_adventurer_health(self: @ContractState, adventurer_id: u64) -> u16 {
+            let (adventurer, _) = _load_adventurer(self.world(@DEFAULT_NS()), adventurer_id);
+            adventurer.health
         }
 
         fn get_adventurer_verbose(self: @ContractState, adventurer_id: u64) -> AdventurerVerbose {

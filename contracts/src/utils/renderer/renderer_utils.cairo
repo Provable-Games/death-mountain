@@ -39,7 +39,7 @@ pub fn generate_svg_with_page(adventurer: AdventurerVerbose, page: u8) -> ByteAr
 pub fn generate_svg(adventurer: AdventurerVerbose) -> ByteArray {
     let mut svg = "";
 
-    let battle_state = if adventurer.health == 0 {
+    let battle_state = if (adventurer.health == 0 && adventurer.xp > 0) {
         BattleState::Dead
     } else if adventurer.beast_health > 0 {
         BattleState::InCombat
