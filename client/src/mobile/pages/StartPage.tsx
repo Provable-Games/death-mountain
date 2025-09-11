@@ -25,7 +25,8 @@ import { useGameTokens } from "metagame-sdk/sql";
 export default function LandingPage() {
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } =
+    useDynamicConnector();
   const navigate = useNavigate();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
@@ -72,23 +73,31 @@ export default function LandingPage() {
 
   const switchMode = () => {
     if (currentNetworkConfig.name === "Beast Mode") {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
+      );
     } else {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig);
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
+      );
     }
   };
 
-
-  let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+  let disableGameButtons =
+    !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
   const { games } = useGameTokens({
     owner: account?.address,
     limit: 101,
     sortBy: "minted_at",
     sortOrder: "desc",
-    mintedByAddress: currentNetworkConfig.dungeon ? addAddressPadding(currentNetworkConfig.dungeon) : "0",
+    mintedByAddress: currentNetworkConfig.dungeon
+      ? addAddressPadding(currentNetworkConfig.dungeon)
+      : "0",
   });
-  const gameCount = games.filter((game: any) => !game.game_over && game.score === 0).length;
+  const gameCount = games.filter(
+    (game: any) => !game.game_over && game.score === 0
+  ).length;
 
   return (
     <>
@@ -129,14 +138,21 @@ export default function LandingPage() {
                   />
                 }
                 sx={{
-                  '&.Mui-disabled': {
-                    backgroundColor: 'rgba(208, 201, 141, 0.12)',
-                    color: 'rgba(208, 201, 141, 0.4)',
-                  }
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(208, 201, 141, 0.12)",
+                    color: "rgba(208, 201, 141, 0.4)",
+                  },
                 }}
               >
-                <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
-                  {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
+                <Typography
+                  variant="h5"
+                  color={
+                    disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"
+                  }
+                >
+                  {currentNetworkConfig.name === "Beast Mode"
+                    ? "Buy Game"
+                    : "Start Game"}
                 </Typography>
               </Button>
 
@@ -150,21 +166,49 @@ export default function LandingPage() {
                 sx={{
                   height: "36px",
                   mt: 1,
-                  '&.Mui-disabled': {
-                    backgroundColor: 'rgba(208, 201, 141, 0.12)',
-                    color: 'rgba(208, 201, 141, 0.4)',
-                  }
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(208, 201, 141, 0.12)",
+                    color: "rgba(208, 201, 141, 0.4)",
+                  },
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: gameCount > 0 ? "space-between" : "center", width: "100%" }}>
-                  {gameCount > 0 && <Typography color="black" fontWeight={500} visibility={"hidden"}>{gameCount} NEW</Typography>}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: gameCount > 0 ? "space-between" : "center",
+                    width: "100%",
+                  }}
+                >
+                  {gameCount > 0 && (
+                    <Typography
+                      color="black"
+                      fontWeight={500}
+                      visibility={"hidden"}
+                    >
+                      {gameCount} NEW
+                    </Typography>
+                  )}
                   <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <SportsEsportsIcon sx={{ opacity: disableGameButtons ? 0.4 : 1, mr: 1 }} />
-                    <Typography variant="h5" color={disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"}>
+                    <SportsEsportsIcon
+                      sx={{ opacity: disableGameButtons ? 0.4 : 1, mr: 1 }}
+                    />
+                    <Typography
+                      variant="h5"
+                      color={
+                        disableGameButtons
+                          ? "rgba(208, 201, 141, 0.4)"
+                          : "#111111"
+                      }
+                    >
                       My Games
                     </Typography>
                   </Box>
-                  {gameCount > 0 && <Typography variant="h5" color="black" fontWeight={500}>{gameCount} NEW</Typography>}
+                  {gameCount > 0 && (
+                    <Typography variant="h5" color="black" fontWeight={500}>
+                      {gameCount} NEW
+                    </Typography>
+                  )}
                 </Box>
               </Button>
 
@@ -177,13 +221,13 @@ export default function LandingPage() {
                 sx={{ height: "36px", mt: 1, mb: 1 }}
               >
                 <Typography variant="h5" color="#111111">
-                  {currentNetworkConfig.name === "Beast Mode" ? 'Practice for Free' : 'Play for Real'}
+                  {currentNetworkConfig.name === "Beast Mode"
+                    ? "Practice for Free"
+                    : "Play for Real"}
                 </Typography>
               </Button>
 
-              <Divider
-                sx={{ width: "100%", my: 0.5 }}
-              />
+              <Divider sx={{ width: "100%", my: 0.5 }} />
 
               <Button
                 fullWidth
@@ -199,19 +243,21 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
-              {currentNetworkConfig.name === "Beast Mode" && <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                color="secondary"
-                onClick={() => setShowDungeonRewards(true)}
-                startIcon={<EmojiEventsIcon />}
-                sx={{ height: "36px", mt: 1, mb: 2 }}
-              >
-                <Typography variant="h5" color="#111111">
-                  Dungeon Rewards
-                </Typography>
-              </Button>}
+              {currentNetworkConfig.name === "Beast Mode" && (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  color="secondary"
+                  onClick={() => setShowDungeonRewards(true)}
+                  startIcon={<EmojiEventsIcon />}
+                  sx={{ height: "36px", mt: 1, mb: 2 }}
+                >
+                  <Typography variant="h5" color="#111111">
+                    Dungeon Rewards
+                  </Typography>
+                </Button>
+              )}
 
               {/* {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />} */}
             </>
@@ -279,7 +325,9 @@ export default function LandingPage() {
                 </Box>
               </Box>
 
-              <Box sx={{ width: "100%", maxHeight: "365px", overflowY: "auto" }}>
+              <Box
+                sx={{ width: "100%", maxHeight: "365px", overflowY: "auto" }}
+              >
                 <DungeonRewards />
               </Box>
             </>

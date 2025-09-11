@@ -43,23 +43,26 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_8",
-    slot: "pg-mainnet-3",
+    slot: "pg-mainnet-4",
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-mainnet-3/torii",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-4/torii",
     tokens: {
       erc20: [],
     },
     manifest: manifest_mainnet,
     vrf: true,
     denshokan:
-      "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
+      "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
     dungeon:
       "0x05a72f7d2e51e85421c3bbabc8be375f8fc9ffe7a762f52450c290f389ab30a3",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
-    beasts: "0x0785c6bd0f02b7e9158d89259a3424da34f3b8cffa30937cac8c4bdceab39523",
-    goldenToken: "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
-    ekuboRouter: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
+    beasts:
+      "0x0785c6bd0f02b7e9158d89259a3424da34f3b8cffa30937cac8c4bdceab39523",
+    goldenToken:
+      "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
+    ekuboRouter:
+      "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
     paymentTokens: [
       {
         name: "ETH",
