@@ -11,8 +11,8 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@cartridge/connector": "^0.10.0-alpha.1",
-    "@cartridge/controller": "^0.10.0-alpha.1",
+    "@cartridge/connector": "^0.10.1",
+    "@cartridge/controller": "^0.10.1",
     "@cloudflare/stream-react": "^1.9.3",
     "@dojoengine/core": "^1.6.0-beta.4",
     "@dojoengine/sdk": "^1.6.0-beta.4",
