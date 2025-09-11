@@ -213,7 +213,7 @@ export default function LandingPage() {
                 </Typography>
               </Button>}
 
-              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
+              {/* {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />} */}
             </>
           )}
 

@@ -263,9 +263,9 @@ export default function MainMenu() {
                 </Typography>
               </Button> */}
 
-              {currentNetworkConfig.name === "Beast Mode" &&
+              {/* {currentNetworkConfig.name === "Beast Mode" &&
                 <PriceIndicator />
-              }
+              } */}
 
               <Box sx={styles.bottom}>
                 <WalletConnect />
