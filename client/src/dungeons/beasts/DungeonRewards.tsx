@@ -1,10 +1,11 @@
-import { totalCollectableBeasts, totalSurvivorTokens, useStatistics } from "@/contexts/Statistics";
+import { JACKPOT_AMOUNT, totalCollectableBeasts, totalSurvivorTokens, useStatistics } from "@/contexts/Statistics";
 import { useUIStore } from "@/stores/uiStore";
 import { formatRewardNumber } from "@/utils/utils";
 import { Box, Divider, LinearProgress, Link, Skeleton, Typography } from "@mui/material";
 import { isMobile } from "react-device-detect";
 
 export default function DungeonRewards() {
+  const { strkPrice } = useStatistics();
   const { useMobileClient } = useUIStore();
   const { remainingSurvivorTokens, collectedBeasts } = useStatistics();
   const beastsRemaining = totalCollectableBeasts - (collectedBeasts - 75);
@@ -123,14 +124,29 @@ export default function DungeonRewards() {
       <Divider sx={{ width: "100%", my: 1.5 }} />
 
       <Box sx={styles.rewardSection}>
-        <Box mb={0.5}>
-          <img src="/images/jackpot_dragon.png" alt="beast" height={64} />
+        <Typography sx={[styles.rewardTitle, { color: '#d7c529' }]} mb={1}>Wanted Beasts</Typography>
+
+        <Box mb={0.5} display="flex" justifyContent="space-between">
+          <Box>
+            <img src="/images/jackpot_balrog.png" alt="beast" height={80} />
+            <Typography fontWeight={500} fontSize={13}>"Torment Bane" Balrog</Typography>
+          </Box>
+          <Box>
+            <img src="/images/jackpot_warlock.png" alt="beast" height={80} />
+            <Typography fontWeight={500} fontSize={13}>"Pain Whisper" Warlock</Typography>
+          </Box>
+          <Box>
+            <img src="/images/jackpot_dragon.png" alt="beast" height={80} />
+            <Typography fontWeight={500} fontSize={13}>"Demon Grasp" Dragon</Typography>
+          </Box>
         </Box>
 
         <Box sx={styles.rewardHeader}>
           <Box sx={{ flex: 1 }}>
-            <Typography fontWeight={700}>"Armageddon Moon" Dragon</Typography>
-            <Typography fontWeight={500} color="secondary" mt={0.5} letterSpacing={0.2}>First to collect this beast wins a $10.000 jackpot!</Typography>
+            <Typography fontWeight={500} color="secondary" mt={0.5} letterSpacing={0.2}>Each beast holds {JACKPOT_AMOUNT.toLocaleString()} $STRK!</Typography>
+            {strkPrice !== null && Number(strkPrice) > 0 && <Typography mt={0.5} sx={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+              value: ~${(Number(strkPrice) * JACKPOT_AMOUNT).toLocaleString()}
+            </Typography>}
           </Box>
         </Box>
       </Box>

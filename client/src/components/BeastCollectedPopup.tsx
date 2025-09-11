@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { extractImageFromTokenURI } from '@/utils/utils';
 import { useController } from '@/contexts/controller';
 import { Beast } from '@/types/game';
+import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_BEASTS } from '@/constants/beast';
 
 export interface BeastCollectedPopupProps {
   onClose: () => void;
@@ -15,7 +17,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
   const imageSrc = extractImageFromTokenURI(tokenURI);
   const { openProfile } = useController();
 
-  const isJackpot = beast.baseName === "Dragon" && beast.specialPrefix === "Armageddon" && beast.specialSuffix === "Moon";
+  const isJackpot = JACKPOT_BEASTS.includes(beast?.name!);
 
   const getSurvivorTokens = (tier: number): number => {
     switch (tier) {
@@ -61,7 +63,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
                 sx={styles.tokenImage}
               />
               <Typography sx={styles.jackpotText}>
-                +$10.000 jackpot!
+                +${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!
               </Typography>
             </>}
           </Box>

@@ -20,6 +20,12 @@ export const GOLD_MULTIPLIER = {
 export const GOLD_REWARD_DIVISOR = 2;
 export const MINIMUM_XP_REWARD = 4;
 
+export const JACKPOT_BEASTS = [
+    '"Demon Grasp" Dragon',
+    '"Torment Bane" Balrog',
+    '"Pain Whisper" Warlock'
+];
+
 // Special name mappings from loot.cairo
 export const BEAST_NAME_PREFIXES: { [key: number]: string } = {
     1: "Agony",

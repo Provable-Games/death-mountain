@@ -7,6 +7,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useState } fro
 export interface StatisticsContext {
   gamePrice: string | null;
   gamePriceHistory: any[];
+  strkPrice: string | null;
 
   fetchRewardTokensClaimed: () => Promise<void>;
   remainingSurvivorTokens: number | null;
@@ -16,9 +17,10 @@ export interface StatisticsContext {
 // Create a context
 const StatisticsContext = createContext<StatisticsContext>({} as StatisticsContext);
 
-export const OPENING_TIME = 1757420824;
+export const OPENING_TIME = 1759420824;
 export const totalSurvivorTokens = 2000000;
 export const totalCollectableBeasts = 93150;
+export const JACKPOT_AMOUNT = 33333;
 
 const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;
 const STRK = NETWORKS.SN_MAIN.paymentTokens.find(token => token.name === 'STRK')?.address!;
@@ -33,6 +35,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   const [gamePriceHistory, setGamePriceHistory] = useState<any[]>([]);
   const [remainingSurvivorTokens, setRemainingSurvivorTokens] = useState<number | null>(null);
   const [collectedBeasts, setCollectedBeasts] = useState(0);
+  const [strkPrice, setStrkPrice] = useState<string | null>(null);
 
   const fetchCollectedBeasts = async () => {
     const result = await countBeasts();
@@ -49,6 +52,11 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
     setGamePrice((swap.total * -1 / 1e6).toFixed(2));
   }
 
+  const fetchStrkPrice = async () => {
+    const swap = await getSwapQuote(100e18, STRK, USDC);
+    setStrkPrice((swap.total / 1e6 / 100).toFixed(2));
+  }
+
   const fetchRewardTokensClaimed = async () => {
     const result = await getRewardTokensClaimed();
     setRemainingSurvivorTokens(result !== null ? totalSurvivorTokens - result : null);
@@ -57,6 +65,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     fetchPriceHistory();
     fetchGamePrice();
+    fetchStrkPrice();
     fetchRewardTokensClaimed();
     fetchCollectedBeasts();
   }, []);
@@ -65,6 +74,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
     <StatisticsContext.Provider value={{
       gamePrice,
       gamePriceHistory,
+      strkPrice,
       fetchRewardTokensClaimed,
       remainingSurvivorTokens,
       collectedBeasts,

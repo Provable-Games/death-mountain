@@ -87,7 +87,9 @@ export const streamIds = {
   "Ogre": "923a8565e8926025ff90d6114513918a",
   "Orc": "181a4ae107ba701d5672e99d33b803fa",
   "Skeleton": "70b9d0bb4ae661bb2c548a11bfaad174",
-  "Armageddon Moon Dragon": "24a8fbcb677d3783c6deeb12b40412b1",
+  "jackpot_dragon": "6a824d8cc14c53b267ebb0959ba52d4a",
+  "jackpot_balrog": "aff047703e774abec0c5e0b22e261961",
+  "jackpot_warlock": "d24ba192ebed7c1920b2d66122e902c1",
 
   // Obstacles
   "Demonic Altar": "f326ce8a56dfa31d73c043a9dddff1eb",

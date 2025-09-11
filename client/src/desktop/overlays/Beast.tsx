@@ -8,6 +8,8 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
+import { JACKPOT_AMOUNT } from '@/contexts/Statistics';
+import { JACKPOT_BEASTS } from '@/constants/beast';
 
 const pulseGold = keyframes`
   0% {
@@ -29,7 +31,7 @@ export default function Beast() {
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const collectable = beast ? beast!.isCollectable : false;
   const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
-  const isJackpot = beast?.baseName === "Dragon" && beast?.specialPrefix === "Armageddon" && beast?.specialSuffix === "Moon";
+  const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
 
   useEffect(() => {
     if (battleEvent && battleEvent.type === "attack") {
@@ -105,7 +107,7 @@ export default function Beast() {
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
           {isJackpot && <Typography sx={styles.collectableText}>
-            {"$10.000 JACKPOT!"}
+            {`${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
           </Typography>}
         </Box>
       )}

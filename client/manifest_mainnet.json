@@ -1329,7 +1329,7 @@
   "contracts": [
     {
       "address": "0x2fe9d4b4e17b460b42205a691530fda3d21d9878416b4d381542cc81f238ae7",
-      "class_hash": "0x42fa3991de15435a644302454ac227f9f9ea14d428a45559323a469b1263f1e",
+      "class_hash": "0x625335fd205f0b098ddc7fae28901830a225f93922bbb6f73f38156c13cd7d1",
       "abi": [
         {
           "type": "impl",
@@ -2012,6 +2012,22 @@
               "outputs": [
                 {
                   "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_adventurer_health",
+              "inputs": [
+                {
+                  "name": "adventurer_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u16"
                 }
               ],
               "state_mutability": "view"
@@ -5357,7 +5373,7 @@
     },
     {
       "address": "0x7efc32898a450887823f7ddc693237355cb5936ab2f7ab5f1ba0d273d744d20",
-      "class_hash": "0x59850074323a4949fd37501f5ce4421fad12e08f930ce1a2f4e5a8db7c9bb9c",
+      "class_hash": "0x6caf5a6340f9e5adc608d538fd772092e9805a46d075b0acb1b8741817ed7a7",
       "abi": [
         {
           "type": "impl",

@@ -26,6 +26,7 @@ import {
 import { useAnalytics } from "@/utils/analytics";
 import { useMarketStore } from "@/stores/marketStore";
 import { useUIStore } from "@/stores/uiStore";
+import { JACKPOT_BEASTS } from "@/constants/beast";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -295,9 +296,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     // Jackpot video
-    if (event.type === "beast" && event.beast!.isCollectable && event.beast!.specialPrefix === "Armageddon" && event.beast!.specialSuffix === "Moon") {
+    if (event.type === "beast" && event.beast!.isCollectable && JACKPOT_BEASTS.includes(event.beast!.name!)) {
       setShowOverlay(false);
-      setVideoQueue((prev) => [...prev, streamIds["Armageddon Moon Dragon"]]);
+      setVideoQueue((prev) => [...prev, streamIds[`jackpot_${event.beast!.baseName!.toLowerCase()}` as keyof typeof streamIds]]);
     }
 
     if (delayTimes[event.type] && !skipDelay) {
