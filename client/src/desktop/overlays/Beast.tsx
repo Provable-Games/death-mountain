@@ -106,8 +106,8 @@ export default function Beast() {
           <Typography sx={styles.collectableText}>
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
-          {isJackpot && <Typography sx={styles.collectableText}>
-            {`${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
+          {isJackpot && <Typography sx={styles.collectableText} mt={0.2}>
+            {`+ ${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!`}
           </Typography>}
         </Box>
       )}

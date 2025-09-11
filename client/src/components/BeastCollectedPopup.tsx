@@ -56,12 +56,6 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
               </Typography>
             </>}
             {isJackpot && <>
-              <Box
-                component="img"
-                src="/images/jackpot_dragon.png"
-                alt="Jackpot Dragon"
-                sx={styles.tokenImage}
-              />
               <Typography sx={styles.jackpotText}>
                 +${JACKPOT_AMOUNT.toLocaleString()} $STRK JACKPOT!
               </Typography>

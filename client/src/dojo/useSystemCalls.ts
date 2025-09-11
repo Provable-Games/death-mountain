@@ -107,7 +107,7 @@ export const useSystemCalls = () => {
   }
 
   const waitForTransaction = async (txHash: string, retries: number, _account?: any) => {
-    if (retries > 2) {
+    if (retries > 9) {
       throw new Error("Transaction failed");
     }
 
@@ -366,6 +366,17 @@ export const useSystemCalls = () => {
     return waitForClaimBeast(retries + 1);
   };
 
+  const fetchTokenURI = async (tokenId: number, retries: number = 0) => {
+    const tokenURI = await getBeastTokenURI(tokenId);
+
+    if (tokenURI || retries > 9) {
+      return tokenURI;
+    }
+
+    await delay(1000);
+    return fetchTokenURI(tokenId, retries + 1);
+  };
+
 
   const claimBeast = async (gameId: number, beast: Beast) => {
     let prefix =
@@ -391,14 +402,17 @@ export const useSystemCalls = () => {
       );
 
       const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
-      const tokenId = parseInt(receipt.events[1].data[2], 16);
+      const tokenId = parseInt(receipt.events[2].data[2], 16);
 
-      if (beast.id === 29 && prefix === 3 && suffix === 18) {
+      const tokenURI = await fetchTokenURI(tokenId);
+
+      setCollectableTokenURI(tokenURI);
+
+      if ((beast.id === 29 && prefix === 18 && suffix === 6) ||
+        (beast.id === 1 && prefix === 47 && suffix === 11) ||
+        (beast.id === 53 && prefix === 61 && suffix === 1)) {
         await claimJackpot(tokenId);
       }
-
-      const tokenURI = await getBeastTokenURI(tokenId);
-      setCollectableTokenURI(tokenURI);
 
       return tokenId;
     } catch (error) {
