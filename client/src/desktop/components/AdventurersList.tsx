@@ -31,10 +31,6 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     "game_token_systems"
   )?.address;
   const { games: gamesData, loading: gamesLoading } = useMetagameTokens({
-    mintedByAddress:
-      currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
-        ? GAME_TOKEN_ADDRESS
-        : addAddressPadding(currentNetworkConfig.dungeon),
     owner: address,
   });
   const [gameTokens, setGameTokens] = useState<any[]>([]);
