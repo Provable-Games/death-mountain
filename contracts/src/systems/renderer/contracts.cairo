@@ -36,6 +36,11 @@ mod renderer_systems {
             self.generate_details(token_id)
         }
 
+        fn token_name(self: @ContractState, token_id: u64) -> ByteArray {
+            self.validate_token_ownership(token_id);
+            Renderer::get_name()
+        }
+
         fn token_description(self: @ContractState, token_id: u64) -> ByteArray {
             self.validate_token_ownership(token_id);
             Renderer::get_description()
@@ -392,7 +397,7 @@ mod renderer_tests {
         let svg = generate_svg(create_test_adventurer_verbose());
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]
@@ -422,7 +427,7 @@ mod renderer_tests {
         let svg = dispatchers.renderer.generate_svg(adventurer_id);
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]
@@ -471,7 +476,7 @@ mod renderer_tests {
         let svg = dispatchers.minigame_details_svg.game_details_svg(adventurer_id);
 
         assert(svg.len() > 0, 'should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     // Test functions for SVG generation script
@@ -488,7 +493,7 @@ mod renderer_tests {
         println!("=== END NORMAL STATE SVG ===");
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]
@@ -504,7 +509,7 @@ mod renderer_tests {
         println!("=== END DEATH STATE SVG ===");
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]
@@ -520,7 +525,7 @@ mod renderer_tests {
         println!("=== END BATTLE STATE SVG ===");
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]
@@ -536,7 +541,7 @@ mod renderer_tests {
         println!("=== END DEATH IN BATTLE SVG ===");
 
         assert(svg.len() > 0, 'svg should not be empty');
-        assert(starts_with_pattern(@svg, @"<svg"), 'should start with svg tag');
+        assert(starts_with_pattern(@svg, @"data:image/svg+xml;base64"), 'should start with svg tag');
     }
 
     #[test]

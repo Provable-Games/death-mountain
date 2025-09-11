@@ -17,6 +17,7 @@ pub trait Renderer {
     fn create_metadata(token_id: u64, adventurer_verbose: AdventurerVerbose) -> ByteArray;
     fn create_page_metadata(token_id: u64, adventurer_verbose: AdventurerVerbose, page: u8) -> ByteArray;
     fn get_traits(adventurer_verbose: AdventurerVerbose) -> Span<GameDetail>;
+    fn get_name() -> ByteArray;
     fn get_description() -> ByteArray;
     fn get_image(adventurer_verbose: AdventurerVerbose) -> ByteArray;
     fn get_page_image(adventurer_verbose: AdventurerVerbose, page: u8) -> ByteArray;
@@ -74,6 +75,10 @@ pub impl RendererImpl of Renderer {
 
     fn get_traits(adventurer_verbose: AdventurerVerbose) -> Span<GameDetail> {
         generate_details(adventurer_verbose)
+    }
+
+    fn get_name()-> ByteArray {
+        "Adventurer"
     }
 
     fn get_description() -> ByteArray {
