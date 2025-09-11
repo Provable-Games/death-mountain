@@ -53,7 +53,7 @@ export default function LandingPage() {
         return;
       }
 
-      setShowPaymentOptions(true);
+      navigate(`/survivor/play?mode=real`);
     } else {
       navigate(`/survivor/play`);
     }
