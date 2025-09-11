@@ -98,7 +98,7 @@ export default function GamePage() {
       return;
     }
 
-    if (!controllerAddress && mode === "real") {
+    if (!controllerAddress && mode !== "practice") {
       login();
       return;
     }

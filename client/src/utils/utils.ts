@@ -94,8 +94,10 @@ export function extractImageFromTokenURI(tokenURI: string): string | null {
 
       // Decode base64 to string
       const jsonString = atob(paddedBase64);
+      // Clean the JSON string to remove control characters
+      const cleanJsonString = jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
       // Parse the JSON
-      const metadata = JSON.parse(jsonString);
+      const metadata = JSON.parse(cleanJsonString);
       // Return the image field
       return metadata.image || null;
     }

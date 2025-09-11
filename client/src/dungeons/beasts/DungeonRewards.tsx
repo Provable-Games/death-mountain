@@ -8,7 +8,7 @@ export default function DungeonRewards() {
   const { strkPrice } = useStatistics();
   const { useMobileClient } = useUIStore();
   const { remainingSurvivorTokens, collectedBeasts } = useStatistics();
-  const beastsRemaining = totalCollectableBeasts - (collectedBeasts - 75);
+  const beastsRemaining = totalCollectableBeasts - collectedBeasts;
 
   return (
     <>

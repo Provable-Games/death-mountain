@@ -54,10 +54,10 @@ export const NETWORKS = {
     denshokan:
       "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
     dungeon:
-      "0x06271ec2464b80ed35e6e0d8457c66534510c6d88f23a2164dd4cf997cfd4479",
+      "0x0197405cfcf140137689bb5e2563c89ae17073d6bfb24aba5e4cad7d40563a44",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
-    beasts: "",
+    beasts: "0x0465fc42cd109b2e559421a36fa702a10f6b86460c7c2f7384e570a689f2717f",
     goldenToken: "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
     ekuboRouter: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
     paymentTokens: [

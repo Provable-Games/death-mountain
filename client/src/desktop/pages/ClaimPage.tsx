@@ -1,16 +1,29 @@
 import RewardsOverlay from '@/dungeons/beasts/RewardsOverlay';
+import { useStarknetApi } from '@/api/starknet';
 import { Box } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { calculateLevel } from '@/utils/game';
+
 
 export default function ClaimPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [adventurerLevel, setAdventurerLevel] = useState(0);
   const game_id = Number(searchParams.get("id"));
+  const { getGameState } = useStarknetApi();
+
+
+  const getState = async (gameId: number) => {
+    let gameState = await getGameState(gameId);
+    setAdventurerLevel(calculateLevel(gameState?.adventurer?.xp || 0));
+  };
 
   useEffect(() => {
     if (!game_id || isNaN(game_id)) {
       navigate('/survivor', { replace: true });
+    } else {
+      getState(game_id!);
     }
   }, [game_id]);
 
@@ -21,7 +34,7 @@ export default function ClaimPage() {
   return (
     <Box sx={styles.container}>
       <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/start.png')` }]} />
-      <RewardsOverlay gameId={game_id!} adventurerLevel={10} onClose={handleClose} />
+      <RewardsOverlay gameId={game_id!} adventurerLevel={adventurerLevel} onClose={handleClose} />
     </Box>
   );
 }
