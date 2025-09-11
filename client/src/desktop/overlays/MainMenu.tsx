@@ -6,9 +6,13 @@ import discordIcon from "@/desktop/assets/images/discord.png";
 import AdventurersList from "@/desktop/components/AdventurersList";
 import Settings from "@/desktop/components/Settings";
 import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
-import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
+import {
+  ChainId,
+  getNetworkConfig,
+  NetworkConfig,
+} from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -36,7 +40,8 @@ export default function MainMenu() {
   const navigate = useNavigate();
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig, setCurrentNetworkConfig } =
+    useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -72,7 +77,7 @@ export default function MainMenu() {
         return;
       }
 
-      setShowPaymentOptions(true);
+      navigate(`/survivor/play?mode=real`);
     } else {
       navigate(`/survivor/play`);
     }
@@ -92,22 +97,31 @@ export default function MainMenu() {
 
   const switchMode = () => {
     if (currentNetworkConfig.name === "Beast Mode") {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
+      );
     } else {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig);
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
+      );
     }
   };
 
-  let disableGameButtons = !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+  let disableGameButtons =
+    !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
   const { games } = useGameTokens({
     owner: account?.address,
     limit: 101,
     sortBy: "minted_at",
     sortOrder: "desc",
-    mintedByAddress: currentNetworkConfig.dungeon ? addAddressPadding(currentNetworkConfig.dungeon) : "0",
+    mintedByAddress: currentNetworkConfig.dungeon
+      ? addAddressPadding(currentNetworkConfig.dungeon)
+      : "0",
   });
-  const gameCount = games.filter((game: any) => !game.game_over && game.score === 0).length;
+  const gameCount = games.filter(
+    (game: any) => !game.game_over && game.score === 0
+  ).length;
 
   return (
     <>
@@ -151,10 +165,14 @@ export default function MainMenu() {
                       fontSize: "0.85rem",
                       fontWeight: 500,
                       letterSpacing: 0.5,
-                      color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
+                      color: disableGameButtons
+                        ? "rgba(208, 201, 141, 0.3)"
+                        : "#d0c98d",
                     }}
                   >
-                    {currentNetworkConfig.name === "Beast Mode" ? 'Buy Game' : 'Start Game'}
+                    {currentNetworkConfig.name === "Beast Mode"
+                      ? "Buy Game"
+                      : "Start Game"}
                   </Typography>
                 </Box>
               </Button>
@@ -168,18 +186,31 @@ export default function MainMenu() {
                 sx={{ pl: 1, height: "36px" }}
               >
                 <ShieldOutlinedIcon sx={{ fontSize: 20, mr: 1 }} />
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
                   <Typography
                     sx={{
                       fontSize: "0.85rem",
                       fontWeight: 500,
                       letterSpacing: 0.5,
-                      color: disableGameButtons ? "rgba(208, 201, 141, 0.3)" : "#d0c98d",
+                      color: disableGameButtons
+                        ? "rgba(208, 201, 141, 0.3)"
+                        : "#d0c98d",
                     }}
                   >
                     My Games
                   </Typography>
-                  {gameCount > 0 && <Typography color="secondary" fontWeight={500}>{gameCount} NEW</Typography>}
+                  {gameCount > 0 && (
+                    <Typography color="secondary" fontWeight={500}>
+                      {gameCount} NEW
+                    </Typography>
+                  )}
                 </Box>
               </Button>
 
@@ -190,10 +221,15 @@ export default function MainMenu() {
                 onClick={switchMode}
                 sx={{ pl: 1, height: "36px" }}
               >
-                {currentNetworkConfig.name === "Beast Mode"
-                  ? <img src="/images/practice.png" alt="practice" style={{ width: 20, height: 20 }} />
-                  : <AttachMoneyIcon sx={{ fontSize: 20 }} />
-                }
+                {currentNetworkConfig.name === "Beast Mode" ? (
+                  <img
+                    src="/images/practice.png"
+                    alt="practice"
+                    style={{ width: 20, height: 20 }}
+                  />
+                ) : (
+                  <AttachMoneyIcon sx={{ fontSize: 20 }} />
+                )}
                 <Typography
                   sx={{
                     ml: 1,
@@ -203,7 +239,9 @@ export default function MainMenu() {
                     color: "#d0c98d",
                   }}
                 >
-                  {currentNetworkConfig.name === "Beast Mode" ? 'Practice for Free' : 'Play for Real'}
+                  {currentNetworkConfig.name === "Beast Mode"
+                    ? "Practice for Free"
+                    : "Play for Real"}
                 </Typography>
               </Button>
 
