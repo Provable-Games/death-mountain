@@ -179,6 +179,7 @@ const styles = {
   container: {
     width: '100%',
     height: '100vh',
+    height: '100dvh', // Use dynamic viewport height for mobile browsers
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: '#0a0a0a',
@@ -258,6 +259,7 @@ const styles = {
     backgroundColor: '#0a0a0a',
     borderTop: '2px solid #80FF00',
     padding: '20px',
+    paddingBottom: 'max(20px, env(safe-area-inset-bottom))', // Account for iPhone notch/home indicator
     display: 'flex',
     justifyContent: 'center',
   },
