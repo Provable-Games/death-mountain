@@ -59,7 +59,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
 
   const fetchRewardTokensClaimed = async () => {
     const result = await getRewardTokensClaimed();
-    setRemainingSurvivorTokens(result !== null ? totalSurvivorTokens - result : null);
+    setRemainingSurvivorTokens(0);
   };
 
   useEffect(() => {
