@@ -171,12 +171,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     processNextEvent();
   }, [eventQueue, isProcessing]);
 
-  useEffect(() => {
-    if (beastDefeated && collectable && currentNetworkConfig.beasts) {
-      incrementBeastsCollected();
-      claimBeast(gameId!, collectable);
-    }
-  }, [beastDefeated]);
+  // useEffect(() => {
+  //   if (beastDefeated && collectable && currentNetworkConfig.beasts) {
+  //     incrementBeastsCollected();
+  //     claimBeast(gameId!, collectable);
+  //   }
+  // }, [beastDefeated]);
 
   const initializeGame = async (settings: Settings, mode: string) => {
     if (spectating) return;

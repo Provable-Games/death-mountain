@@ -166,12 +166,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     processNextEvent();
   }, [eventQueue, isProcessing]);
 
-  useEffect(() => {
-    if (beastDefeated && collectable && currentNetworkConfig.beasts) {
-      incrementBeastsCollected();
-      claimBeast(gameId!, collectable);
-    }
-  }, [beastDefeated]);
+  // useEffect(() => {
+  //   if (beastDefeated && collectable && currentNetworkConfig.beasts) {
+  //     incrementBeastsCollected();
+  //     claimBeast(gameId!, collectable);
+  //   }
+  // }, [beastDefeated]);
 
   const initializeGame = async (settings: Settings, mode: string) => {
     if (spectating) return;
@@ -233,7 +233,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       if (
         !skipDelay &&
         event.adventurer!.item_specials_seed &&
-        event.adventurer!.item_specials_seed !== adventurer?.item_specials_seed &&
+        event.adventurer!.item_specials_seed !==
+          adventurer?.item_specials_seed &&
         !skipAllAnimations
       ) {
         setShowOverlay(false);
@@ -296,9 +297,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     // Jackpot video
-    if (event.type === "beast" && event.beast!.isCollectable && JACKPOT_BEASTS.includes(event.beast!.name!)) {
+    if (
+      event.type === "beast" &&
+      event.beast!.isCollectable &&
+      JACKPOT_BEASTS.includes(event.beast!.name!)
+    ) {
       setShowOverlay(false);
-      setVideoQueue((prev) => [...prev, streamIds[`jackpot_${event.beast!.baseName!.toLowerCase()}` as keyof typeof streamIds]]);
+      setVideoQueue((prev) => [
+        ...prev,
+        streamIds[
+          `jackpot_${event.beast!.baseName!.toLowerCase()}` as keyof typeof streamIds
+        ],
+      ]);
     }
 
     if (delayTimes[event.type] && !skipDelay) {
