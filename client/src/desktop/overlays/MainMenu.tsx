@@ -375,9 +375,9 @@ export default function MainMenu() {
         />
       )}
 
-      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+      {/* <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
         <DungeonRewards />
-      </Box>
+      </Box> */}
     </>
   );
 }

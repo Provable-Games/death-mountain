@@ -243,7 +243,7 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
-              {currentNetworkConfig.name === "Beast Mode" && (
+              {/* {currentNetworkConfig.name === "Beast Mode" && (
                 <Button
                   fullWidth
                   variant="contained"
@@ -257,7 +257,7 @@ export default function LandingPage() {
                     Dungeon Rewards
                   </Typography>
                 </Button>
-              )}
+              )} */}
 
               {/* {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />} */}
             </>
@@ -300,7 +300,7 @@ export default function LandingPage() {
 
           {showDungeonRewards && (
             <>
-              <Box
+              {/* <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -323,13 +323,13 @@ export default function LandingPage() {
                     </Typography>
                   </Button>
                 </Box>
-              </Box>
+              </Box> */}
 
-              <Box
+              {/* <Box
                 sx={{ width: "100%", maxHeight: "365px", overflowY: "auto" }}
               >
                 <DungeonRewards />
-              </Box>
+              </Box> */}
             </>
           )}
         </Box>
