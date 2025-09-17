@@ -183,11 +183,13 @@ mod beast_systems {
             self: @ContractState, dungeon: ContractAddress, entity_hash: felt252, index: u64,
         ) -> CollectableEntity {
             let world: WorldStorage = self.world(@DEFAULT_NS());
+            let dungeon = _get_correct_dungeon(dungeon);
             world.read_model((dungeon, entity_hash, index))
         }
 
         fn get_collectable_count(self: @ContractState, dungeon: ContractAddress, entity_hash: felt252) -> u64 {
             let world: WorldStorage = self.world(@DEFAULT_NS());
+            let dungeon = _get_correct_dungeon(dungeon);
             let collectable_count: CollectableCount = world.read_model((dungeon, entity_hash));
             collectable_count.count
         }
@@ -209,6 +211,7 @@ mod beast_systems {
 
         fn get_entity_stats(self: @ContractState, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats {
             let world: WorldStorage = self.world(@DEFAULT_NS());
+            let dungeon = _get_correct_dungeon(dungeon);
             world.read_model((dungeon, entity_hash))
         }
 
@@ -216,6 +219,7 @@ mod beast_systems {
             self: @ContractState, dungeon: ContractAddress, entity_hash: felt252, kill_index: u64,
         ) -> AdventurerKilled {
             let world: WorldStorage = self.world(@DEFAULT_NS());
+            let dungeon = _get_correct_dungeon(dungeon);
             world.read_model((dungeon, entity_hash, kill_index))
         }
 
@@ -238,6 +242,14 @@ mod beast_systems {
 
         fn get_beast_hash(self: @ContractState, id: u8, prefix: u8, suffix: u8) -> felt252 {
             ImplBeast::get_beast_hash(id, prefix, suffix)
+        }
+    }
+
+    fn _get_correct_dungeon(dungeon: ContractAddress) -> ContractAddress {
+        if dungeon == starknet::get_contract_address() {
+            0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42.try_into().unwrap()
+        } else {
+            dungeon
         }
     }
 }
