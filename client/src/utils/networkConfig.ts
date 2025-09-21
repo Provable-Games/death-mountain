@@ -14,7 +14,7 @@ export interface NetworkConfig {
   policies: Array<{
     target: string;
     method: string;
-  }>;
+  }> | undefined;
   vrf: boolean;
   rpcUrl: string;
   toriiUrl: string;
@@ -197,7 +197,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const vrf_provider = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
 
   // Base policies that are common across networks
-  const policies = [
+  const policies = network.chainId === ChainId.SN_MAIN ? undefined : [
     {
       target:
         "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
@@ -261,6 +261,8 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     },
   ];
 
+  console.log({ policies });
+
   return {
     chainId: network.chainId,
     name: network.name,
@@ -270,7 +272,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     slot: network.slot,
     preset: "loot-survivor",
     vrf: network.vrf,
-    policies,
+    policies: network.chainId === ChainId.SN_MAIN ? undefined : policies,
     rpcUrl: network.rpcUrl,
     toriiUrl: network.torii,
     chains: [{ rpcUrl: network.rpcUrl }],
