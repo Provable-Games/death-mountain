@@ -13,12 +13,13 @@ const STAT_DESCRIPTIONS = {
   intelligence: "Increases chance of dodging Obstacles.",
   wisdom: "Increases chance of avoiding Beast ambush.",
   charisma: "Provides discounts on the marketplace.",
+  luck: "Increases chance of critical hits. Based on the total level of all your equipped and bagged jewelry."
 } as const;
 
 const COMBAT_STAT_DESCRIPTIONS = {
   baseDamage: "Damage you deal per hit.",
   criticalDamage: "Damage you deal if critical hit.",
-  critChance: "Chance to land a critical hit.",
+  critChance: "Chance to land a critical hit. Based on the total level of all your equipped and bagged jewelry.",
   gearScore: "Combined power of your equipment and bag."
 } as const;
 
@@ -130,7 +131,7 @@ export default function AdventurerStats() {
 
   const renderStatsView = () => (
     <>
-      {Object.entries(STAT_DESCRIPTIONS).map(([stat, description]) => (
+      {Object.entries(STAT_DESCRIPTIONS).filter(([stat]) => (adventurer!.stat_upgrades_available! > 0 ? stat !== 'luck' : true)).map(([stat, description]) => (
         <Box sx={styles.statRow} key={stat}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Tooltip
@@ -192,7 +193,12 @@ export default function AdventurerStats() {
               -
             </Button>}
 
-            <Typography sx={{ width: '18px', textAlign: 'center', pt: '1px' }}>
+            <Typography sx={{
+              width: '18px',
+              textAlign: 'center',
+              pt: '1px',
+              color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d'
+            }}>
               {adventurer?.stats?.[stat as keyof typeof STAT_DESCRIPTIONS]! + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]!}
             </Typography>
 
@@ -451,7 +457,7 @@ const styles = {
     padding: '4px 0',
   },
   tooltipDescription: {
-    fontSize: '14px',
+    fontSize: '13px',
   },
   tooltipRow: {
     display: 'flex',

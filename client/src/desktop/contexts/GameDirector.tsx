@@ -39,6 +39,10 @@ export interface GameDirectorContext {
   eventsProcessed: number;
   setEventQueue: (events: any) => void;
   setEventsProcessed: (eventsProcessed: number) => void;
+  setSkipCombat: (skipCombat: boolean) => void;
+  skipCombat: boolean;
+  setShowSkipCombat: (showSkipCombat: boolean) => void;
+  showSkipCombat: boolean;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -119,6 +123,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [eventsProcessed, setEventsProcessed] = useState(0);
   const [videoQueue, setVideoQueue] = useState<string[]>([]);
 
+  const [skipCombat, setSkipCombat] = useState(false);
+  const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
 
   useEffect(() => {
@@ -156,7 +162,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       if (eventQueue.length > 0 && !isProcessing) {
         setIsProcessing(true);
         const event = eventQueue[0];
-        await processEvent(event);
+        await processEvent(event, skipCombat);
         setEventQueue((prev) => prev.slice(1));
         setIsProcessing(false);
         setEventsProcessed((prev) => prev + 1);
@@ -225,6 +231,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const processEvent = async (event: any, skipDelay: boolean = false) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
+      setSkipCombat(false);
+      setShowSkipCombat(false);
 
       if (event.adventurer!.health === 0 && !skipDelay && !skipIntroOutro) {
         setShowOverlay(false);
@@ -372,6 +380,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBeastDefeated(true);
     }
 
+    if (events.filter((event: any) => event.type === "beast_attack").length >= 2) {
+      setShowSkipCombat(true);
+    }
+
     setEventQueue((prev) => [...prev, ...events]);
   };
 
@@ -388,6 +400,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setEventQueue,
         setSpectating,
         spectating,
+        setSkipCombat,
+        skipCombat,
+        setShowSkipCombat,
+        showSkipCombat,
       }}
     >
       {children}

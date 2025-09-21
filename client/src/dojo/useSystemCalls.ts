@@ -77,8 +77,15 @@ export const useSystemCalls = () => {
       }
 
       const translatedEvents = receipt.events.map((event: any) =>
-        translateGameEvent(event, currentNetworkConfig.manifest)
+        translateGameEvent(event, currentNetworkConfig.manifest, gameId)
       );
+
+      if (translatedEvents.includes('Fatal Error')) {
+        await delay(3000);
+        window.location.reload();
+        return;
+      }
+
       return translatedEvents.filter(Boolean);
     } catch (error) {
       console.error("Error executing action:", error);

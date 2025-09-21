@@ -101,7 +101,12 @@ export default function ItemTooltip({ itemSpecialsSeed, item, style }: ItemToolt
                   <Box fontSize="13px">Deals {damage.criticalDamage} damage (critical)</Box>
                 </Box>
               )}
-              {damageTaken && `-${damageTaken} health when hit`}
+              {damageTaken && (
+                <Box>
+                  <Box fontSize="13px">-{damageTaken.baseDamage} health (base)</Box>
+                  <Box fontSize="13px">-{damageTaken.criticalDamage} health (if critical)</Box>
+                </Box>
+              )}
             </Typography>
           </Box>
         </>

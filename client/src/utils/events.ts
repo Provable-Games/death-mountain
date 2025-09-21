@@ -285,7 +285,7 @@ export const getEventIcon = (event: GameEvent) => {
       if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
     case 'obstacle':
       const obstacleName = OBSTACLE_NAMES[event.obstacle?.id!];
-      const snakeCaseName = obstacleName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      const snakeCaseName = obstacleName.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
       return `/images/obstacles/${snakeCaseName}.png`;
     case 'defeated_beast':
       return getBeastImageById(event.beast_id!);

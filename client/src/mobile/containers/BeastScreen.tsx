@@ -220,7 +220,7 @@ export default function BeastScreen() {
                   </Typography>
                   {isJackpot && (
                     <Typography sx={styles.traitBox}>
-                      {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
+                      {strkPrice ? `+$${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
                     </Typography>
                   )}
                   {collectableTraits && (
@@ -389,7 +389,7 @@ export default function BeastScreen() {
                 if (isArmorSlot && beast.health > 4) {
                   // For armor slots, show damage taken (always negative)
                   if (equippedItem && equippedItem.id !== 0) {
-                    damageTaken = calculateBeastDamage(beast, adventurer!, equippedItem);
+                    damageTaken = calculateBeastDamage(beast, adventurer!, equippedItem).baseDamage;
                   } else {
                     // For empty armor slots, show beast power * 1.5
                     damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
@@ -623,7 +623,7 @@ export default function BeastScreen() {
                             
                             if (beast) {
                               if (isArmorSlot) {
-                                swapDamageTaken = calculateBeastDamage(beast, adventurer!, item);
+                                swapDamageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
                               } else if (isWeaponSlot) {
                                 swapDamage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
                               }

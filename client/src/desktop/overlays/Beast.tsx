@@ -1,32 +1,18 @@
+import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
 import { beastPowerPercent, getCollectableTraits } from '@/utils/beast';
-import { calculateLevel } from '@/utils/game';
+import { calculateGoldReward, calculateLevel } from '@/utils/game';
 import { beastNameSize } from '@/utils/utils';
 import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
-import { JACKPOT_AMOUNT, useStatistics } from '@/contexts/Statistics';
-import { JACKPOT_BEASTS } from '@/constants/beast';
-
-const pulseGold = keyframes`
-  0% {
-    box-shadow: 0 0 8px rgba(237, 207, 51, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 15px rgba(237, 207, 51, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 8px rgba(237, 207, 51, 0.4);
-  }
-`;
 
 export default function Beast() {
   const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
-  const { strkPrice } = useStatistics();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
 
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
@@ -107,11 +93,42 @@ export default function Beast() {
           <Typography sx={styles.collectableText}>
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
           </Typography>
-          {isJackpot && <Typography sx={styles.collectableText} mt={0.2}>
-            {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
-          </Typography>}
         </Box>
       )}
+
+      {collectable && isJackpot && (
+        <Box sx={styles.toastContainer}>
+          <Typography sx={styles.wantedBeastText}>
+            WANTED BEAST
+          </Typography>
+        </Box>
+      )}
+
+      <Box sx={styles.beastStatsContainer}>
+        <Box sx={styles.statContainer}>
+          <Typography variant="body2" sx={styles.statLabel}>
+            Crit Chance
+          </Typography>
+          <Typography variant="body2" sx={styles.statValue}>
+            {calculateLevel(adventurer!.xp)}%
+          </Typography>
+        </Box>
+        <Box sx={styles.statContainer}>
+          <Typography variant="body2" sx={styles.statLabel}>
+            Gold
+          </Typography>
+          <Box sx={styles.goldValueContainer}>
+            <Typography variant="body2" sx={styles.statValue}>
+              {calculateGoldReward(beast!, adventurer!.equipment.ring)}
+            </Typography>
+            <img
+              src="/images/mobile/gold.png"
+              alt="Gold"
+              style={{ width: '11px', height: '11px', marginLeft: '2px', paddingBottom: '1px' }}
+            />
+          </Box>
+        </Box>
+      </Box>
 
       {/* Beast Health Bar */}
       <Box sx={collectable ? styles.collectableHealthBarContainer : styles.healthBarContainer}>
@@ -154,6 +171,33 @@ export default function Beast() {
     </>
   );
 }
+
+const pulseGold = keyframes`
+  0% {
+    box-shadow: 0 0 8px rgba(237, 207, 51, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(237, 207, 51, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(237, 207, 51, 0.4);
+  }
+`;
+
+const elegantPulse = keyframes`
+  0% {
+    box-shadow: 0 0 15px rgba(237, 207, 51, 0.4), 0 0 30px rgba(237, 207, 51, 0.2);
+    border: 1px solid rgba(237, 207, 51, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(237, 207, 51, 0.8), 0 0 50px rgba(237, 207, 51, 0.4);
+    border: 1px solid rgba(237, 207, 51, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(237, 207, 51, 0.4), 0 0 30px rgba(237, 207, 51, 0.2);
+    border: 1px solid rgba(237, 207, 51, 0.6);
+  }
+`;
 
 const styles = {
   portraitWrapper: {
@@ -279,10 +323,49 @@ const styles = {
   },
   collectableIndicator: {
     position: 'absolute',
-    top: 110,
+    top: 10,
     right: '80px',
     width: '300px',
     textAlign: 'center',
+  },
+  beastStatsContainer: {
+    position: 'absolute',
+    top: 106,
+    right: '155px',
+    width: '185px',
+    display: 'flex',
+    gap: '4px',
+  },
+  statContainer: {
+    flex: 1,
+    padding: '4px 4px',
+    background: 'rgba(0, 0, 0, 0.4)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '4px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  statLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: '0.6rem',
+    fontWeight: '400',
+    marginBottom: '3px',
+    lineHeight: 1,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  statValue: {
+    color: '#EDCF33',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    lineHeight: 1,
+  },
+  goldValueContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   collectableText: {
     color: '#EDCF33',
@@ -290,5 +373,29 @@ const styles = {
     textAlign: 'center',
     textShadow: '0 0 8px rgba(237, 207, 51, 0.3)',
     lineHeight: '1.1',
+  },
+  wantedBeastText: {
+    color: '#EDCF33',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    textAlign: 'center',
+    textShadow: '0 0 8px rgba(237, 207, 51, 0.6), 0 0 16px rgba(237, 207, 51, 0.3)',
+    lineHeight: '1.1',
+    letterSpacing: '0.5px',
+  },
+  toastContainer: {
+    display: 'flex',
+    alignItems: 'baseline',
+    position: 'absolute',
+    top: 95,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '8px 20px',
+    borderRadius: '8px',
+    background: 'rgba(24, 40, 24, 0.9)',
+    border: '1px solid rgba(237, 207, 51, 0.6)',
+    backdropFilter: 'blur(8px)',
+    zIndex: 1000,
+    animation: `${elegantPulse} 2s infinite ease-in-out`,
   },
 }; 

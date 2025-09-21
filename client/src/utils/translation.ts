@@ -250,13 +250,17 @@ export const components: any = {
   },
 }
 
-export const translateGameEvent = (event: any, manifest: any): any => {
+export const translateGameEvent = (event: any, manifest: any, gameId: number | null): any => {
   const eventDefinition = manifest.events.find((definition: any) => definition.selector === event.keys[1]);
   const name = eventDefinition?.tag?.split('-')[1];
   const data = event.data;
 
   if (name !== 'GameEvent') {
     return undefined;
+  }
+
+  if (gameId && gameId !== parseInt(data[1])) {
+    return 'Fatal Error';
   }
 
   const keysNumber = parseInt(data[0]);

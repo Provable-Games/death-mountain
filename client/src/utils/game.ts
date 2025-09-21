@@ -171,7 +171,8 @@ export const ability_based_damage_reduction = (adventurer_xp: number, relevant_s
 
 export const calculateBeastDamage = (beast: Beast, adventurer: Adventurer, armor: Item) => {
   const baseAttack = beast.level * (6 - Number(beast.tier));
-  let damage = baseAttack;
+  let baseDamage = baseAttack;
+  let critDamage = baseAttack;
 
   if (armor) {
     const armorLevel = calculateLevel(armor.xp);
@@ -180,7 +181,8 @@ export const calculateBeastDamage = (beast: Beast, adventurer: Adventurer, armor
     // Apply elemental adjustment
     const beastAttackType = getAttackType(beast.id);
     const armorType = ItemUtils.getItemType(armor.id);
-    damage = elementalAdjustedDamage(damage, beastAttackType, armorType);
+    let elementalDamage = elementalAdjustedDamage(baseAttack, beastAttackType, armorType);
+    let damage = elementalDamage;
 
     // Apply name match bonus
     if (beast.specialPrefix && beast.specialSuffix) {
@@ -193,19 +195,27 @@ export const calculateBeastDamage = (beast: Beast, adventurer: Adventurer, armor
       }
     }
 
-    damage = Math.max(BEAST_MIN_DAMAGE, damage - armorValue);
+    critDamage = Math.max(BEAST_MIN_DAMAGE, (damage + elementalDamage) - armorValue);
+    baseDamage = Math.max(BEAST_MIN_DAMAGE, damage - armorValue);
 
     // Check for neck armor reduction
     const neck = adventurer.equipment.neck;
     if (neck_reduction(armor, neck)) {
       const neckLevel = calculateLevel(neck.xp);
-      damage -= Math.floor((armorLevel * (6 - ItemUtils.getItemTier(armor.id)) * neckLevel * 3) / 100);
+      const neckReduction = Math.floor((armorLevel * (6 - ItemUtils.getItemTier(armor.id)) * neckLevel * 3) / 100);
+
+      baseDamage -= neckReduction;
+      critDamage -= neckReduction;
     }
   } else {
-    damage = Math.floor(damage * 1.5);
+    baseDamage = Math.floor(baseAttack * 1.5);
+    critDamage = Math.floor(baseAttack * 1.5) * 2;
   }
 
-  return Math.max(BEAST_MIN_DAMAGE, damage);
+  return {
+    baseDamage: Math.max(BEAST_MIN_DAMAGE, baseDamage),
+    criticalDamage: Math.max(BEAST_MIN_DAMAGE, critDamage),
+  }
 };
 
 // Check if neck item provides bonus armor reduction
@@ -280,13 +290,13 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
       let armorDefense = 0;
 
       if (armor.id !== 0) {
-        armorDefense = Math.max(0, maxDamage - calculateBeastDamage(beast, adventurer, armor));
+        armorDefense = Math.max(0, maxDamage - calculateBeastDamage(beast, adventurer, armor).baseDamage);
       }
 
       let bestDefense = armorDefense;
       let bestItem = null;
       bagItems.filter((item) => ItemUtils.getItemSlot(item.id).toLowerCase() === slot).forEach((item) => {
-        let itemDefense = Math.max(0, maxDamage - calculateBeastDamage(beast, adventurer, item));
+        let itemDefense = Math.max(0, maxDamage - calculateBeastDamage(beast, adventurer, item).baseDamage);
         if (itemDefense > bestDefense) {
           bestDefense = itemDefense;
           bestItem = item;
@@ -333,4 +343,16 @@ export const calculateCombatStats = (adventurer: Adventurer, bagItems: Item[], b
     criticalDamage,
     gearScore,
   };
+};
+
+export const calculateGoldReward = (beast: Beast, ring: Item | null) => {
+  let goldReward = Math.floor(beast.level * (6 - Number(beast.tier)) / 2);
+
+  // Gold Ring gives 3% bonus per level on gold reward
+  if (ring && ItemUtils.getItemName(ring.id) === "Gold Ring" && goldReward > 0) {
+    const ringLevel = calculateLevel(ring.xp);
+    goldReward += Math.floor((goldReward * 3 * ringLevel) / 100);
+  }
+
+  return goldReward;
 };

@@ -58,7 +58,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
             </>}
             {isJackpot && <>
               <Typography sx={styles.jackpotText}>
-                {strkPrice ? `+${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
+                {strkPrice ? `+$${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
               </Typography>
             </>}
           </Box>

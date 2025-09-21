@@ -166,7 +166,7 @@ export default function StatSelectionScreen() {
                     }}
                   />
                   <Typography sx={styles.statName}>
-                    {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                    {stat === 'intelligence' ? 'Intellect' : stat.charAt(0).toUpperCase() + stat.slice(1)}
                   </Typography>
                 </Box>
 

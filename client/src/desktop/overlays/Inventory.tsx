@@ -66,7 +66,7 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
             if (isArmorSlot && beast.health > 4) {
               // For armor slots, show damage taken (always negative)
               if (item && item.id !== 0) {
-                damageTaken = calculateBeastDamage(beast, adventurer!, item);
+                damageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
               } else {
                 // For empty armor slots, show beast power * 1.5
                 damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
@@ -255,7 +255,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
           let damageTaken = 0;
           if (beast) {
             if (isArmorSlot) {
-              damageTaken = calculateBeastDamage(beast, adventurer!, item);
+              damageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
             } else if (isWeaponSlot) {
               damage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
             }
