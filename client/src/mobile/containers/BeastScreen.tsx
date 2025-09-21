@@ -5,7 +5,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
 import { getBeastImageById, getCollectableTraits } from '@/utils/beast';
-import { ability_based_percentage, calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateLevel, getNewItemsEquipped } from '@/utils/game';
+import { ability_based_percentage, calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateGoldReward, calculateLevel, getNewItemsEquipped } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
 import { Box, Button, Checkbox, LinearProgress, Menu, Tooltip, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -152,7 +152,6 @@ export default function BeastScreen() {
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
   const collectable = beast ? beast!.isCollectable : false;
-  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
   const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
 
   const hasNewItemsEquipped = useMemo(() => {
@@ -180,7 +179,7 @@ export default function BeastScreen() {
                 variant={beast!.name.length > 28 ? "h5" : "h4"}
                 sx={[
                   styles.beastName,
-                  beast!.isCollectable && {
+                  collectable && {
                     animation: `${pulseTextGlow} 2s infinite`,
                   }
                 ]}
@@ -213,35 +212,38 @@ export default function BeastScreen() {
                 value={(beastHealth / beast!.health) * 100}
                 sx={styles.healthBar}
               />
-              {beast!.isCollectable && (
-                <>
-                  <Typography sx={styles.collectableText}>
-                    {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
+
+              <Box sx={styles.traitIndicators} mt={1}>
+                <Box sx={styles.traitBox}>
+                  <Typography variant="body2" sx={styles.statValue}>
+                    {calculateLevel(adventurer!.xp)}% Crit Chance
                   </Typography>
-                  {isJackpot && (
-                    <Typography sx={styles.traitBox}>
-                      {strkPrice ? `+$${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()} Bounty!` : 'Bounty!'}
+                </Box>
+                <Box sx={styles.traitBox}>
+                  <Box sx={styles.goldValueContainer}>
+                    <Typography variant="body2" sx={styles.levelValue}>
+                      {calculateGoldReward(beast!, adventurer!.equipment.ring)}
                     </Typography>
-                  )}
-                  {collectableTraits && (
-                    <Box sx={styles.traitIndicators}>
-                      {collectableTraits.shiny && (
-                        <Box sx={styles.traitBox}>
-                          <Typography sx={styles.traitText}>SHINY</Typography>
-                        </Box>
-                      )}
-                      {collectableTraits.animated && (
-                        <Box sx={styles.traitBox}>
-                          <Typography sx={styles.traitText}>ANIMATED</Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                </>
-              )}
+                    <img
+                      src="/images/mobile/gold.png"
+                      alt="Gold"
+                      style={{ width: '11px', height: '11px', marginLeft: '2px', paddingBottom: '1px' }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+
             </Box>
           </Box>
-          <Box sx={beast!.isCollectable ? styles.collectableBeastContainer : styles.beastImageContainer}>
+          <Box sx={styles.beastImageContainer}>
+            {collectable && isJackpot && (
+              <Box sx={styles.toastContainer}>
+                <Typography sx={styles.wantedBeastText}>
+                  WANTED BEAST
+                </Typography>
+              </Box>
+            )}
+
             <img
               src={getBeastImageById(beast!.id)}
               alt={beast!.name}
@@ -250,6 +252,14 @@ export default function BeastScreen() {
               }}
             />
             {strike.View}
+
+            {collectable && (
+              <Box sx={styles.collectableContainer}>
+                <Typography sx={styles.collectableText}>
+                  {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -620,7 +630,7 @@ export default function BeastScreen() {
                           {(() => {
                             let swapDamage = 0;
                             let swapDamageTaken = 0;
-                            
+
                             if (beast) {
                               if (isArmorSlot) {
                                 swapDamageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
@@ -628,7 +638,7 @@ export default function BeastScreen() {
                                 swapDamage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
                               }
                             }
-                            
+
                             return (swapDamage > 0 || swapDamageTaken > 0) && (
                               <Box sx={[
                                 styles.damageIndicator,
@@ -692,15 +702,15 @@ const pulseTextGlow = keyframes`
   }
 `;
 
-const pulseGold = keyframes`
+const elegantPulse = keyframes`
   0% {
-    box-shadow: 0 0 12px rgba(237, 207, 51, 0.6);
+    text-shadow: 0 0 5px rgba(237, 207, 51, 0.4), 0 0 30px rgba(237, 207, 51, 0.2);
   }
   50% {
-    box-shadow: 0 0 20px rgba(237, 207, 51, 0.8);
+    text-shadow: 0 0 8px rgba(237, 207, 51, 0.8), 0 0 50px rgba(237, 207, 51, 0.4);
   }
   100% {
-    box-shadow: 0 0 12px rgba(237, 207, 51, 0.6);
+    text-shadow: 0 0 5px rgba(237, 207, 51, 0.4), 0 0 30px rgba(237, 207, 51, 0.2);
   }
 `;
 
@@ -779,7 +789,7 @@ const styles = {
   },
   traitIndicators: {
     display: 'flex',
-    gap: '4px',
+    gap: '8px',
     flexWrap: 'wrap',
     justifyContent: 'center',
   },
@@ -883,16 +893,6 @@ const styles = {
     },
   },
   beastImageContainer: {
-    width: '160px',
-    height: '160px',
-    maxWidth: '35vw',
-    maxHeight: '35vw',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  collectableBeastContainer: {
     width: '160px',
     height: '160px',
     maxWidth: '35vw',
@@ -1423,5 +1423,49 @@ const styles = {
   damageIndicatorTextGreen: {
     color: '#FFFFFF',
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
+  },
+  beastStatsContainer: {
+    position: 'absolute',
+    top: 106,
+    right: '155px',
+    width: '185px',
+    display: 'flex',
+    gap: '4px',
+  },
+  statContainer: {
+    flex: 1,
+    padding: '4px 4px',
+    background: 'rgba(0, 0, 0, 0.4)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '4px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  goldValueContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  collectableContainer: {
+    position: 'absolute',
+    bottom: -5,
+  },
+  wantedBeastText: {
+    color: '#EDCF33',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    textAlign: 'center',
+    textShadow: '0 0 8px rgba(237, 207, 51, 0.6), 0 0 16px rgba(237, 207, 51, 0.3)',
+    lineHeight: '1.1',
+    letterSpacing: '0.5px',
+    animation: `${elegantPulse} 0.5s infinite`,
+  },
+  toastContainer: {
+    display: 'flex',
+    position: 'absolute',
+    top: -5,
+    zIndex: 1000,
   },
 };
