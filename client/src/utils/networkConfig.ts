@@ -261,8 +261,6 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     },
   ];
 
-  console.log({ policies });
-
   return {
     chainId: network.chainId,
     name: network.name,
@@ -272,7 +270,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     slot: network.slot,
     preset: "loot-survivor",
     vrf: network.vrf,
-    policies: network.chainId === ChainId.SN_MAIN ? undefined : policies,
+    policies,
     rpcUrl: network.rpcUrl,
     toriiUrl: network.torii,
     chains: [{ rpcUrl: network.rpcUrl }],
