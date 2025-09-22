@@ -3,10 +3,10 @@ import { createContext, PropsWithChildren, useContext, useEffect, useRef, useSta
 import { useLocation } from 'react-router-dom';
 
 const tracks: Record<string, string> = {
-  Intro: "/audio/LS2_2.mp3",
-  Death: "/audio/LS2_4.mp3",
-  Battle: "/audio/LS2_3.mp3",
-  Background: "/audio/background.mp3",
+  Intro: "https://media.lootsurvivor.io/LS2_2.mp3?v=2",
+  Death: "https://media.lootsurvivor.io/LS2_4.mp3?v=2",
+  Battle: "https://media.lootsurvivor.io/LS2_3.mp3?v=2",
+  Background: "https://media.lootsurvivor.io/background.mp3?v=2",
 };
 
 class AudioManager {
@@ -17,6 +17,7 @@ class AudioManager {
 
   constructor() {
     this.primary = new Audio();
+    this.primary.crossOrigin = 'anonymous';
     this.primary.loop = true;
     // Don't create background audio until we need it
   }
@@ -33,6 +34,7 @@ class AudioManager {
     if (!this.currentTrack) {
       if (!this.background) {
         this.background = new Audio(tracks.Background);
+        this.background.crossOrigin = 'anonymous';
         this.background.loop = true;
       }
       await this.background.play().catch(() => { });
@@ -70,6 +72,7 @@ class AudioManager {
       // Switch to background
       if (!this.background) {
         this.background = new Audio(tracks.Background);
+        this.background.crossOrigin = 'anonymous';
         this.background.loop = true;
       }
       await this.crossfade(this.primary, this.background, volume);
@@ -143,6 +146,7 @@ class AudioManager {
       this.primary.src = '';
       if (!this.background) {
         this.background = new Audio(tracks.Background);
+        this.background.crossOrigin = 'anonymous';
         this.background.loop = true;
       }
       this.background.volume = volume;

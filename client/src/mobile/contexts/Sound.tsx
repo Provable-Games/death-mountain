@@ -3,14 +3,14 @@ import { calculateLevel } from '@/utils/game';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
 const tracks: Record<string, string> = {
-  Intro: "/audio/Intro.mp3",
-  Death: "/audio/Game_Over.mp3",
-  Beginning: "/audio/Start_Journey.mp3",
-  Early: "/audio/Vault_Of_Whispers.mp3",
-  RampUp: "/audio/Torchlit_Passage.mp3",
-  Mid: "/audio/Trap_Door.mp3",
-  Late: "/audio/Courage.mp3",
-  SuperLate: "/audio/Hall_Of_A_Thousand_Eyes.mp3",
+  Intro: "https://media.lootsurvivor.io/Intro.mp3?v=2",
+  Death: "https://media.lootsurvivor.io/Game_Over.mp3?v=2",
+  Beginning: "https://media.lootsurvivor.io/Start_Journey.mp3?v=2",
+  Early: "https://media.lootsurvivor.io/Vault_Of_Whispers.mp3?v=2",
+  RampUp: "https://media.lootsurvivor.io/Torchlit_Passage.mp3?v=2",
+  Mid: "https://media.lootsurvivor.io/Trap_Door.mp3?v=2",
+  Late: "https://media.lootsurvivor.io/Courage.mp3?v=2",
+  SuperLate: "https://media.lootsurvivor.io/Hall_Of_A_Thousand_Eyes.mp3?v=2",
 };
 
 interface SoundContextType {
@@ -45,6 +45,7 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
   const [hasInteracted, setHasInteracted] = useState(false)
 
   const audioRef = useRef(new Audio(tracks.Intro));
+  audioRef.current.crossOrigin = "anonymous";
   audioRef.current.loop = true;
 
   const setVolume = (newVolume: number) => {
@@ -122,6 +123,7 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
     }
 
     if (newTrack && newTrack !== new URL(audioRef.current.src).pathname) {
+      audioRef.current.crossOrigin = "anonymous";
       audioRef.current.src = newTrack;
       if (playing) {
         audioRef.current.load();

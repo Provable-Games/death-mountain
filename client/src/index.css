@@ -130,8 +130,8 @@ input:-webkit-autofill {
 }
 
 .notistack-MuiContent-warning {
-  background-color: #570000;
-  border: 1px solid #b10000;
+  background-color: #570000 !important;
+  border: 1px solid #b10000 !important;
   color: #FFE6E6 !important;
 }
 
