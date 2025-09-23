@@ -1638,7 +1638,7 @@ mod game_systems {
         } else if VRF_ENABLED
             && (get_tx_info().unbox().chain_id == MAINNET_CHAIN_ID
                 || get_tx_info().unbox().chain_id == SEPOLIA_CHAIN_ID) {
-            seed = VRFImpl::seed(vrf_address);
+            seed = VRFImpl::seed(vrf_address, ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id));
         } else {
             seed = ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id);
         }

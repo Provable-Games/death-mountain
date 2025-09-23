@@ -16,6 +16,7 @@ import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
 import { useSnackbar } from "notistack";
+import * as starknet from "@scure/starknet";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -263,13 +264,16 @@ export const useSystemCalls = () => {
   /**
    * Requests randomness from the VRF provider.
    */
-  const requestRandom = () => {
+  const requestRandom = (gameId: number, xp: number) => {
+    let params = [BigInt(xp), BigInt(gameId)];
+    let poseidon = starknet.poseidonHashMany(params);
+
     return {
       contractAddress: VRF_PROVIDER_ADDRESS,
       entrypoint: "request_random",
       calldata: CallData.compile({
         caller: GAME_ADDRESS,
-        source: { type: 0, address: account!.address },
+        source: { type: 1, salt: poseidon },
       }),
     };
   };

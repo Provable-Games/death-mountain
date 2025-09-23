@@ -20,9 +20,9 @@ pub impl VRFImpl of VRFTrait {
         contract_address_const::<0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f>()
     }
 
-    fn seed(vrf_address: ContractAddress) -> felt252 {
+    fn seed(vrf_address: ContractAddress, seed: felt252) -> felt252 {
         let vrf_provider = IVrfProviderDispatcher { contract_address: vrf_address };
-        let random_value: felt252 = vrf_provider.consume_random(Source::Nonce(get_caller_address()));
+        let random_value: felt252 = vrf_provider.consume_random(Source::Salt(seed));
         return random_value;
     }
 }
