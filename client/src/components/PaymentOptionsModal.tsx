@@ -171,10 +171,10 @@ const TokenSelectionContent = memo(
             {tokenQuote.loading
               ? "Loading quote..."
               : tokenQuote.error
-              ? `Error: ${tokenQuote.error}`
-              : tokenQuote.amount
-              ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-              : "Loading..."}
+                ? `Error: ${tokenQuote.error}`
+                : tokenQuote.amount
+                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+                  : "Loading..."}
           </Typography>
         </Box>
 
@@ -412,22 +412,21 @@ export default function PaymentOptionsModal({
 
   // Initialize the view based on user's situation
   useEffect(() => {
-    setCurrentView("golden");
-    // if (currentView === null) {
-    //   if (goldenPassIds.length > 0) {
-    //     setCurrentView("golden");
-    //   } else if (dungeonTicketCount >= 1) {
-    //     setCurrentView("dungeon");
-    //   } else if (
-    //     userTokens &&
-    //     userTokens.length > 0 &&
-    //     userTokens.some((t: any) => parseFloat(t.balance) > 0)
-    //   ) {
-    //     setCurrentView("token");
-    //   } else {
-    //     setCurrentView("credit");
-    //   }
-    // }
+    if (currentView === null) {
+      if (goldenPassIds.length > 0) {
+        setCurrentView("golden");
+      } else if (dungeonTicketCount >= 1) {
+        setCurrentView("dungeon");
+      } else if (
+        userTokens &&
+        userTokens.length > 0 &&
+        userTokens.some((t: any) => parseFloat(t.balance) > 0)
+      ) {
+        setCurrentView("token");
+      } else {
+        setCurrentView("credit");
+      }
+    }
   }, [currentView]);
 
   // Fetch initial quote when component loads or selected token changes
@@ -479,7 +478,7 @@ export default function PaymentOptionsModal({
               >
                 <AnimatePresence mode="wait">
                   {/* Golden Token Option */}
-                  {goldenPassIds.length > 0 && currentView === "golden" ? (
+                  {currentView === "golden" && (
                     <MotionWrapper viewKey="golden">
                       <Box sx={styles.paymentCard}>
                         <Box
@@ -510,12 +509,6 @@ export default function PaymentOptionsModal({
                           Enter Dungeon
                         </ActionButton>
                       </Box>
-                    </MotionWrapper>
-                  ) : (
-                    <MotionWrapper viewKey="dungeon">
-                      <Typography sx={styles.paymentTitle} textAlign="center" my={1}>
-                        Coming Soon
-                      </Typography>
                     </MotionWrapper>
                   )}
 
@@ -663,7 +656,7 @@ export default function PaymentOptionsModal({
               </Box>
 
               {/* Footer links */}
-              {/* <Box sx={styles.footer}>
+              <Box sx={styles.footer}>
                 <Box
                   sx={{
                     display: "flex",
@@ -722,6 +715,7 @@ export default function PaymentOptionsModal({
                       onClick={() => setCurrentView("credit")}
                       sx={styles.footerLink}
                     >
+                      Pay with credit card or other wallet
                     </Link>
                   )}
 
@@ -752,7 +746,7 @@ export default function PaymentOptionsModal({
                       </Link>
                     ) : null)}
                 </Box>
-              </Box> */}
+              </Box>
             </Box>
           </motion.div>
         </Box>
