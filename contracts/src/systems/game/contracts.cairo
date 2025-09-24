@@ -1500,6 +1500,7 @@ mod game_systems {
 
             // get item id
             let item_id = *items.at(i);
+            let item_suffix = game_libs.loot.get_suffix(item_id, adventurer.item_specials_seed);
 
             // if item is equipped
             if adventurer.equipment.is_equipped(item_id) {
@@ -1508,14 +1509,7 @@ mod game_systems {
 
                 // if the item was providing a stat boosts
                 if item.get_greatness() >= SUFFIX_UNLOCK_GREATNESS {
-                    // remove it
-                    let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
                     adventurer.stats.remove_suffix_boost(item_suffix);
-                    adventurer.stats.remove_bag_boost(item_suffix);
-                    let max_health = adventurer.stats.get_max_health();
-                    if adventurer.health > max_health {
-                        adventurer.health = max_health;
-                    }
                 }
 
                 // drop the item
@@ -1525,21 +1519,20 @@ mod game_systems {
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
                     item = bag.get_item(item_id);
-
-                    if item.get_greatness() >= SUFFIX_UNLOCK_GREATNESS {
-                        let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
-                        adventurer.stats.remove_bag_boost(item_suffix);
-                        let max_health = adventurer.stats.get_max_health();
-                        if adventurer.health > max_health {
-                            adventurer.health = max_health;
-                        }
-                    }
-
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
                     bag = new_bag;
                 } else {
                     panic_with_felt252('Item not owned by adventurer');
                 }
+            }
+
+            if item.get_greatness() >= SUFFIX_UNLOCK_GREATNESS {
+                adventurer.stats.remove_bag_boost(item_suffix);
+            }
+
+            let max_health = adventurer.stats.get_max_health();
+            if adventurer.health > max_health {
+                adventurer.health = max_health;
             }
 
             game_libs.adventurer.record_item_drop(adventurer_id, item);
