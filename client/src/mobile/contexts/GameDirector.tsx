@@ -288,13 +288,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         action.settings.game_seed === 0 &&
         action.settings.adventurer.xp !== 0
       ) {
-        txs.push(requestRandom());
+        txs.push(requestRandom(action.gameId!, action.settings.adventurer.xp));
       }
       txs.push(startGame(action.gameId!));
     }
 
     if (VRFEnabled && ["explore", "attack", "flee"].includes(action.type)) {
-      txs.push(requestRandom());
+      txs.push(requestRandom(gameId!, adventurer!.xp));
     }
 
     if (
@@ -302,7 +302,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       action.type === "equip" &&
       adventurer?.beast_health! > 0
     ) {
-      txs.push(requestRandom());
+      txs.push(requestRandom(gameId!, adventurer!.xp));
     }
 
     let newItemsEquipped = getNewItemsEquipped(
