@@ -6,7 +6,8 @@ import { transitionVideos } from "@/utils/events";
 import { Stream, StreamPlayerApi } from "@cloudflare/stream-react";
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
 
 const CUSTOMER_CODE = import.meta.env.VITE_PUBLIC_CLOUDFLARE_ID;
 
@@ -19,26 +20,61 @@ export default function VideoPlayer() {
   const [videoReady, setVideoReady] = useState(false);
   const [nextVideoReady, setNextVideoReady] = useState(false);
 
-  useEffect(() => {
-    if (videoQueue[0] === streamIds.explore && nextVideoReady) {
-      handleEnded()
-    }
-  }, [nextVideoReady]);
+  const currentVideo = videoQueue[0];
+  const isExploreVideo = currentVideo === streamIds.explore;
+  // Only expose the skip binding for the follow-up animation (beast/event reveal).
+  const isSkippableVideo = Boolean(currentVideo && !isExploreVideo);
+  const skipHotkeyOptions = useMemo(() => ({
+    enabled: isSkippableVideo,
+    preventDefault: true,
+  }), [isSkippableVideo]);
 
-  const handleEnded = () => {
-    if (videoQueue[0] === streamIds.explore && !nextVideoReady) {
+  // Drive the on-screen badge: dim it for the opener, light it once the skip is permitted.
+  const skipHintVariant = isExploreVideo ? 'loading' : (isSkippableVideo ? 'active' : 'hidden');
+
+  const handleEnded = useCallback(() => {
+    if (!currentVideo) {
       return;
     }
 
-    let isLastVideo = !transitionVideos.includes(videoQueue[0]) && videoQueue.length === 1;
+    if (currentVideo === streamIds.explore && !nextVideoReady) {
+      return;
+    }
+
+    const isLastVideo = !transitionVideos.includes(currentVideo) && videoQueue.length === 1;
     setShowOverlay(isLastVideo);
     setVideoReady(false);
 
+    const delay = isLastVideo ? 500 : 0;
     setTimeout(() => {
-      setVideoQueue(videoQueue.slice(1));
+      setVideoQueue((prev) => prev.slice(1));
       setNextVideoReady(false);
-    }, !isLastVideo ? 0 : 500);
-  }
+    }, delay);
+  }, [currentVideo, nextVideoReady, setShowOverlay, setVideoQueue, videoQueue.length]);
+
+  useEffect(() => {
+    if (videoQueue[0] === streamIds.explore && nextVideoReady) {
+      handleEnded();
+    }
+  }, [handleEnded, nextVideoReady, videoQueue]);
+
+  // Allow players to skip queued cinematics once the skippable clip is active; Enter intentionally remains disabled here.
+  useDesktopHotkey('q', () => {
+    if (!isSkippableVideo) {
+      return;
+    }
+
+    const playerApi = playerRef.current as unknown as { pause?: () => void } | undefined;
+    if (playerApi?.pause) {
+      try {
+        playerApi.pause();
+      } catch {
+        // ignore if pause is unsupported
+      }
+    }
+
+    handleEnded();
+  }, skipHotkeyOptions);
 
   function videoText() {
     if (videoQueue[0] === streamIds.explore) {
@@ -51,6 +87,9 @@ export default function VideoPlayer() {
 
     return ""
   }
+
+  // Only surface the skip hint during the second, skippable animation.
+  const canShowSkipHint = skipHintVariant !== 'hidden';
 
   return (
     <>
@@ -82,6 +121,17 @@ export default function VideoPlayer() {
               <Box sx={styles.loadingText}>
                 <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>{videoText()}</Typography>
               </Box>
+              {canShowSkipHint && (
+                <Box sx={[
+                  styles.skipHint,
+                  skipHintVariant === 'loading' && styles.skipHintDisabled,
+                ]}>
+                  <Typography sx={styles.skipText}>
+                    Skip
+                    <span className='hotkey-hint'> [Q]</span>
+                  </Typography>
+                </Box>
+              )}
             </>
           )}
         </motion.div>
@@ -118,5 +168,32 @@ const styles = {
       '50%': { opacity: 0.3 },
       '100%': { opacity: 1 }
     }
-  }
+  },
+  skipHint: {
+    position: 'absolute',
+    top: '32px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'rgba(24, 40, 24, 0.85)',
+    border: '2px solid #083e22',
+    borderRadius: '20px',
+    padding: '6px 16px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)',
+    zIndex: 1001,
+    pointerEvents: 'none',
+    transition: 'opacity 0.2s ease-in-out, border-color 0.2s ease-in-out',
+  },
+  skipHintDisabled: {
+    // Keep the badge visible during the intro clip without hinting the action is available yet.
+    opacity: 0.45,
+    borderColor: 'rgba(8, 62, 34, 0.5)',
+  },
+  skipText: {
+    fontFamily: 'Cinzel, Georgia, serif',
+    fontSize: '0.9rem',
+    letterSpacing: '1px',
+    color: '#d7c529',
+    textTransform: 'uppercase',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
+  },
 };

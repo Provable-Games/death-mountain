@@ -31,6 +31,12 @@ img {
   pointer-events: none;
 }
 
+/* Shared styling for in-line hotkey hints such as [E] or [B]. */
+.hotkey-hint {
+  opacity: 0.75 !important;
+  display: inline-block;
+}
+
 strong,
 b {
   font-weight: 400;

@@ -1,14 +1,17 @@
 import { STARTING_HEALTH } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { CombatStats, Equipment } from '@/types/game';
 import { calculateLevel } from '@/utils/game';
 import { ItemUtils, Tier } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Checkbox, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
 
 export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats }) {
   const { adventurer, beast, gameSettings, newMarket } = useGameStore();
+  const { showHotkeys, setShowHotkeys } = useUIStore();
 
   const [showTips, setShowTips] = useState(() => {
     // Load initial state from localStorage, default to true if not set
@@ -60,20 +63,69 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
     setCurrentTip(tip);
   }, [adventurer]);
 
+  const tipsHotkeyOptions = useMemo(() => ({
+    preventDefault: true,
+  }), []);
+
+  // Leave this listener always enabled so players can reveal hints even when hidden.
+  const hotkeyToggleOptions = useMemo(() => ({
+    preventDefault: true,
+  }), []);
+
+  // 't' flips the tips checkbox for quick keyboard access.
+  useDesktopHotkey('t', () => {
+    setShowTips((prev) => !prev);
+  }, tipsHotkeyOptions);
+
+  useDesktopHotkey('h', () => {
+    // Keep the on-screen toggle independent of the keyboard shortcut.
+    setShowHotkeys((prev) => !prev);
+  }, hotkeyToggleOptions);
+  // Previously this only worked while hints were visible:
+  // useDesktopHotkey('h', () => setShowHotkeys((prev) => !prev), { enabled: showHotkeys });
+
   return (
     <>
       {/* Tips Toggle Button - positioned next to inventory */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: 20, left: 120, zIndex: 100 }}>
-        <Box sx={styles.toggleWrapper} onClick={() => setShowTips(!showTips)}>
-          <Checkbox
-            checked={showTips}
-            onChange={(e) => setShowTips(e.target.checked)}
-            size="large"
-            sx={styles.tipsCheckbox}
-          />
-          <Typography sx={styles.tipsLabel}>
-            tips
-          </Typography>
+      <Box sx={styles.toggleStack}>
+        <Box sx={styles.toggleRow}>
+          <Box sx={styles.toggleWrapper} onClick={() => setShowTips(!showTips)}>
+            <Checkbox
+              checked={showTips}
+              onChange={(e) => setShowTips(e.target.checked)}
+              size="large"
+              sx={styles.tipsCheckbox}
+            />
+            <Typography sx={styles.toggleLabel}>
+              {/* Surface the tips shortcut only when players opt into hotkey overlays. */}
+              Tips
+              {showHotkeys && (
+                <>
+                  <br />
+                  <span className='hotkey-hint'>[T]</span>
+                </>
+              )}
+            </Typography>
+          </Box>
+          {/* Clicking still toggles visibility so players can hide the overlay without the keyboard. */}
+          <Box sx={styles.toggleWrapper} onClick={() => setShowHotkeys(!showHotkeys)}>
+            <Checkbox
+              checked={showHotkeys}
+              onChange={(e) => setShowHotkeys(e.target.checked)}
+              size="large"
+              sx={styles.tipsCheckbox}
+            />
+            <Typography sx={styles.toggleLabel}>
+              {/* Hide the [H] cue when hints are collapsed, but leave the keyboard toggle active. */}
+              Hotkeys
+              {showHotkeys && (
+                <>
+                  <br />
+                  <span className='hotkey-hint'>[H]</span>
+                </>
+              )}
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
@@ -90,6 +142,24 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
 }
 
 const styles = {
+  toggleStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: 20,
+    left: 138,
+    zIndex: 100,
+    gap: 0.5,
+  },
+  toggleRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
   toggleWrapper: {
     width: 64,
     height: 64,
@@ -106,9 +176,9 @@ const styles = {
       color: '#d0c98d',
     },
   },
-  tipsLabel: {
+  toggleLabel: {
     fontFamily: 'Cinzel, Georgia, serif',
-    lineHeight: '0.9',
+    lineHeight: '1.3',
     textAlign: 'center',
     marginTop: '2px',
   },

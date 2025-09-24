@@ -11,6 +11,8 @@ import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
+import { useUIStore } from '@/stores/uiStore';
+import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -18,6 +20,7 @@ const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed, spectating, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
+  const { showHotkeys } = useUIStore();
   const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
 
@@ -105,6 +108,33 @@ export default function CombatOverlay() {
   const isJackpot = useMemo(() => {
     return currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
   }, [beast]);
+
+  const hasAdventurer = Boolean(adventurer);
+  const hasBeast = Boolean(beast);
+  const adventurerDexterity = adventurer?.stats.dexterity ?? 0;
+
+  const canAttack = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && !attackInProgress && !fleeInProgress && !equipInProgress;
+  const canFlee = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && adventurerDexterity > 0 && !fleeInProgress && !attackInProgress && !equipInProgress;
+
+  const attackHotkeyOptions = useMemo(() => ({
+    enabled: canAttack,
+    preventDefault: true,
+  }), [canAttack]);
+
+  const fleeHotkeyOptions = useMemo(() => ({
+    enabled: canFlee,
+    preventDefault: true,
+  }), [canFlee]);
+
+  // 'a' queues an attack whenever the on-screen button is available.
+  useDesktopHotkey('a', () => {
+    handleAttack();
+  }, attackHotkeyOptions);
+
+  // 'f' attempts to flee using the same gating as the flee button.
+  useDesktopHotkey('f', () => {
+    handleFlee();
+  }, fleeHotkeyOptions);
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
@@ -194,6 +224,7 @@ export default function CombatOverlay() {
                 <Box sx={{ opacity: !adventurer || !beast || attackInProgress || fleeInProgress || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     ATTACK
+                    {showHotkeys && <span className='hotkey-hint'> [A]</span>}
                   </Typography>
 
                   <Typography sx={styles.buttonHelperText}>
@@ -213,6 +244,7 @@ export default function CombatOverlay() {
                 <Box sx={{ opacity: adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
                     FLEE
+                    {showHotkeys && <span className='hotkey-hint'> [F]</span>}
                   </Typography>
                   <Typography sx={styles.buttonHelperText}>
                     {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}

@@ -3,13 +3,15 @@ import AdventurerStats from '@/desktop/components/AdventurerStats';
 import ItemTooltip from '@/desktop/components/ItemTooltip';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { Item } from '@/types/game';
 import { calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateLevel } from '@/utils/game';
 import { ItemUtils, Tier } from '@/utils/loot';
 import { keyframes } from '@emotion/react';
 import { DeleteOutline, Star } from '@mui/icons-material';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
 
 type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | 'neck' | 'ring';
 
@@ -371,10 +373,46 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, bag, showInventory, setShowInventory } = useGameStore();
   const { equipItem, newInventoryItems, setNewInventoryItems } = useGameStore();
+  const { showHotkeys } = useUIStore();
   const [isDropMode, setIsDropMode] = useState(false);
   const [itemsToDrop, setItemsToDrop] = useState<number[]>([]);
   const [dropInProgress, setDropInProgress] = useState(false);
   const [newItems, setNewItems] = useState<number[]>([]);
+
+  // Dedicated handler so the inventory can still be toggled while other dialogs are open.
+  const inventoryHotkeyOptions = useMemo(() => ({
+    preventDefault: true,
+  }), []);
+
+  const dropCancelHotkeyOptions = useMemo(() => ({
+    enabled: isDropMode && !dropInProgress,
+    preventDefault: true,
+  }), [isDropMode, dropInProgress]);
+
+  const dropConfirmHotkeyOptions = useMemo(() => ({
+    enabled: isDropMode && !dropInProgress && itemsToDrop.length > 0,
+    preventDefault: true,
+  }), [isDropMode, dropInProgress, itemsToDrop.length]);
+
+  // 'i' toggles the inventory tray just like clicking the on-screen button.
+  useDesktopHotkey('i', () => {
+    setShowInventory(!showInventory);
+  }, inventoryHotkeyOptions);
+
+  // 'j' cancels drop mode, 'k' confirms the selected drop list.
+  useDesktopHotkey('j', () => {
+    if (!isDropMode || dropInProgress) {
+      return;
+    }
+    handleCancelDrop();
+  }, dropCancelHotkeyOptions);
+
+  useDesktopHotkey('k', () => {
+    if (!isDropMode || dropInProgress || itemsToDrop.length === 0) {
+      return;
+    }
+    handleConfirmDrop();
+  }, dropConfirmHotkeyOptions);
 
   // Update newItems when newInventoryItems changes and clear newInventoryItems
   useEffect(() => {
@@ -435,7 +473,16 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
         <Box sx={styles.buttonWrapper} onClick={() => setShowInventory(!showInventory)}>
           <img src={'/images/inventory.png'} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />
         </Box>
-        <Typography sx={styles.inventoryLabel}>Inventory</Typography>
+        <Typography sx={styles.inventoryLabel}>
+          {/* Tooltip mirrors the single-key binding so players aren't confused by the former [i/c] combo. */}
+          Inventory
+          {showHotkeys && (
+            <>
+              <br />
+              <span className='hotkey-hint'>[i]</span>
+            </>
+          )}
+        </Typography>
       </Box>
       {showInventory && (
         <>
@@ -474,7 +521,11 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
                   sx={styles.cancelDropButton}
                   disabled={dropInProgress}
                 >
-                  Cancel
+                  {/* Keyboard hint mirrors the 'j' hotkey introduced above. */}
+                  <Typography>
+                    Cancel
+                    {showHotkeys && <span className='hotkey-hint'> [J]</span>}
+                  </Typography>
                 </Button>
                 <Button
                   variant="contained"
@@ -490,7 +541,9 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
                       <div className='dotLoader yellow' />
                     </Box>
                     : <Typography>
+                      {/* 'k' shortcut sits alongside the original confirm copy. */}
                       Confirm
+                      {showHotkeys && <span className='hotkey-hint'> [K]</span>}
                     </Typography>
                   }
                 </Button>

@@ -5,7 +5,7 @@ import { streamIds } from '@/utils/cloudflare';
 import { getEventTitle } from '@/utils/events';
 import { ItemUtils } from '@/utils/loot';
 import { Box, Button, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
@@ -13,18 +13,23 @@ import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
-import { useSnackbar } from 'notistack';
+import { useDesktopHotkey, normalizeHotkey } from '../hooks/useDesktopHotkey';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
     setCollectable, selectedStats, setSelectedStats, claimInProgress } = useGameStore();
-  const { cart, inProgress, setInProgress } = useMarketStore();
-  const { skipAllAnimations } = useUIStore();
-  const { enqueueSnackbar } = useSnackbar()
-
+  const { cart, inProgress, setInProgress, isOpen: marketIsOpen } = useMarketStore();
+  const { skipAllAnimations, showHotkeys } = useUIStore();
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
+
+  const totalSelectedPoints = useMemo(
+    () => Object.values(selectedStats).reduce((sum, value) => sum + value, 0),
+    [selectedStats],
+  );
+  const availableStatPoints = adventurer?.stat_upgrades_available ?? 0;
+  const cartHasPurchases = cart.items.length > 0 || cart.potions > 0;
 
   useEffect(() => {
     setIsExploring(false);
@@ -55,7 +60,7 @@ export default function ExploreOverlay() {
   const handleCheckout = () => {
     setInProgress(true);
 
-    let itemPurchases = cart.items.map(item => ({
+    const itemPurchases = cart.items.map(item => ({
       item_id: item.id,
       equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
     }));
@@ -68,6 +73,48 @@ export default function ExploreOverlay() {
   };
 
   const event = exploreLog[0];
+
+  const canConfirmStats = availableStatPoints > 0 && !spectating && !isSelectingStats && !inProgress && totalSelectedPoints === availableStatPoints;
+  const canCheckout = availableStatPoints === 0 && cartHasPurchases && !spectating && !isExploring && !inProgress;
+  const canExplore = availableStatPoints === 0 && !cartHasPurchases && !spectating && !isExploring && !isSelectingStats && !inProgress;
+
+  // Shared handler so confirmation keys respect both explore and market states.
+  const confirmHotkeyOptions = useMemo(() => ({
+    enabled: canConfirmStats || canCheckout,
+    preventDefault: true,
+  }), [canConfirmStats, canCheckout]);
+
+  const exploreHotkeyOptions = useMemo(() => ({
+    enabled: canExplore,
+    preventDefault: true,
+  }), [canExplore]);
+
+  // 'e' or Enter confirms stat allocation; 'b' or Enter finalizes market purchases outside of the market modal.
+  useDesktopHotkey(['e', 'b', 'enter'], (event) => {
+    const key = normalizeHotkey(event.key);
+
+    if (key === 'e' || key === 'enter') {
+      if (canConfirmStats) {
+        handleSelectStats();
+        return;
+      }
+      if (key === 'enter' && canCheckout && !marketIsOpen) {
+        handleCheckout();
+      }
+      if (key === 'e') {
+        return;
+      }
+    }
+
+    if (key === 'b' && canCheckout && !marketIsOpen) {
+      handleCheckout();
+    }
+  }, confirmHotkeyOptions);
+
+  // 'e' lets players explore without leaving the keyboard.
+  useDesktopHotkey('e', () => {
+    handleExplore();
+  }, exploreHotkeyOptions);
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
@@ -179,10 +226,16 @@ export default function ExploreOverlay() {
           >
             {isSelectingStats
               ? <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Selecting Stats</Typography>
+                <Typography sx={styles.buttonText}>
+                  {/* While the server processes the stat allocation, hide the hint to avoid implying another press is needed. */}
+                  Selecting Stats
+                </Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
-              : <Typography sx={styles.buttonText}>Select Stats</Typography>
+              : <Typography sx={styles.buttonText}>
+                Select Stats
+                {showHotkeys && <span className='hotkey-hint'> [E]</span>}
+              </Typography>
             }
           </Button>
         ) : (
@@ -191,20 +244,29 @@ export default function ExploreOverlay() {
             onClick={cart.items.length > 0 || cart.potions > 0 ? handleCheckout : handleExplore}
             sx={styles.exploreButton}
             disabled={inProgress || isExploring}
-          >
+            >
             {inProgress ? (
               <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Processing</Typography>
+                <Typography sx={styles.buttonText}>
+                  Processing
+                  {showHotkeys && <span className='hotkey-hint'> [B]</span>}
+                </Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
             ) : isExploring ? (
               <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Exploring</Typography>
+                <Typography sx={styles.buttonText}>
+                  Exploring
+                  {showHotkeys && <span className='hotkey-hint'> [E]</span>}
+                </Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
             ) : (
               <Typography sx={styles.buttonText}>
                 {cart.items.length > 0 || cart.potions > 0 ? 'BUY ITEMS' : 'EXPLORE'}
+                {showHotkeys && (
+                  <span className='hotkey-hint'> {cart.items.length > 0 || cart.potions > 0 ? '[B]' : '[E]'}</span>
+                )}
               </Typography>
             )}
           </Button>
