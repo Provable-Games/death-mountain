@@ -1642,7 +1642,7 @@ mod game_systems {
         } else if VRF_ENABLED
             && (get_tx_info().unbox().chain_id == MAINNET_CHAIN_ID
                 || get_tx_info().unbox().chain_id == SEPOLIA_CHAIN_ID) {
-            let entropy = if adventurer.beast_health > 0 {
+            let entropy = if adventurer.in_battle() {
                 ImplAdventurer::get_battle_entropy(adventurer.xp, adventurer_id, adventurer.action_count)
             } else {
                 ImplAdventurer::get_simple_entropy(adventurer.xp, adventurer_id)
