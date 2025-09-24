@@ -1525,6 +1525,16 @@ mod game_systems {
                 let (item_in_bag, _) = game_libs.adventurer.bag_contains(bag, item_id);
                 if item_in_bag {
                     item = bag.get_item(item_id);
+
+                    if item.get_greatness() >= SUFFIX_UNLOCK_GREATNESS {
+                        let item_suffix = game_libs.loot.get_suffix(item.id, adventurer.item_specials_seed);
+                        adventurer.stats.remove_bag_boost(item_suffix);
+                        let max_health = adventurer.stats.get_max_health();
+                        if adventurer.health > max_health {
+                            adventurer.health = max_health;
+                        }
+                    }
+
                     let (new_bag, _) = game_libs.adventurer.remove_item_from_bag(bag, item_id);
                     bag = new_bag;
                 } else {
