@@ -125,6 +125,17 @@ export default function CombatOverlay() {
     preventDefault: true,
   }), [canFlee]);
 
+  // Equip/Undo are only available when newly equipped items exist and we are not already processing.
+  const equipHotkeyOptions = useMemo(() => ({
+    enabled: hasNewItemsEquipped && !equipInProgress && !spectating,
+    preventDefault: true,
+  }), [hasNewItemsEquipped, equipInProgress, spectating]);
+
+  const undoHotkeyOptions = useMemo(() => ({
+    enabled: hasNewItemsEquipped && !equipInProgress && !spectating,
+    preventDefault: true,
+  }), [hasNewItemsEquipped, equipInProgress, spectating]);
+
   // 'a' queues an attack whenever the on-screen button is available.
   useDesktopHotkey('a', () => {
     handleAttack();
@@ -134,6 +145,18 @@ export default function CombatOverlay() {
   useDesktopHotkey('f', () => {
     handleFlee();
   }, fleeHotkeyOptions);
+
+  // 'e' equips items when there are new items pending.
+  useDesktopHotkey('e', () => {
+    if (!hasNewItemsEquipped || equipInProgress) return;
+    handleEquipItems();
+  }, equipHotkeyOptions);
+
+  // 'u' undoes pending equipment changes.
+  useDesktopHotkey('u', () => {
+    if (!hasNewItemsEquipped || equipInProgress) return;
+    undoEquipment();
+  }, undoHotkeyOptions);
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
@@ -190,7 +213,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    EQUIP
+                    EQUIP <HotkeyHint keys={'E'} />
                   </Typography>
                 </Box>
               </Button>
@@ -205,7 +228,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    UNDO
+                    UNDO <HotkeyHint keys={'U'} />
                   </Typography>
                 </Box>
               </Button>

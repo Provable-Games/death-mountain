@@ -123,10 +123,15 @@ export default function VideoPlayer() {
                 <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>{videoText()}</Typography>
               </Box>
               {canShowSkipHint && (
-                <Box sx={[
-                  styles.skipHint,
-                  skipHintVariant === 'loading' && styles.skipHintDisabled,
-                ]}>
+                <Box
+                  sx={[
+                    styles.skipHint,
+                    skipHintVariant === 'loading' && styles.skipHintDisabled,
+                    isSkippableVideo && { pointerEvents: 'auto', cursor: 'pointer' },
+                  ]}
+                  onClick={() => { if (isSkippableVideo) { handleEnded(); } }}
+                  aria-label="Skip animation"
+                >
                   <Typography sx={styles.skipText}>
                     Skip <HotkeyHint keys={'Q'} />
                   </Typography>
