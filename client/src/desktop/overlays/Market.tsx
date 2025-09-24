@@ -1,6 +1,7 @@
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { calculateLevel } from '@/utils/game';
 import { ItemUtils, slotIcons, typeIcons, Tier } from '@/utils/loot';
@@ -9,6 +10,8 @@ import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import { Box, Button, IconButton, Modal, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import JewelryTooltip from '@/components/JewelryTooltip';
+import { useDesktopHotkey, normalizeHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -61,7 +64,8 @@ const renderTierToggleButton = (tier: Tier) => (
 
 export default function MarketOverlay() {
   const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
-  const { executeGameAction, actionFailed } = useGameDirector();
+  const { executeGameAction, actionFailed, spectating } = useGameDirector();
+  useUIStore();
   const {
     isOpen,
     setIsOpen,
@@ -95,6 +99,16 @@ export default function MarketOverlay() {
       setNewMarket(false);
     }
   };
+
+  const marketHotkeyOptions = useMemo(() => ({
+    enabled: !spectating && !inProgress,
+    preventDefault: true,
+  }), [spectating, inProgress]);
+
+  // 'm' opens or closes the market panel when the player can interact with it.
+  useDesktopHotkey('m', () => {
+    handleOpen();
+  }, marketHotkeyOptions);
 
   useEffect(() => {
     if (inProgress) {
@@ -173,7 +187,7 @@ export default function MarketOverlay() {
   const handleCheckout = () => {
     setInProgress(true);
 
-    let itemPurchases = cart.items.map(item => ({
+    const itemPurchases = cart.items.map(item => ({
       item_id: item.id,
       equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
     }));
@@ -209,10 +223,13 @@ export default function MarketOverlay() {
   const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
   const remainingGold = (adventurer?.gold || 0) - totalCost;
   const maxHealth = STARTING_HEALTH + (adventurer?.stats?.vitality || 0) * 15;
-  const maxPotionsByHealth = Math.ceil((maxHealth - (adventurer?.health || 0)) / 10);
-  const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
-  const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
+  const maxPotionsByHealth = Math.max(0, Math.ceil((maxHealth - (adventurer?.health || 0)) / 10));
+  const maxPotionsByGold = potionCost > 0
+    ? Math.max(0, Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost))
+    : MAX_BAG_SIZE;
+  const maxPotions = Math.max(0, Math.min(maxPotionsByHealth, maxPotionsByGold));
   const inventoryFull = bag.length + cart.items.length === MAX_BAG_SIZE;
+  const cartHasPurchases = cart.items.length > 0 || cart.potions > 0;
 
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
@@ -220,6 +237,34 @@ export default function MarketOverlay() {
     if (tierFilter && item.tier !== tierFilter) return false;
     return true;
   });
+
+  const potionHotkeyOptions = useMemo(() => ({
+    enabled: isOpen && (maxPotions > 0 || cart.potions > 0),
+    preventDefault: true,
+  }), [isOpen, maxPotions, cart.potions]);
+
+  useDesktopHotkey(['-', '+', '='], (event) => {
+    const key = normalizeHotkey(event.key);
+
+    if (key === '-') {
+      handleBuyPotion(Math.max(0, cart.potions - 1));
+    } else if (key === '+' || key === '=') {
+      handleBuyPotion(Math.min(maxPotions, cart.potions + 1));
+    }
+  }, potionHotkeyOptions);
+
+  const checkoutHotkeyOptions = useMemo(() => ({
+    enabled: isOpen && cartHasPurchases && !inProgress && remainingGold >= 0 && !spectating,
+    preventDefault: true,
+  }), [isOpen, cartHasPurchases, inProgress, remainingGold, spectating]);
+
+  // 'b' remains the primary buy shortcut; Enter mirrors it for keyboard users.
+  useDesktopHotkey(['b', 'enter'], (event) => {
+    const key = normalizeHotkey(event.key);
+    if (key === 'b' || key === 'enter') {
+      handleCheckout();
+    }
+  }, checkoutHotkeyOptions);
 
   return (
     <>
@@ -233,7 +278,10 @@ export default function MarketOverlay() {
             <Box sx={styles.newIndicator}>!</Box>
           )}
         </Box>
-        <Typography sx={styles.marketLabel}>Market</Typography>
+        <Typography sx={styles.marketLabel}>
+          {/* Display the market shortcut beneath the label when hotkey hints are enabled. */}
+          Market <HotkeyHint breakLine keys={'m'} />
+        </Typography>
       </Box>
       {isOpen && (
         <>
@@ -259,7 +307,8 @@ export default function MarketOverlay() {
                     <div className='dotLoader yellow' />
                   </Box>
                   : <Typography>
-                    Purchase ({cart.potions + cart.items.length})
+                    {/* B/Enter shortcut appears inline with the dynamic purchase count. */}
+                    Purchase ({cart.potions + cart.items.length}) <HotkeyHint keys={'B'} />
                   </Typography>
                 }
               </Button>
@@ -345,14 +394,14 @@ export default function MarketOverlay() {
                     sx={styles.checkoutButton}
                   >
                     {inProgress
-                      ? <Box display={'flex'} alignItems={'baseline'}>
+                    ? <Box display={'flex'} alignItems={'baseline'}>
                         <Typography variant='h5'>
                           Processing
                         </Typography>
                         <div className='dotLoader yellow' />
                       </Box>
-                      : <Typography variant='h5'>
-                        Checkout
+                  : <Typography variant='h5'>
+                        Checkout <HotkeyHint keys={'B'} />
                       </Typography>
                     }
                   </Button>
@@ -369,7 +418,10 @@ export default function MarketOverlay() {
                     <Box sx={styles.potionLeftSection}>
                       <Box component="img" src={'/images/health.png'} alt="Health Icon" sx={styles.potionImage} />
                       <Box sx={styles.potionInfo}>
-                        <Typography>Potions</Typography>
+                        {/* Display the potion count hotkeys directly beside the slider controls. */}
+                        <Typography sx={styles.potionTitle}>
+                          Potions <HotkeyHint keys={'-/+'} />
+                        </Typography>
                         <Typography sx={styles.potionHelperText}>+10 Health</Typography>
                       </Box>
                     </Box>
@@ -663,6 +715,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '2px',
+  },
+  potionTitle: {
+    color: '#e6d28a',
+    fontWeight: 600,
   },
   potionHelperText: {
     color: '#d0c98d',

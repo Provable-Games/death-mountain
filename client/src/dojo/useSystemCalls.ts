@@ -126,7 +126,7 @@ export const useSystemCalls = () => {
 
       return receipt;
     } catch (error) {
-      console.error("Error waiting for transaction:", error);
+      console.error("Error waiting for transaction :", error);
       await delay(500);
       return waitForTransaction(txHash, retries + 1, _account);
     }

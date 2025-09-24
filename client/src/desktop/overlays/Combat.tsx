@@ -11,6 +11,8 @@ import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -72,6 +74,11 @@ export default function CombatOverlay() {
     }
   }, [actionFailed]);
 
+  // Reset the Until Death setting on a new beast (per-fight scope only)
+  useEffect(() => {
+    setUntilDeath(false);
+  }, [beast?.name]);
+
   const handleAttack = () => {
     setAttackInProgress(true);
     setCombatLog(attackMessage);
@@ -105,6 +112,65 @@ export default function CombatOverlay() {
   const isJackpot = useMemo(() => {
     return currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
   }, [beast]);
+
+  const hasAdventurer = Boolean(adventurer);
+  const hasBeast = Boolean(beast);
+  const adventurerDexterity = adventurer?.stats.dexterity ?? 0;
+
+  const canAttack = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && !attackInProgress && !fleeInProgress && !equipInProgress;
+  const canFlee = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && adventurerDexterity > 0 && !fleeInProgress && !attackInProgress && !equipInProgress;
+  const canToggleUntilDeath = !spectating && !hasNewItemsEquipped && !attackInProgress && !fleeInProgress && !equipInProgress;
+
+  const attackHotkeyOptions = useMemo(() => ({
+    enabled: canAttack,
+    preventDefault: true,
+  }), [canAttack]);
+
+  const fleeHotkeyOptions = useMemo(() => ({
+    enabled: canFlee,
+    preventDefault: true,
+  }), [canFlee]);
+
+  // Equip/Undo are only available when newly equipped items exist and we are not already processing.
+  const equipHotkeyOptions = useMemo(() => ({
+    enabled: hasNewItemsEquipped && !equipInProgress && !spectating,
+    preventDefault: true,
+  }), [hasNewItemsEquipped, equipInProgress, spectating]);
+
+  /**
+   * Single 'u' listener covers two contexts to avoid double listeners:
+   * - If there are pending equipment changes, 'u' triggers Undo (same as UNDO button)
+   * - Otherwise, while in normal combat, 'u' toggles the Until Death checkbox
+   * We enable it only when at least one of the actions is legal.
+   */
+  const uHotkeyEnabled = (!spectating && !equipInProgress) && (hasNewItemsEquipped || canToggleUntilDeath);
+
+  // 'a' queues an attack whenever the on-screen button is available.
+  useDesktopHotkey('a', () => {
+    handleAttack();
+  }, attackHotkeyOptions);
+
+  // 'f' attempts to flee using the same gating as the flee button.
+  useDesktopHotkey('f', () => {
+    handleFlee();
+  }, fleeHotkeyOptions);
+
+  // 'e' equips items when there are new items pending.
+  useDesktopHotkey('e', () => {
+    if (!hasNewItemsEquipped || equipInProgress) return;
+    handleEquipItems();
+  }, equipHotkeyOptions);
+
+  // Unified 'u' behavior: prefer Undo when equipment changes are pending, otherwise toggle Until Death.
+  useDesktopHotkey('u', () => {
+    if (hasNewItemsEquipped) {
+      undoEquipment();
+      return;
+    }
+    if (canToggleUntilDeath) {
+      setUntilDeath((prev) => !prev);
+    }
+  }, uHotkeyEnabled);
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
@@ -161,7 +227,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    EQUIP
+                    EQUIP <HotkeyHint keys={'E'} />
                   </Typography>
                 </Box>
               </Button>
@@ -176,7 +242,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    UNDO
+                    UNDO <HotkeyHint keys={'U'} />
                   </Typography>
                 </Box>
               </Button>
@@ -193,7 +259,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: !adventurer || !beast || attackInProgress || fleeInProgress || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    ATTACK
+                    ATTACK <HotkeyHint keys={'A'} />
                   </Typography>
 
                   <Typography sx={styles.buttonHelperText}>
@@ -212,7 +278,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    FLEE
+                    FLEE <HotkeyHint keys={'F'} />
                   </Typography>
                   <Typography sx={styles.buttonHelperText}>
                     {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}
@@ -221,13 +287,19 @@ export default function CombatOverlay() {
               </Button>
             </Box>
 
-            <Box sx={styles.deathCheckboxContainer} onClick={() => {
-              if (!attackInProgress && !fleeInProgress && !equipInProgress) {
-                setUntilDeath(!untilDeath);
-              }
-            }}>
+            <Box
+              sx={{
+                ...styles.deathCheckboxContainer,
+                ...(attackInProgress || fleeInProgress || equipInProgress ? { opacity: 0.5 } : {}),
+              }}
+              onClick={() => {
+                if (!attackInProgress && !fleeInProgress && !equipInProgress) {
+                  setUntilDeath(!untilDeath);
+                }
+              }}
+            >
               <Typography sx={styles.deathCheckboxLabel}>
-                until<br />death
+                Until<br />Death <HotkeyHint keys={'U'} />
               </Typography>
               <Checkbox
                 checked={untilDeath}

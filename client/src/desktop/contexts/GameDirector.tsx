@@ -22,6 +22,8 @@ import {
   useEffect,
   useReducer,
   useState,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
 import { useMarketStore } from "@/stores/marketStore";
@@ -32,7 +34,7 @@ export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
   actionFailed: number;
   videoQueue: string[];
-  setVideoQueue: (videoQueue: string[]) => void;
+  setVideoQueue: Dispatch<SetStateAction<string[]>>;
   setSpectating: (spectating: boolean) => void;
   spectating: boolean;
   processEvent: (event: any, skipDelay?: boolean) => void;

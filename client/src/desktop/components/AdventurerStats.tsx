@@ -5,6 +5,8 @@ import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, FormControl, MenuItem, Select, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState, useMemo } from 'react';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import HotkeyHint from '@/desktop/components/HotkeyHint';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -26,18 +28,31 @@ const COMBAT_STAT_DESCRIPTIONS = {
 type ViewMode = 'stats' | 'combat';
 
 export default function AdventurerStats() {
-  const { adventurer, bag, beast, selectedStats, setSelectedStats } = useGameStore();
+  const { adventurer, bag, beast, selectedStats, setSelectedStats, showInventory } = useGameStore();
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
 
   useEffect(() => {
-    setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
-  }, [adventurer?.beast_health!]);
+    const beastHealth = adventurer?.beast_health ?? 0;
+    setViewMode((beast && beastHealth > 0) ? 'combat' : 'stats');
+  }, [adventurer?.beast_health, beast]);
 
   useEffect(() => {
-    if (adventurer?.stat_upgrades_available! > 0) {
+    const availableStatPoints = adventurer?.stat_upgrades_available ?? 0;
+    if (availableStatPoints > 0) {
       setViewMode('stats');
     }
   }, [adventurer?.stat_upgrades_available]);
+
+  const canToggleView = showInventory && (adventurer?.stat_upgrades_available ?? 0) === 0;
+  const toggleHotkeyOptions = useMemo(() => ({
+    enabled: canToggleView,
+    preventDefault: true,
+  }), [canToggleView]);
+
+  // Pressing 'c' swaps the dropdown between Stats and Combat views while inventory is open.
+  useDesktopHotkey('c', () => {
+    setViewMode((prev) => (prev === 'stats' ? 'combat' : 'stats'));
+  }, toggleHotkeyOptions);
 
   const combatStats = useMemo(() => {
     return calculateCombatStats(adventurer!, bag, beast);
@@ -316,8 +331,12 @@ export default function AdventurerStats() {
                   }
                 }}
               >
-                <MenuItem value="stats">Stats</MenuItem>
-                <MenuItem value="combat">Combat</MenuItem>
+                <MenuItem value="stats">
+                  Stats <HotkeyHint keys={'c'} />
+                </MenuItem>
+                <MenuItem value="combat">
+                  Combat <HotkeyHint keys={'c'} />
+                </MenuItem>
               </Select>
             </FormControl>
           )}

@@ -16,6 +16,11 @@ interface UIState {
   setUseMobileClient: (useMobile: boolean) => void
   useMobileClient: boolean
 
+  // Desktop helpers
+  setShowHotkeys: (show: boolean) => void
+  toggleShowHotkeys: () => void
+  showHotkeys: boolean
+
   // Animations
   setSkipIntroOutro: (skip: boolean) => void
   setSkipAllAnimations: (skip: boolean) => void
@@ -45,6 +50,11 @@ export const useUIStore = create<UIState>()(
       // Client preferences
       setUseMobileClient: (useMobile) => set({ useMobileClient: useMobile }),
       useMobileClient: false,
+
+      // Desktop helpers
+      setShowHotkeys: (show) => set({ showHotkeys: show }),
+      toggleShowHotkeys: () => set((state) => ({ showHotkeys: !state.showHotkeys })),
+      showHotkeys: false,
     }),
     {
       name: 'death-mountain-ui-settings',
@@ -52,6 +62,7 @@ export const useUIStore = create<UIState>()(
         useMobileClient: state.useMobileClient,
         skipIntroOutro: state.skipIntroOutro,
         skipAllAnimations: state.skipAllAnimations,
+        showHotkeys: state.showHotkeys,
       }),
     }
   )
