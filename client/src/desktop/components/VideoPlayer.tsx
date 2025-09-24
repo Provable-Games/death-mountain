@@ -23,8 +23,10 @@ export default function VideoPlayer() {
 
   const currentVideo = videoQueue[0];
   const isExploreVideo = currentVideo === streamIds.explore;
-  // Only expose the skip binding for the follow-up animation (beast/event reveal).
-  const isSkippableVideo = Boolean(currentVideo && !isExploreVideo);
+  // Treat discovery videos (Gold, Health, Loot) and other non-explore clips as skippable
+  const isSkippableVideo = Boolean(
+    currentVideo && currentVideo !== streamIds.explore
+  );
   const skipHotkeyOptions = useMemo(() => ({
     enabled: isSkippableVideo,
     preventDefault: true,

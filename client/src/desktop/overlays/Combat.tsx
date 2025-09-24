@@ -74,6 +74,11 @@ export default function CombatOverlay() {
     }
   }, [actionFailed]);
 
+  // Reset the Until Death setting on a new beast (per-fight scope only)
+  useEffect(() => {
+    setUntilDeath(false);
+  }, [beast?.name]);
+
   const handleAttack = () => {
     setAttackInProgress(true);
     setCombatLog(attackMessage);
@@ -114,6 +119,7 @@ export default function CombatOverlay() {
 
   const canAttack = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && !attackInProgress && !fleeInProgress && !equipInProgress;
   const canFlee = !spectating && !hasNewItemsEquipped && hasAdventurer && hasBeast && adventurerDexterity > 0 && !fleeInProgress && !attackInProgress && !equipInProgress;
+  const canToggleUntilDeath = !spectating && !hasNewItemsEquipped && !attackInProgress && !fleeInProgress && !equipInProgress;
 
   const attackHotkeyOptions = useMemo(() => ({
     enabled: canAttack,
@@ -131,10 +137,13 @@ export default function CombatOverlay() {
     preventDefault: true,
   }), [hasNewItemsEquipped, equipInProgress, spectating]);
 
-  const undoHotkeyOptions = useMemo(() => ({
-    enabled: hasNewItemsEquipped && !equipInProgress && !spectating,
-    preventDefault: true,
-  }), [hasNewItemsEquipped, equipInProgress, spectating]);
+  /**
+   * Single 'u' listener covers two contexts to avoid double listeners:
+   * - If there are pending equipment changes, 'u' triggers Undo (same as UNDO button)
+   * - Otherwise, while in normal combat, 'u' toggles the Until Death checkbox
+   * We enable it only when at least one of the actions is legal.
+   */
+  const uHotkeyEnabled = (!spectating && !equipInProgress) && (hasNewItemsEquipped || canToggleUntilDeath);
 
   // 'a' queues an attack whenever the on-screen button is available.
   useDesktopHotkey('a', () => {
@@ -152,11 +161,16 @@ export default function CombatOverlay() {
     handleEquipItems();
   }, equipHotkeyOptions);
 
-  // 'u' undoes pending equipment changes.
+  // Unified 'u' behavior: prefer Undo when equipment changes are pending, otherwise toggle Until Death.
   useDesktopHotkey('u', () => {
-    if (!hasNewItemsEquipped || equipInProgress) return;
-    undoEquipment();
-  }, undoHotkeyOptions);
+    if (hasNewItemsEquipped) {
+      undoEquipment();
+      return;
+    }
+    if (canToggleUntilDeath) {
+      setUntilDeath((prev) => !prev);
+    }
+  }, uHotkeyEnabled);
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
@@ -273,13 +287,19 @@ export default function CombatOverlay() {
               </Button>
             </Box>
 
-            <Box sx={styles.deathCheckboxContainer} onClick={() => {
-              if (!attackInProgress && !fleeInProgress && !equipInProgress) {
-                setUntilDeath(!untilDeath);
-              }
-            }}>
+            <Box
+              sx={{
+                ...styles.deathCheckboxContainer,
+                ...(attackInProgress || fleeInProgress || equipInProgress ? { opacity: 0.5 } : {}),
+              }}
+              onClick={() => {
+                if (!attackInProgress && !fleeInProgress && !equipInProgress) {
+                  setUntilDeath(!untilDeath);
+                }
+              }}
+            >
               <Typography sx={styles.deathCheckboxLabel}>
-                until<br />death
+                Until<br />Death <HotkeyHint keys={'U'} />
               </Typography>
               <Checkbox
                 checked={untilDeath}

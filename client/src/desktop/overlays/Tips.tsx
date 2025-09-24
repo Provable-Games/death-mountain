@@ -76,7 +76,8 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
   useHotkeyToggle('t', setShowTips, tipsHotkeyOptions);
 
   // Keep the on-screen toggle independent of the keyboard shortcut.
-  useDesktopHotkey('h', toggleShowHotkeys, hotkeyToggleOptions);
+  // 'h' should work even if hotkeys are globally disabled, to allow users to re-enable them.
+  useDesktopHotkey('h', toggleShowHotkeys, { ...hotkeyToggleOptions, respectGlobalToggle: false });
   // Previously this only worked while hints were visible:
   // useDesktopHotkey('h', () => setShowHotkeys((prev) => !prev), { enabled: showHotkeys });
 

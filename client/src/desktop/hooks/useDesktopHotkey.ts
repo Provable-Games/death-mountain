@@ -1,9 +1,15 @@
 import { useEffect, useMemo } from 'react';
 import { isMobile, isTablet } from 'react-device-detect';
+import { useUIStore } from '@/stores/uiStore';
 
 export interface HotkeyOptions {
   enabled?: boolean;
   preventDefault?: boolean;
+  /**
+   * If true (default), the hotkey only activates when the global Hotkeys toggle is ON.
+   * Set to false for bindings that must work even when hints/hotkeys are hidden (e.g. 'h').
+   */
+  respectGlobalToggle?: boolean;
 }
 
 export interface HotkeyEnvironment {
@@ -114,6 +120,7 @@ export function useDesktopHotkey(
   handler: (event: KeyboardEvent) => void,
   optionsOrEnabled: HotkeyOptions | boolean = {},
 ) {
+  const { showHotkeys } = useUIStore();
   const keyList = useMemo(() => (
     Array.isArray(keys) ? keys : [keys]
   ), [keys]);
@@ -124,12 +131,14 @@ export function useDesktopHotkey(
   const normalizedOptions: HotkeyOptions = typeof optionsOrEnabled === 'boolean'
     ? { enabled: optionsOrEnabled }
     : (optionsOrEnabled ?? {});
-  const { enabled = true, preventDefault = false } = normalizedOptions;
+  const { enabled = true, preventDefault = false, respectGlobalToggle = true } = normalizedOptions;
+  const globalAllowed = respectGlobalToggle ? showHotkeys : true;
+  const finalEnabled = enabled && globalAllowed;
 
   useEffect(() => {
-    const cleanup = registerDesktopHotkey(keyList, handler, { enabled, preventDefault });
+    const cleanup = registerDesktopHotkey(keyList, handler, { enabled: finalEnabled, preventDefault });
     return cleanup;
-  }, [dependencyKey, handler, enabled, preventDefault, keyList]);
+  }, [dependencyKey, handler, finalEnabled, preventDefault, keyList]);
 }
 
 /**
