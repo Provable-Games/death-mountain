@@ -10,7 +10,8 @@ import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import { Box, Button, IconButton, Modal, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import JewelryTooltip from '@/components/JewelryTooltip';
-import { useDesktopHotkey, normalizeHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey, normalizeHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -64,7 +65,7 @@ const renderTierToggleButton = (tier: Tier) => (
 export default function MarketOverlay() {
   const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
   const { executeGameAction, actionFailed, spectating } = useGameDirector();
-  const { showHotkeys } = useUIStore();
+  useUIStore();
   const {
     isOpen,
     setIsOpen,
@@ -279,13 +280,7 @@ export default function MarketOverlay() {
         </Box>
         <Typography sx={styles.marketLabel}>
           {/* Display the market shortcut beneath the label when hotkey hints are enabled. */}
-          Market
-          {showHotkeys && (
-            <>
-              <br />
-              <span className='hotkey-hint'>[m]</span>
-            </>
-          )}
+          Market <HotkeyHint breakLine keys={'m'} />
         </Typography>
       </Box>
       {isOpen && (
@@ -308,14 +303,12 @@ export default function MarketOverlay() {
                   ? <Box display={'flex'} alignItems={'baseline'}>
                     <Typography>
                       Processing
-                      {showHotkeys && <span className='hotkey-hint'> [B]</span>}
                     </Typography>
                     <div className='dotLoader yellow' />
                   </Box>
                   : <Typography>
                     {/* B/Enter shortcut appears inline with the dynamic purchase count. */}
-                    Purchase ({cart.potions + cart.items.length})
-                    {showHotkeys && <span className='hotkey-hint'> [B]</span>}
+                    Purchase ({cart.potions + cart.items.length}) <HotkeyHint keys={'B'} />
                   </Typography>
                 }
               </Button>
@@ -404,13 +397,11 @@ export default function MarketOverlay() {
                     ? <Box display={'flex'} alignItems={'baseline'}>
                         <Typography variant='h5'>
                           Processing
-                          {showHotkeys && <span className='hotkey-hint'> [B]</span>}
                         </Typography>
                         <div className='dotLoader yellow' />
                       </Box>
                   : <Typography variant='h5'>
-                        Checkout
-                        {showHotkeys && <span className='hotkey-hint'> [B]</span>}
+                        Checkout <HotkeyHint keys={'B'} />
                       </Typography>
                     }
                   </Button>
@@ -429,10 +420,7 @@ export default function MarketOverlay() {
                       <Box sx={styles.potionInfo}>
                         {/* Display the potion count hotkeys directly beside the slider controls. */}
                         <Typography sx={styles.potionTitle}>
-                          Potions
-                          {showHotkeys && (
-                            <span className='hotkey-hint'> [-/+]</span>
-                          )}
+                          Potions <HotkeyHint keys={'-/+'} />
                         </Typography>
                         <Typography sx={styles.potionHelperText}>+10 Health</Typography>
                       </Box>

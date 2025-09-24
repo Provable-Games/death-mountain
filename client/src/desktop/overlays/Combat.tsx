@@ -11,8 +11,8 @@ import SettingsOverlay from './Settings';
 import TipsOverlay from './Tips';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
-import { useUIStore } from '@/stores/uiStore';
-import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -20,7 +20,6 @@ const equipMessage = "Equipping items";
 
 export default function CombatOverlay() {
   const { executeGameAction, actionFailed, spectating, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
-  const { showHotkeys } = useUIStore();
   const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, adventurerState, beast, battleEvent, bag, undoEquipment } = useGameStore();
 
@@ -223,8 +222,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: !adventurer || !beast || attackInProgress || fleeInProgress || equipInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    ATTACK
-                    {showHotkeys && <span className='hotkey-hint'> [A]</span>}
+                    ATTACK <HotkeyHint keys={'A'} />
                   </Typography>
 
                   <Typography sx={styles.buttonHelperText}>
@@ -243,8 +241,7 @@ export default function CombatOverlay() {
               >
                 <Box sx={{ opacity: adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress ? 0.5 : 1 }}>
                   <Typography sx={styles.buttonText}>
-                    FLEE
-                    {showHotkeys && <span className='hotkey-hint'> [F]</span>}
+                    FLEE <HotkeyHint keys={'F'} />
                   </Typography>
                   <Typography sx={styles.buttonHelperText}>
                     {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}

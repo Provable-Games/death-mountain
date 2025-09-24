@@ -35,6 +35,7 @@ img {
 .hotkey-hint {
   opacity: 0.75 !important;
   display: inline-block;
+  letter-spacing: 0.5px;
 }
 
 strong,

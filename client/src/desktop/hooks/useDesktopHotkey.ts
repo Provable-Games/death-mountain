@@ -15,10 +15,29 @@ export interface HotkeyEnvironment {
 const INPUT_TAGS = new Set(['input', 'textarea', 'select']);
 
 export const normalizeHotkey = (value: string) => {
-  if (value === ' ') {
-    return 'space';
+  if (!value) return value;
+  // Normalize whitespace and casing
+  const lower = value === ' ' ? 'space' : value.toLowerCase();
+
+  // Map a few common aliases and keypad codes to semantic keys
+  switch (lower) {
+    case 'return':
+      return 'enter';
+    case 'numpadenter':
+      return 'enter';
+    case 'numpadadd':
+    case 'add':
+    case 'plus':
+      return '+';
+    case 'equal': // event.code for '=' key on US layout
+      return '=';
+    case 'numpadsubtract':
+    case 'subtract':
+    case 'minus':
+      return '-';
+    default:
+      return lower;
   }
-  return value.toLowerCase();
 };
 
 const defaultEnv: HotkeyEnvironment = {
@@ -85,11 +104,15 @@ export function registerDesktopHotkey(
 
 /**
  * Registers a keyboard listener that only runs on desktop devices.
+ * Overloads allow passing a boolean `enabled` directly to reduce boilerplate.
  */
+export function useDesktopHotkey(keys: string | string[], handler: (event: KeyboardEvent) => void): void;
+export function useDesktopHotkey(keys: string | string[], handler: (event: KeyboardEvent) => void, enabled: boolean): void;
+export function useDesktopHotkey(keys: string | string[], handler: (event: KeyboardEvent) => void, options: HotkeyOptions): void;
 export function useDesktopHotkey(
   keys: string | string[],
   handler: (event: KeyboardEvent) => void,
-  options: HotkeyOptions = {},
+  optionsOrEnabled: HotkeyOptions | boolean = {},
 ) {
   const keyList = useMemo(() => (
     Array.isArray(keys) ? keys : [keys]
@@ -97,10 +120,27 @@ export function useDesktopHotkey(
   const dependencyKey = useMemo(() => (
     keyList.map(normalizeHotkey).join('|')
   ), [keyList]);
-  const { enabled = true, preventDefault = false } = options ?? {};
+
+  const normalizedOptions: HotkeyOptions = typeof optionsOrEnabled === 'boolean'
+    ? { enabled: optionsOrEnabled }
+    : (optionsOrEnabled ?? {});
+  const { enabled = true, preventDefault = false } = normalizedOptions;
 
   useEffect(() => {
     const cleanup = registerDesktopHotkey(keyList, handler, { enabled, preventDefault });
     return cleanup;
   }, [dependencyKey, handler, enabled, preventDefault, keyList]);
+}
+
+/**
+ * Convenience helper for the common toggle pattern: flips a boolean state when keys are pressed.
+ * Accepts a React setState function (functional update supported).
+ */
+export function useHotkeyToggle(
+  keys: string | string[],
+  setState: (value: ((prev: boolean) => boolean) | boolean) => void,
+  optionsOrEnabled: HotkeyOptions | boolean = {},
+) {
+  const opts: HotkeyOptions = typeof optionsOrEnabled === 'boolean' ? { enabled: optionsOrEnabled } : (optionsOrEnabled ?? {});
+  useDesktopHotkey(keys, () => setState((prev: boolean) => !prev), opts);
 }

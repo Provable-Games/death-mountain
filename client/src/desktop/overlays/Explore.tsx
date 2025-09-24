@@ -13,14 +13,15 @@ import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
-import { useDesktopHotkey, normalizeHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey, normalizeHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue, spectating } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
     setCollectable, selectedStats, setSelectedStats, claimInProgress } = useGameStore();
   const { cart, inProgress, setInProgress, isOpen: marketIsOpen } = useMarketStore();
-  const { skipAllAnimations, showHotkeys } = useUIStore();
+  const { skipAllAnimations } = useUIStore();
   const [isExploring, setIsExploring] = useState(false);
   const [isSelectingStats, setIsSelectingStats] = useState(false);
 
@@ -89,7 +90,7 @@ export default function ExploreOverlay() {
     preventDefault: true,
   }), [canExplore]);
 
-  // 'e' or Enter confirms stat allocation; 'b' or Enter finalizes market purchases outside of the market modal.
+  // 'e' confirms stat allocation; 'b' or Enter finalizes market purchases outside of the market modal.
   useDesktopHotkey(['e', 'b', 'enter'], (event) => {
     const key = normalizeHotkey(event.key);
 
@@ -100,9 +101,6 @@ export default function ExploreOverlay() {
       }
       if (key === 'enter' && canCheckout && !marketIsOpen) {
         handleCheckout();
-      }
-      if (key === 'e') {
-        return;
       }
     }
 
@@ -233,8 +231,7 @@ export default function ExploreOverlay() {
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
               : <Typography sx={styles.buttonText}>
-                Select Stats
-                {showHotkeys && <span className='hotkey-hint'> [E]</span>}
+                Select Stats <HotkeyHint keys={'E'} />
               </Typography>
             }
           </Button>
@@ -249,7 +246,6 @@ export default function ExploreOverlay() {
               <Box display={'flex'} alignItems={'baseline'}>
                 <Typography sx={styles.buttonText}>
                   Processing
-                  {showHotkeys && <span className='hotkey-hint'> [B]</span>}
                 </Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
@@ -257,16 +253,12 @@ export default function ExploreOverlay() {
               <Box display={'flex'} alignItems={'baseline'}>
                 <Typography sx={styles.buttonText}>
                   Exploring
-                  {showHotkeys && <span className='hotkey-hint'> [E]</span>}
                 </Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
               </Box>
             ) : (
               <Typography sx={styles.buttonText}>
-                {cart.items.length > 0 || cart.potions > 0 ? 'BUY ITEMS' : 'EXPLORE'}
-                {showHotkeys && (
-                  <span className='hotkey-hint'> {cart.items.length > 0 || cart.potions > 0 ? '[B]' : '[E]'}</span>
-                )}
+                {cart.items.length > 0 || cart.potions > 0 ? 'BUY ITEMS' : 'EXPLORE'} <HotkeyHint keys={cart.items.length > 0 || cart.potions > 0 ? 'B' : 'E'} />
               </Typography>
             )}
           </Button>

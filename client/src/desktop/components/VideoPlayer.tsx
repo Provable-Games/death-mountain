@@ -7,7 +7,8 @@ import { Stream, StreamPlayerApi } from "@cloudflare/stream-react";
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import HotkeyHint from '@/desktop/components/HotkeyHint';
 
 const CUSTOMER_CODE = import.meta.env.VITE_PUBLIC_CLOUDFLARE_ID;
 
@@ -47,10 +48,10 @@ export default function VideoPlayer() {
 
     const delay = isLastVideo ? 500 : 0;
     setTimeout(() => {
-      setVideoQueue((prev) => prev.slice(1));
+      setVideoQueue(videoQueue.slice(1));
       setNextVideoReady(false);
     }, delay);
-  }, [currentVideo, nextVideoReady, setShowOverlay, setVideoQueue, videoQueue.length]);
+  }, [currentVideo, nextVideoReady, setShowOverlay, setVideoQueue, videoQueue]);
 
   useEffect(() => {
     if (videoQueue[0] === streamIds.explore && nextVideoReady) {
@@ -127,8 +128,7 @@ export default function VideoPlayer() {
                   skipHintVariant === 'loading' && styles.skipHintDisabled,
                 ]}>
                   <Typography sx={styles.skipText}>
-                    Skip
-                    <span className='hotkey-hint'> [Q]</span>
+                    Skip <HotkeyHint keys={'Q'} />
                   </Typography>
                 </Box>
               )}

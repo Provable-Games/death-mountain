@@ -11,7 +11,8 @@ import { keyframes } from '@emotion/react';
 import { DeleteOutline, Star } from '@mui/icons-material';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import { HotkeyHint } from '@/desktop/components/HotkeyHint';
 
 type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | 'neck' | 'ring';
 
@@ -373,7 +374,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, bag, showInventory, setShowInventory } = useGameStore();
   const { equipItem, newInventoryItems, setNewInventoryItems } = useGameStore();
-  const { showHotkeys } = useUIStore();
+  useUIStore();
   const [isDropMode, setIsDropMode] = useState(false);
   const [itemsToDrop, setItemsToDrop] = useState<number[]>([]);
   const [dropInProgress, setDropInProgress] = useState(false);
@@ -475,13 +476,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
         </Box>
         <Typography sx={styles.inventoryLabel}>
           {/* Tooltip mirrors the single-key binding so players aren't confused by the former [i/c] combo. */}
-          Inventory
-          {showHotkeys && (
-            <>
-              <br />
-              <span className='hotkey-hint'>[i]</span>
-            </>
-          )}
+          Inventory <HotkeyHint breakLine keys={'i'} />
         </Typography>
       </Box>
       {showInventory && (
@@ -523,8 +518,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
                 >
                   {/* Keyboard hint mirrors the 'j' hotkey introduced above. */}
                   <Typography>
-                    Cancel
-                    {showHotkeys && <span className='hotkey-hint'> [J]</span>}
+                    Cancel <HotkeyHint keys={'J'} />
                   </Typography>
                 </Button>
                 <Button
@@ -542,8 +536,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
                     </Box>
                     : <Typography>
                       {/* 'k' shortcut sits alongside the original confirm copy. */}
-                      Confirm
-                      {showHotkeys && <span className='hotkey-hint'> [K]</span>}
+                      Confirm <HotkeyHint keys={'K'} />
                     </Typography>
                   }
                 </Button>

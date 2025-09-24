@@ -1,12 +1,12 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
-import { useUIStore } from '@/stores/uiStore';
 import { ability_based_percentage, calculateCombatStats, calculateLevel } from '@/utils/game';
 import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, FormControl, MenuItem, Select, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState, useMemo } from 'react';
-import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey } from '@/desktop/hooks/useDesktopHotkey';
+import HotkeyHint from '@/desktop/components/HotkeyHint';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -29,7 +29,6 @@ type ViewMode = 'stats' | 'combat';
 
 export default function AdventurerStats() {
   const { adventurer, bag, beast, selectedStats, setSelectedStats, showInventory } = useGameStore();
-  const { showHotkeys } = useUIStore();
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
 
   useEffect(() => {
@@ -333,12 +332,10 @@ export default function AdventurerStats() {
                 }}
               >
                 <MenuItem value="stats">
-                  Stats
-                  {showHotkeys && <span className='hotkey-hint'> [c]</span>}
+                  Stats <HotkeyHint keys={'c'} />
                 </MenuItem>
                 <MenuItem value="combat">
-                  Combat
-                  {showHotkeys && <span className='hotkey-hint'> [c]</span>}
+                  Combat <HotkeyHint keys={'c'} />
                 </MenuItem>
               </Select>
             </FormControl>

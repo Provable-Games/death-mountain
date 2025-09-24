@@ -18,6 +18,7 @@ interface UIState {
 
   // Desktop helpers
   setShowHotkeys: (show: boolean) => void
+  toggleShowHotkeys: () => void
   showHotkeys: boolean
 
   // Animations
@@ -52,6 +53,7 @@ export const useUIStore = create<UIState>()(
 
       // Desktop helpers
       setShowHotkeys: (show) => set({ showHotkeys: show }),
+      toggleShowHotkeys: () => set((state) => ({ showHotkeys: !state.showHotkeys })),
       showHotkeys: false,
     }),
     {

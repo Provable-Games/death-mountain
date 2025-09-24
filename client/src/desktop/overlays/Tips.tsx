@@ -7,11 +7,11 @@ import { ItemUtils, Tier } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Checkbox, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { useDesktopHotkey } from '../hooks/useDesktopHotkey';
+import { useDesktopHotkey, useHotkeyToggle } from '@/desktop/hooks/useDesktopHotkey';
 
 export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats }) {
   const { adventurer, beast, gameSettings, newMarket } = useGameStore();
-  const { showHotkeys, setShowHotkeys } = useUIStore();
+  const { showHotkeys, setShowHotkeys, toggleShowHotkeys } = useUIStore();
 
   const [showTips, setShowTips] = useState(() => {
     // Load initial state from localStorage, default to true if not set
@@ -73,14 +73,10 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
   }), []);
 
   // 't' flips the tips checkbox for quick keyboard access.
-  useDesktopHotkey('t', () => {
-    setShowTips((prev) => !prev);
-  }, tipsHotkeyOptions);
+  useHotkeyToggle('t', setShowTips, tipsHotkeyOptions);
 
-  useDesktopHotkey('h', () => {
-    // Keep the on-screen toggle independent of the keyboard shortcut.
-    setShowHotkeys((prev) => !prev);
-  }, hotkeyToggleOptions);
+  // Keep the on-screen toggle independent of the keyboard shortcut.
+  useDesktopHotkey('h', toggleShowHotkeys, hotkeyToggleOptions);
   // Previously this only worked while hints were visible:
   // useDesktopHotkey('h', () => setShowHotkeys((prev) => !prev), { enabled: showHotkeys });
 
