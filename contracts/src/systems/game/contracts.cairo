@@ -161,7 +161,7 @@ mod game_systems {
 
                 let (beast_seed, market_seed) = _get_random_seed(
                     adventurer_id,
-                    adventurer.xp,
+                    adventurer,
                     game_settings.game_seed,
                     game_settings.game_seed_until_xp,
                     game_settings.vrf_address,
@@ -226,7 +226,7 @@ mod game_systems {
             let game_settings: GameSettings = _get_game_settings(world, adventurer_id);
             let (explore_seed, market_seed) = _get_random_seed(
                 adventurer_id,
-                adventurer.xp,
+                adventurer,
                 game_settings.game_seed,
                 game_settings.game_seed_until_xp,
                 game_settings.vrf_address,
@@ -304,7 +304,7 @@ mod game_systems {
 
             let (level_seed, market_seed) = _get_random_seed(
                 adventurer_id,
-                adventurer.xp,
+                adventurer,
                 game_settings.game_seed,
                 game_settings.game_seed_until_xp,
                 game_settings.vrf_address,
@@ -376,7 +376,7 @@ mod game_systems {
 
             let (flee_seed, market_seed) = _get_random_seed(
                 adventurer_id,
-                adventurer.xp,
+                adventurer,
                 game_settings.game_seed,
                 game_settings.game_seed_until_xp,
                 game_settings.vrf_address,
@@ -449,7 +449,7 @@ mod game_systems {
 
                 let (seed, _) = _get_random_seed(
                     adventurer_id,
-                    adventurer.xp,
+                    adventurer,
                     game_settings.game_seed,
                     game_settings.game_seed_until_xp,
                     game_settings.vrf_address,
@@ -1629,18 +1629,27 @@ mod game_systems {
     }
 
     fn _get_random_seed(
-        adventurer_id: u64, adventurer_xp: u16, game_seed: u64, game_seed_until_xp: u16, vrf_address: ContractAddress,
+        adventurer_id: u64,
+        adventurer: Adventurer,
+        game_seed: u64,
+        game_seed_until_xp: u16,
+        vrf_address: ContractAddress,
     ) -> (u64, u64) {
         let mut seed: felt252 = 0;
 
-        if game_seed != 0 && (game_seed_until_xp == 0 || game_seed_until_xp > adventurer_xp) {
-            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, game_seed);
+        if game_seed != 0 && (game_seed_until_xp == 0 || game_seed_until_xp > adventurer.xp) {
+            seed = ImplAdventurer::get_simple_entropy(adventurer.xp, game_seed);
         } else if VRF_ENABLED
             && (get_tx_info().unbox().chain_id == MAINNET_CHAIN_ID
                 || get_tx_info().unbox().chain_id == SEPOLIA_CHAIN_ID) {
-            seed = VRFImpl::seed(vrf_address, ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id));
+            let entropy = if adventurer.beast_health > 0 {
+                ImplAdventurer::get_battle_entropy(adventurer.xp, adventurer_id, adventurer.action_count)
+            } else {
+                ImplAdventurer::get_simple_entropy(adventurer.xp, adventurer_id)
+            };
+            seed = VRFImpl::seed(vrf_address, entropy);
         } else {
-            seed = ImplAdventurer::get_simple_entropy(adventurer_xp, adventurer_id);
+            seed = ImplAdventurer::get_simple_entropy(adventurer.xp, adventurer_id);
         }
 
         ImplAdventurer::felt_to_two_u64(seed)

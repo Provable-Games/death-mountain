@@ -1,4 +1,5 @@
 import { BigNumberish, shortString } from "starknet";
+import * as starknet from "@scure/starknet";
 
 export const stringToFelt = (v: string): BigNumberish =>
   v ? shortString.encodeShortString(v) : "0x0";
@@ -174,4 +175,16 @@ export function formatRewardNumber(num: number): string {
     return (num / 1000).toFixed(1) + 'K';
   }
   return num.toLocaleString();
+}
+
+export function generateSalt(gameId: number, xp: number) {
+  let params = [BigInt(xp), BigInt(gameId)];
+  let poseidon = starknet.poseidonHashMany(params);
+  return poseidon;
+}
+
+export function generateBattleSalt(gameId: number, xp: number, actionCount: number) {
+  let params = [BigInt(xp), BigInt(gameId), BigInt(actionCount)];
+  let poseidon = starknet.poseidonHashMany(params);
+  return poseidon;
 }

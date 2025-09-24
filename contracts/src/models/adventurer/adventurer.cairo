@@ -1085,6 +1085,13 @@ pub impl ImplAdventurer of IAdventurer {
         poseidon_hash_span(hash_span.span()).into()
     }
 
+    fn get_battle_entropy(adventurer_xp: u16, seed: u64, action_count: u16) -> felt252 {
+        let mut hash_span = ArrayTrait::<felt252>::new();
+        hash_span.append(adventurer_xp.into());
+        hash_span.append(seed.into());
+        hash_span.append(action_count.into());
+        poseidon_hash_span(hash_span.span()).into()
+    }
 
     fn apply_health_boost_from_vitality_unlock(ref self: Adventurer, item_specials: SpecialPowers) {
         // get the vitality boost for the special

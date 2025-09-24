@@ -12,7 +12,7 @@ import {
   processGameEvent,
 } from "@/utils/events";
 import { getNewItemsEquipped, incrementBeastsCollected } from "@/utils/game";
-import { delay } from "@/utils/utils";
+import { delay, generateBattleSalt, generateSalt } from "@/utils/utils";
 import {
   createContext,
   PropsWithChildren,
@@ -288,13 +288,17 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         action.settings.game_seed === 0 &&
         action.settings.adventurer.xp !== 0
       ) {
-        txs.push(requestRandom(action.gameId!, action.settings.adventurer.xp));
+        txs.push(requestRandom(generateSalt(action.gameId!, action.settings.adventurer.xp)));
       }
       txs.push(startGame(action.gameId!));
     }
 
-    if (VRFEnabled && ["explore", "attack", "flee"].includes(action.type)) {
-      txs.push(requestRandom(gameId!, adventurer!.xp));
+    if (VRFEnabled && action.type === "explore") {
+      txs.push(requestRandom(generateSalt(gameId!, adventurer!.xp)));
+    }
+
+    if (VRFEnabled && ["attack", "flee"].includes(action.type)) {
+      txs.push(requestRandom(generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)));
     }
 
     if (
@@ -302,7 +306,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       action.type === "equip" &&
       adventurer?.beast_health! > 0
     ) {
-      txs.push(requestRandom(gameId!, adventurer!.xp));
+      txs.push(requestRandom(generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)));
     }
 
     let newItemsEquipped = getNewItemsEquipped(
