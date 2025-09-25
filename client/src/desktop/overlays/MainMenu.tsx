@@ -110,18 +110,21 @@ export default function MainMenu() {
   let disableGameButtons =
     !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
-  const { games } = useGameTokens({
+  const { totalCount } = useGameTokens({
     owner: account?.address || "0x0",
-    limit: 10000,
     sortBy: "minted_at",
     sortOrder: "desc",
+    gameOver: false,
+    score: {
+      max: 0,
+    },
     mintedByAddress: currentNetworkConfig.dungeon
       ? addAddressPadding(currentNetworkConfig.dungeon)
       : "0",
+    countOnly: true,
   });
-  const gameCount = games.filter(
-    (game: any) => !game.game_over && game.score === 0
-  ).length;
+
+  const gamesCount = totalCount ?? 0;
 
   return (
     <>
@@ -206,9 +209,9 @@ export default function MainMenu() {
                   >
                     My Games
                   </Typography>
-                  {gameCount > 0 && (
+                  {gamesCount > 0 && (
                     <Typography color="secondary" fontWeight={500}>
-                      {gameCount} NEW
+                      {gamesCount} NEW
                     </Typography>
                   )}
                 </Box>

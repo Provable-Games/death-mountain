@@ -86,18 +86,21 @@ export default function LandingPage() {
   let disableGameButtons =
     !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
 
-  const { games } = useGameTokens({
+  const { totalCount } = useGameTokens({
     owner: account?.address || "0x0",
-    limit: 10000,
     sortBy: "minted_at",
     sortOrder: "desc",
+    gameOver: false,
+    score: {
+      max: 0,
+    },
     mintedByAddress: currentNetworkConfig.dungeon
       ? addAddressPadding(currentNetworkConfig.dungeon)
       : "0",
+    countOnly: true,
   });
-  const gameCount = games.filter(
-    (game: any) => !game.game_over && game.score === 0
-  ).length;
+
+  const gamesCount = totalCount ?? 0;
 
   return (
     <>
@@ -176,17 +179,17 @@ export default function LandingPage() {
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: gameCount > 0 ? "space-between" : "center",
+                    justifyContent: gamesCount > 0 ? "space-between" : "center",
                     width: "100%",
                   }}
                 >
-                  {gameCount > 0 && (
+                  {gamesCount > 0 && (
                     <Typography
                       color="black"
                       fontWeight={500}
                       visibility={"hidden"}
                     >
-                      {gameCount} NEW
+                      {gamesCount} NEW
                     </Typography>
                   )}
                   <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -204,9 +207,9 @@ export default function LandingPage() {
                       My Games
                     </Typography>
                   </Box>
-                  {gameCount > 0 && (
+                  {gamesCount > 0 && (
                     <Typography variant="h5" color="black" fontWeight={500}>
-                      {gameCount} NEW
+                      {gamesCount} NEW
                     </Typography>
                   )}
                 </Box>

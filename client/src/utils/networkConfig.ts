@@ -11,10 +11,12 @@ export interface NetworkConfig {
   manifest: any;
   slot: string;
   preset: string;
-  policies: Array<{
-    target: string;
-    method: string;
-  }> | undefined;
+  policies:
+    | Array<{
+        target: string;
+        method: string;
+      }>
+    | undefined;
   vrf: boolean;
   rpcUrl: string;
   toriiUrl: string;
@@ -43,9 +45,9 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_9",
-    slot: "pg-mainnet-4",
+    slot: "pg-mainnet-5",
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-mainnet-4/torii",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-5/torii",
     tokens: {
       erc20: [
         "0x042dd777885ad2c116be96d4d634abc90a26a790ffb5871e037dd5ae7d2ec86b",
@@ -197,69 +199,72 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const vrf_provider = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
 
   // Base policies that are common across networks
-  const policies = network.chainId === ChainId.SN_MAIN ? undefined : [
-    {
-      target:
-        "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-      method: "approve",
-    },
-    {
-      target: game_token_systems,
-      method: "mint_game",
-    },
-    {
-      target: game_systems,
-      method: "start_game",
-    },
-    {
-      target: game_systems,
-      method: "explore",
-    },
-    {
-      target: game_systems,
-      method: "attack",
-    },
-    {
-      target: game_systems,
-      method: "flee",
-    },
-    {
-      target: game_systems,
-      method: "buy_items",
-    },
-    {
-      target: game_systems,
-      method: "equip",
-    },
-    {
-      target: game_systems,
-      method: "drop",
-    },
-    {
-      target: game_systems,
-      method: "select_stat_upgrades",
-    },
-    {
-      target: vrf_provider,
-      method: "request_random",
-    },
-    {
-      target: network.dungeon,
-      method: "buy_game",
-    },
-    {
-      target: network.dungeon,
-      method: "claim_beast",
-    },
-    {
-      target: network.dungeon,
-      method: "claim_reward_token",
-    },
-    {
-      target: network.dungeon,
-      method: "claim_jackpot",
-    },
-  ];
+  const policies =
+    network.chainId === ChainId.SN_MAIN
+      ? undefined
+      : [
+          {
+            target:
+              "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
+            method: "approve",
+          },
+          {
+            target: game_token_systems,
+            method: "mint_game",
+          },
+          {
+            target: game_systems,
+            method: "start_game",
+          },
+          {
+            target: game_systems,
+            method: "explore",
+          },
+          {
+            target: game_systems,
+            method: "attack",
+          },
+          {
+            target: game_systems,
+            method: "flee",
+          },
+          {
+            target: game_systems,
+            method: "buy_items",
+          },
+          {
+            target: game_systems,
+            method: "equip",
+          },
+          {
+            target: game_systems,
+            method: "drop",
+          },
+          {
+            target: game_systems,
+            method: "select_stat_upgrades",
+          },
+          {
+            target: vrf_provider,
+            method: "request_random",
+          },
+          {
+            target: network.dungeon,
+            method: "buy_game",
+          },
+          {
+            target: network.dungeon,
+            method: "claim_beast",
+          },
+          {
+            target: network.dungeon,
+            method: "claim_reward_token",
+          },
+          {
+            target: network.dungeon,
+            method: "claim_jackpot",
+          },
+        ];
 
   return {
     chainId: network.chainId,
