@@ -207,8 +207,12 @@ pub impl ImplCombat of ICombat {
     /// @return bool: true if the attack is a critical hit, false otherwise
     /// @dev this function scales the chance around a u8 (1-255) for uniform distribution
     fn is_critical_hit(chance: u8, rnd: u8) -> bool {
-        let scaled_chance: u16 = (chance.into() * 255) / 100;
-        scaled_chance > rnd.into()
+        if (chance >= 100) {
+            return true;
+        } else {
+            let scaled_chance: u16 = (chance.into() * 255) / 100;
+            scaled_chance > rnd.into()
+        }
     }
 
     /// @notice calculates the bonus damage done by a critical hit
@@ -962,6 +966,14 @@ mod tests {
         rnd = 255;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
         assert(is_critical_hit, 'should be critical hit');
+    }
+
+    #[test]
+    fn is_critical_hit_regression_max_entropy() {
+        let chance = 100;
+        let rnd = 255;
+        let is_critical_hit = ImplCombat::is_critical_hit(chance, rnd);
+        assert(is_critical_hit, '100 percent chance should crit');
     }
 
     #[test]
