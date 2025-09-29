@@ -207,12 +207,8 @@ pub impl ImplCombat of ICombat {
     /// @return bool: true if the attack is a critical hit, false otherwise
     /// @dev this function scales the chance around a u8 (1-255) for uniform distribution
     fn is_critical_hit(chance: u8, rnd: u8) -> bool {
-        if (chance >= 100) {
-            return true;
-        } else {
-            let scaled_chance: u16 = (chance.into() * 255) / 100;
-            scaled_chance > rnd.into()
-        }
+        let scaled_chance: u16 = chance.into() * 256;
+        scaled_chance > 100 * rnd.into()
     }
 
     /// @notice calculates the bonus damage done by a critical hit
@@ -915,26 +911,46 @@ mod tests {
 
         // no critical hit
         let critical_hit_damage_bonus = ImplCombat::critical_hit_bonus(base_damage, critical_hit_chance, rnd);
-        assert(critical_hit_damage_bonus == 0, 'should be no crit hit bonus');
+        assert!(
+            critical_hit_damage_bonus == 0,
+            "should be no crit hit bonus. Expected: 0, Actual: {}",
+            critical_hit_damage_bonus,
+        );
 
         // 100% critical hit
         critical_hit_chance = 100;
         let critical_hit_damage_bonus = ImplCombat::critical_hit_bonus(base_damage, critical_hit_chance, rnd);
-        assert(critical_hit_damage_bonus == 100, 'should be crit hit bonus');
+        assert!(
+            critical_hit_damage_bonus == 100,
+            "should be crit hit bonus. Expected: 100, Actual: {}",
+            critical_hit_damage_bonus,
+        );
 
         // With a 1% chance, critical hit only works if rnd % 100 == 0
         critical_hit_chance = 1;
         rnd = 0;
         let critical_hit_damage_bonus = ImplCombat::critical_hit_bonus(base_damage, critical_hit_chance, rnd);
-        assert(critical_hit_damage_bonus == 100, 'should be crit hit bonus');
+        assert!(
+            critical_hit_damage_bonus == 100,
+            "should be crit hit bonus. Expected: 100, Actual: {}",
+            critical_hit_damage_bonus,
+        );
 
-        rnd = 2;
+        rnd = 3;
         let critical_hit_damage_bonus = ImplCombat::critical_hit_bonus(base_damage, critical_hit_chance, rnd);
-        assert(critical_hit_damage_bonus == 0, 'should be no crit hit bonus');
+        assert!(
+            critical_hit_damage_bonus == 0,
+            "should be no crit hit bonus 2. Expected: 0, Actual: {}",
+            critical_hit_damage_bonus,
+        );
 
         rnd = 99;
         let critical_hit_damage_bonus = ImplCombat::critical_hit_bonus(base_damage, critical_hit_chance, rnd);
-        assert(critical_hit_damage_bonus == 0, 'should be no crit hit bonus');
+        assert!(
+            critical_hit_damage_bonus == 0,
+            "should be no crit hit bonus 3. Expected: 0, Actual: {}",
+            critical_hit_damage_bonus,
+        );
     }
 
     #[test]
@@ -943,29 +959,29 @@ mod tests {
         let mut luck = 0;
         let mut rnd = 0;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
-        assert(is_critical_hit == false, 'no critical hit without luck');
+        assert!(is_critical_hit == false, "no critical hit without luck. Expected: false, Actual: {}", is_critical_hit);
 
         // 1 luck gets us a critical hit with 0 entropy
         luck = 1;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
-        assert(is_critical_hit, 'should be critical hit');
+        assert!(is_critical_hit, "should be critical hit. Expected: true, Actual: {}", is_critical_hit);
 
         // rnd is a u8 so range is 0-255
         // at rnd 2 and above, 1 luck does not provide critical hit
-        rnd = 2;
+        rnd = 3;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
-        assert(!is_critical_hit, 'should not be critical hit');
+        assert!(!is_critical_hit, "should not be critical hit. Expected: false, Actual: {}", is_critical_hit);
 
         // check for multiplication overflow errors with max u8 luck
         luck = 255;
         rnd = 0;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
-        assert(is_critical_hit, 'should be critical hit');
+        assert!(is_critical_hit, "should be critical hit. Expected: true, Actual: {}", is_critical_hit);
 
         // with max luck, every attack is critical hit
         rnd = 255;
         let is_critical_hit = ImplCombat::is_critical_hit(luck, rnd);
-        assert(is_critical_hit, 'should be critical hit');
+        assert!(is_critical_hit, "should be critical hit. Expected: true, Actual: {}", is_critical_hit);
     }
 
     #[test]
