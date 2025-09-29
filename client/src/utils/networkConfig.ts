@@ -12,11 +12,11 @@ export interface NetworkConfig {
   slot: string;
   preset: string;
   policies:
-    | Array<{
-        target: string;
-        method: string;
-      }>
-    | undefined;
+  | Array<{
+    target: string;
+    method: string;
+  }>
+  | undefined;
   vrf: boolean;
   rpcUrl: string;
   toriiUrl: string;
@@ -58,7 +58,7 @@ export const NETWORKS = {
     denshokan:
       "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
     dungeon:
-      "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42",
+      "0x0777efa3cbfbd6c6ffe1262ccddf378e5321d18c4f5c1198b64bd25ed941da99",
     dungeonTicket:
       "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
     beasts:
@@ -68,6 +68,12 @@ export const NETWORKS = {
     ekuboRouter:
       "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
     paymentTokens: [
+      {
+        name: "LORDS",
+        address:
+          "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+        displayDecimals: 0,
+      },
       {
         name: "ETH",
         address:
