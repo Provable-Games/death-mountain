@@ -198,7 +198,7 @@ export default function PaymentOptionsModal({
   open,
   onClose,
 }: PaymentOptionsModalProps) {
-  const { tokenBalances, goldenPassIds, openProfile, enterDungeon } =
+  const { tokenBalances, goldenPassIds, enterDungeon, openBuyTicket } =
     useController();
 
   // Use the provider from StarknetConfig
@@ -646,7 +646,7 @@ export default function PaymentOptionsModal({
                           </Box>
                         </Box>
 
-                        <ActionButton onClick={openProfile}>
+                        <ActionButton onClick={openBuyTicket}>
                           Continue
                         </ActionButton>
                       </Box>

@@ -32,6 +32,7 @@ export interface ControllerContext {
   enterDungeon: (payment: Payment, txs: any[]) => void;
   showTermsOfService: boolean;
   acceptTermsOfService: () => void;
+  openBuyTicket: () => void;
 }
 
 // Create a context
@@ -69,12 +70,12 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (account) {
       fetchTokenBalances();
       identifyAddress({ address: account.address });
-      
+
       // Check if terms have been accepted
-      const termsAccepted = typeof window !== 'undefined' 
-        ? localStorage.getItem('termsOfServiceAccepted') 
+      const termsAccepted = typeof window !== 'undefined'
+        ? localStorage.getItem('termsOfServiceAccepted')
         : null;
-      
+
       if (!termsAccepted) {
         setShowTermsOfService(true);
       }
@@ -185,6 +186,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         acceptTermsOfService,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
+        openBuyTicket: () => (connector as any)?.controller?.openStarterPack("ls2-dungeon-ticket-mainnet"),
         login: () =>
           connect({
             connector: connectors.find((conn) => conn.id === "controller"),
