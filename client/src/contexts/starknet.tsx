@@ -5,7 +5,7 @@ import {
 } from "@/utils/networkConfig";
 import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
-import { sepolia } from "@starknet-react/chains";
+import { mainnet } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import {
   createContext,
@@ -67,7 +67,7 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
       }}
     >
       <StarknetConfig
-        chains={[sepolia]}
+        chains={[mainnet]}
         provider={jsonRpcProvider({ rpc })}
         connectors={[cartridgeController as any]}
         explorer={voyager}
