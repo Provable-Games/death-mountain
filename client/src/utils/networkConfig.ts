@@ -12,11 +12,11 @@ export interface NetworkConfig {
   slot: string;
   preset: string;
   policies:
-  | Array<{
-    target: string;
-    method: string;
-  }>
-  | undefined;
+    | Array<{
+        target: string;
+        method: string;
+      }>
+    | undefined;
   vrf: boolean;
   rpcUrl: string;
   toriiUrl: string;
@@ -60,7 +60,7 @@ export const NETWORKS = {
     dungeon:
       "0x0777efa3cbfbd6c6ffe1262ccddf378e5321d18c4f5c1198b64bd25ed941da99",
     dungeonTicket:
-      "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+      "0x02877A8C9B71963a53A9CeDd1Cd3F1eb1cc2cd213bD5BafD6390E938ccd60f18",
     beasts:
       "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
     goldenToken:
@@ -96,7 +96,7 @@ export const NETWORKS = {
       {
         name: "TICKET",
         address:
-          "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49",
+          "0x02877A8C9B71963a53A9CeDd1Cd3F1eb1cc2cd213bD5BafD6390E938ccd60f18",
         displayDecimals: 0,
       },
       {
