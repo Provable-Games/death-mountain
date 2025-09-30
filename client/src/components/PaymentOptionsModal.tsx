@@ -294,8 +294,16 @@ export default function PaymentOptionsModal({
         if (quote) {
           const rawAmount =
             (quote.total * -1) / Math.pow(10, selectedTokenData.decimals || 18);
-          const amount = formatAmount(rawAmount);
-          setTokenQuote({ amount, loading: false });
+          if (rawAmount === 0) {
+            setTokenQuote({
+              amount: "",
+              loading: false,
+              error: "No liquidity",
+            });
+          } else {
+            const amount = formatAmount(rawAmount);
+            setTokenQuote({ amount, loading: false });
+          }
         } else {
           setTokenQuote({
             amount: "",
