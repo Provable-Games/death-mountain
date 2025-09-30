@@ -304,28 +304,11 @@ export default function MainMenu() {
                 </Typography>
               </Button> */}
 
-              {/* {currentNetworkConfig.name === "Beast Mode" &&
+              {currentNetworkConfig.name === "Beast Mode" &&
                 <PriceIndicator />
-              } */}
+              }
 
               <Box sx={styles.bottom}>
-                <Box sx={styles.launchCampaign}>
-                  <Typography sx={styles.campaignHeadline}>
-                    Launch Campaign
-                  </Typography>
-                  <Typography sx={styles.campaignDescription}>
-                    588k free games available
-                  </Typography>
-                  <Typography
-                    component="a"
-                    href="https://claims.lootsurvivor.io/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={styles.eligibilityLink}
-                  >
-                    Check if you're eligible
-                  </Typography>
-                </Box>
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>

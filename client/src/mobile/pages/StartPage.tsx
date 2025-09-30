@@ -246,25 +246,7 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
-              <Box sx={styles.launchCampaign}>
-                <Typography sx={styles.campaignHeadline}>
-                  Launch Campaign
-                </Typography>
-                <Typography sx={styles.campaignDescription}>
-                  588k free games available
-                </Typography>
-                <Typography
-                  component="a"
-                  href="https://claims.lootsurvivor.io/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={styles.eligibilityLink}
-                >
-                  Check if you're eligible
-                </Typography>
-              </Box>
-
-              {/* {currentNetworkConfig.name === "Beast Mode" && (
+              {currentNetworkConfig.name === "Beast Mode" && (
                 <Button
                   fullWidth
                   variant="contained"
@@ -278,9 +260,9 @@ export default function LandingPage() {
                     Dungeon Rewards
                   </Typography>
                 </Button>
-              )} */}
+              )}
 
-              {/* {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />} */}
+              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
             </>
           )}
 
