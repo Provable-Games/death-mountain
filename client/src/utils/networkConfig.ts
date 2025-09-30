@@ -60,7 +60,7 @@ export const NETWORKS = {
     dungeon:
       "0x010eedffdca8123d95e21025f5166465d5539c8f575d2369fd31abe31ca17186",
     dungeonTicket:
-      "0x02877A8C9B71963a53A9CeDd1Cd3F1eb1cc2cd213bD5BafD6390E938ccd60f18",
+      "0x04e9b7794d3f4affaca03d4e88d35db205a5a2325b0ed2b3889c93f0867858eb",
     beasts:
       "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
     goldenToken:
@@ -96,7 +96,7 @@ export const NETWORKS = {
       {
         name: "TICKET",
         address:
-          "0x02877A8C9B71963a53A9CeDd1Cd3F1eb1cc2cd213bD5BafD6390E938ccd60f18",
+          "0x04e9b7794d3f4affaca03d4e88d35db205a5a2325b0ed2b3889c93f0867858eb",
         displayDecimals: 0,
       },
       {
