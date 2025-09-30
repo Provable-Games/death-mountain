@@ -14,8 +14,8 @@ export interface StatisticsContext {
   gamePrice: string | null;
   gamePriceHistory: any[];
   strkPrice: string | null;
-
   fetchRewardTokensClaimed: () => Promise<void>;
+  fetchGamePrice: () => Promise<void>;
   remainingSurvivorTokens: number | null;
   collectedBeasts: number;
 }
@@ -93,6 +93,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
         gamePriceHistory,
         strkPrice,
         fetchRewardTokensClaimed,
+        fetchGamePrice,
         remainingSurvivorTokens,
         collectedBeasts,
       }}

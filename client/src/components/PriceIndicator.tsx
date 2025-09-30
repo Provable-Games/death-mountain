@@ -1,11 +1,12 @@
 import { useStatistics } from '@/contexts/Statistics';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Price indicator component
 export default function PriceIndicator() {
-  const { gamePrice, gamePriceHistory } = useStatistics();
+  const { gamePrice, gamePriceHistory, fetchGamePrice } = useStatistics();
 
   // Handle case where data is not available
   if (!gamePrice) {
@@ -101,9 +102,54 @@ export default function PriceIndicator() {
               <Box sx={[styles.infoIcon, { borderColor: 'text.primary' }]}>i</Box>
             </Tooltip>
           </Box>
-          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-            ${currentPrice.toFixed(2)}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Tooltip 
+              title={
+                <Box sx={styles.smallTooltipContainer}>
+                  <Typography sx={{ color: 'text.primary', fontSize: '0.8rem' }}>
+                    Refresh price
+                  </Typography>
+                </Box>
+              } 
+              arrow
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: 'transparent',
+                    border: 'none',
+                  },
+                },
+              }}
+            >
+              <IconButton
+                onClick={fetchGamePrice}
+                sx={{
+                  width: 20,
+                  height: 20,
+                  minWidth: 'unset',
+                  padding: 0,
+                  color: 'text.primary',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  },
+                }}
+              >
+                <Box sx={{
+                  fontSize: '16px',
+                  transform: 'rotate(0deg)',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'rotate(180deg)',
+                  },
+                }}>
+                  ↻
+                </Box>
+              </IconButton>
+            </Tooltip>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+              ${currentPrice.toFixed(2)}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Simple display without price bar when no history */}
@@ -208,9 +254,54 @@ export default function PriceIndicator() {
             </Box>
           </Tooltip>
         </Box>
-        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-          ${currentPrice.toFixed(2)}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Tooltip 
+            title={
+              <Box sx={styles.smallTooltipContainer}>
+                <Typography sx={{ color: 'text.primary', fontSize: '0.8rem' }}>
+                  Refresh price
+                </Typography>
+              </Box>
+            } 
+            arrow
+            slotProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: 'transparent',
+                  border: 'none',
+                },
+              },
+            }}
+          >
+            <IconButton
+              onClick={fetchGamePrice}
+              sx={{
+                width: 20,
+                height: 20,
+                minWidth: 'unset',
+                padding: 0,
+                color: 'text.primary',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
+              <Box sx={{
+                fontSize: '16px',
+                transform: 'rotate(0deg)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'rotate(180deg)',
+                },
+              }}>
+                ↻
+              </Box>
+            </IconButton>
+          </Tooltip>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+            ${currentPrice.toFixed(2)}
+          </Typography>
+        </Box>
       </Box>
 
       {/* Price bar */}
@@ -317,5 +408,13 @@ const styles = {
     fontWeight: 600,
     letterSpacing: '0.3px',
     lineHeight: '1.0',
+  },
+  smallTooltipContainer: {
+    backgroundColor: 'rgba(17, 17, 17, 1)',
+    border: '2px solid #083e22',
+    borderRadius: '8px',
+    padding: '6px 8px',
+    minWidth: 'auto',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
 }; 

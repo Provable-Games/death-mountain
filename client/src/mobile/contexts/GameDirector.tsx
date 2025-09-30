@@ -181,18 +181,18 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     async function checkUnclaimedBeast() {
-      let collectable = JSON.parse(localStorage.getItem('collectable_beast')!);
+      let collectable = JSON.parse(localStorage.getItem("collectable_beast")!);
       let isUnclaimed = await unclaimedBeast(collectable.gameId, collectable);
       if (isUnclaimed) {
         setClaimInProgress(true);
         setCollectable(collectable);
         claimBeast(collectable.gameId, collectable);
       } else {
-        localStorage.removeItem('collectable_beast');
+        localStorage.removeItem("collectable_beast");
       }
     }
 
-    if (gameId && localStorage.getItem('collectable_beast')) {
+    if (gameId && localStorage.getItem("collectable_beast")) {
       checkUnclaimedBeast();
     }
   }, [gameId]);
@@ -306,8 +306,13 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         action.settings.game_seed === 0 &&
         action.settings.adventurer.xp !== 0
       ) {
-        txs.push(requestRandom(generateSalt(action.gameId!, action.settings.adventurer.xp)));
+        txs.push(
+          requestRandom(
+            generateSalt(action.gameId!, action.settings.adventurer.xp)
+          )
+        );
       }
+      delay(2000); // Small delay to ensure UI updates before transaction
       txs.push(startGame(action.gameId!));
     }
 
@@ -316,7 +321,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
 
     if (VRFEnabled && ["attack", "flee"].includes(action.type)) {
-      txs.push(requestRandom(generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)));
+      txs.push(
+        requestRandom(
+          generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)
+        )
+      );
     }
 
     if (
@@ -324,7 +333,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       action.type === "equip" &&
       adventurer?.beast_health! > 0
     ) {
-      txs.push(requestRandom(generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)));
+      txs.push(
+        requestRandom(
+          generateBattleSalt(gameId!, adventurer!.xp, adventurer!.action_count)
+        )
+      );
     }
 
     let newItemsEquipped = getNewItemsEquipped(
