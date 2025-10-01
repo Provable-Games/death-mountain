@@ -51,6 +51,7 @@ export const NETWORKS = {
     tokens: {
       erc20: [
         "0x042dd777885ad2c116be96d4d634abc90a26a790ffb5871e037dd5ae7d2ec86b",
+        "0x01e558546e33411a84cc4ee9e69917fff2f96400d0c90dc9ee48036be8f0641b"
       ],
     },
     manifest: manifest_mainnet,
@@ -58,9 +59,9 @@ export const NETWORKS = {
     denshokan:
       "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
     dungeon:
-      "0x010eedffdca8123d95e21025f5166465d5539c8f575d2369fd31abe31ca17186",
+      "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42",
     dungeonTicket:
-      "0x009ea98dcdf6462c491adf5375ee0f8e43f5748a2942df6207a6b3ba9db7cfc8",
+      "0x01e558546e33411a84cc4ee9e69917fff2f96400d0c90dc9ee48036be8f0641b",
     beasts:
       "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
     goldenToken:
@@ -96,7 +97,7 @@ export const NETWORKS = {
       {
         name: "TICKET",
         address:
-          "0x009ea98dcdf6462c491adf5375ee0f8e43f5748a2942df6207a6b3ba9db7cfc8",
+          "0x01e558546e33411a84cc4ee9e69917fff2f96400d0c90dc9ee48036be8f0641b",
         displayDecimals: 0,
       },
       {
