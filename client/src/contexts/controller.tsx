@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
+import { delay } from "@/utils/utils";
 
 export interface ControllerContext {
   account: any;
@@ -126,6 +127,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     );
 
     if (gameId) {
+      await delay(2000);
       navigate(`/survivor/play?id=${gameId}`, { replace: true });
       fetchTokenBalances();
       if (!skipIntroOutro) {

@@ -357,7 +357,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           )
         );
       }
-      delay(2000); // Small delay to ensure UI updates before transaction
+      
       txs.push(startGame(action.gameId!));
     }
 
