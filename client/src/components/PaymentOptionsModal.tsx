@@ -432,7 +432,7 @@ export default function PaymentOptionsModal({
       ) {
         setCurrentView("token");
       } else {
-        setCurrentView("credit");
+        setCurrentView("token");
       }
     }
   }, [currentView]);
@@ -716,7 +716,7 @@ export default function PaymentOptionsModal({
                       >
                       </Link>
                     ))}
-
+{/* 
                   {currentView === "token" && (
                     <Link
                       component="button"
@@ -725,7 +725,7 @@ export default function PaymentOptionsModal({
                     >
                       Pay with credit card or other wallet
                     </Link>
-                  )}
+                  )} */}
 
                   {currentView === "credit" &&
                     (userTokens.length > 0 ? (
