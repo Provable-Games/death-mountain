@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 // Price indicator component
 export default function PriceIndicator() {
@@ -103,14 +104,14 @@ export default function PriceIndicator() {
             </Tooltip>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Tooltip 
+            <Tooltip
               title={
                 <Box sx={styles.smallTooltipContainer}>
                   <Typography sx={{ color: 'text.primary', fontSize: '0.8rem' }}>
                     Refresh price
                   </Typography>
                 </Box>
-              } 
+              }
               arrow
               slotProps={{
                 tooltip: {
@@ -134,16 +135,14 @@ export default function PriceIndicator() {
                   },
                 }}
               >
-                <Box sx={{
-                  fontSize: '16px',
+                <RefreshIcon sx={{
+                  fontSize: '1rem',
                   transform: 'rotate(0deg)',
                   transition: 'transform 0.3s ease',
                   '&:hover': {
-                    transform: 'rotate(180deg)',
+                    transform: 'rotate(90deg)',
                   },
-                }}>
-                  ↻
-                </Box>
+                }} />
               </IconButton>
             </Tooltip>
             <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
@@ -255,14 +254,14 @@ export default function PriceIndicator() {
           </Tooltip>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Tooltip 
+          <Tooltip
             title={
               <Box sx={styles.smallTooltipContainer}>
                 <Typography sx={{ color: 'text.primary', fontSize: '0.8rem' }}>
                   Refresh price
                 </Typography>
               </Box>
-            } 
+            }
             arrow
             slotProps={{
               tooltip: {
