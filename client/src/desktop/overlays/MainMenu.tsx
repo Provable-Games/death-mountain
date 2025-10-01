@@ -25,6 +25,7 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
 import { useGameTokens } from "metagame-sdk/sql";
@@ -305,7 +306,20 @@ export default function MainMenu() {
               </Button> */}
 
               {currentNetworkConfig.name === "Beast Mode" &&
-                <PriceIndicator />
+                <>
+                  <PriceIndicator />
+
+                  <Link
+                    href="#"
+                    sx={styles.learnMoreLink}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open('https://docs.provable.games/lootsurvivor/dungeon-tickets', '_blank');
+                    }}
+                  >
+                    Learn more about Dungeon Tickets
+                  </Link>
+                </>
               }
 
               <Box sx={styles.bottom}>
@@ -535,6 +549,15 @@ const styles = {
     "&:hover": {
       textDecoration: "underline !important",
       color: "#d0ffd0",
+    },
+  },
+  learnMoreLink: {
+    fontSize: '0.9rem',
+    color: 'rgba(208, 201, 141, 0.6)',
+    textDecoration: 'underline !important',
+    cursor: 'pointer',
+    '&:hover': {
+      color: 'rgba(208, 201, 141, 0.8)',
     },
   },
 };
