@@ -268,6 +268,12 @@ export default function PaymentOptionsModal({
     }
   }, [userTokens]);
 
+
+  const handleCreditCardSelect = () => {
+    openBuyTicket();
+    onClose();
+  };
+
   const fetchTokenQuote = useCallback(
     async (tokenSymbol: string) => {
       const selectedTokenData = userTokens.find(
@@ -654,7 +660,7 @@ export default function PaymentOptionsModal({
                           </Box>
                         </Box>
 
-                        <ActionButton onClick={openBuyTicket}>
+                        <ActionButton onClick={handleCreditCardSelect}>
                           Continue
                         </ActionButton>
                       </Box>
@@ -971,9 +977,7 @@ const styles = {
   paymentOption: {
     py: 1,
     px: 1.5,
-    background: "rgba(0, 0, 0, 0.2)",
     borderRadius: 1,
-    border: "1px solid rgba(208, 201, 141, 0.1)",
   },
   optionHeader: {
     display: "flex",
