@@ -7,7 +7,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 
 // Price indicator component
 export default function PriceIndicator() {
-  const { gamePrice, gamePriceHistory, fetchGamePrice } = useStatistics();
+  const { gamePrice, gamePriceHistory, lordsPrice, fetchGamePrice } = useStatistics();
 
   // Handle case where data is not available
   if (!gamePrice) {
@@ -34,7 +34,7 @@ export default function PriceIndicator() {
   const currentPrice = parseFloat(gamePrice);
 
   // Handle case where we have price but no history
-  if (!gamePriceHistory || gamePriceHistory.length === 0) {
+  if (!gamePriceHistory || gamePriceHistory.length === 0 || !lordsPrice) {
     return (
       <Box sx={{
         width: '100%',
@@ -164,11 +164,11 @@ export default function PriceIndicator() {
   }
 
   // Find min and max from the history data
-  const minPrice = Math.min(...gamePriceHistory.map(item => item.min));
-  const maxPrice = Math.max(...gamePriceHistory.map(item => item.max));
+  const minPrice = Math.min(...gamePriceHistory.map(item => item.vwap));
+  const maxPrice = Math.max(...gamePriceHistory.map(item => item.vwap));
 
   // Calculate position on the bar (0-100%)
-  const pricePosition = ((currentPrice - minPrice) / (maxPrice - minPrice)) * 100;
+  const pricePosition = ((Number(lordsPrice) - minPrice) / (maxPrice - minPrice)) * 100;
 
   return (
     <Box sx={{
@@ -285,16 +285,14 @@ export default function PriceIndicator() {
                 },
               }}
             >
-              <Box sx={{
-                fontSize: '16px',
+              <RefreshIcon sx={{
+                fontSize: '1rem',
                 transform: 'rotate(0deg)',
                 transition: 'transform 0.3s ease',
                 '&:hover': {
-                  transform: 'rotate(180deg)',
+                  transform: 'rotate(90deg)',
                 },
-              }}>
-                ↻
-              </Box>
+              }} />
             </IconButton>
           </Tooltip>
           <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>

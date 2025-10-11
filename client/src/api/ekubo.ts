@@ -41,7 +41,7 @@ interface SwapCall {
 }
 
 export const getPriceChart = async (token: string, otherToken: string) => {
-  const response = await fetch(`https://starknet-mainnet-api.ekubo.org/price/${token}/${otherToken}/history?interval=10000`)
+  const response = await fetch(`https://starknet-mainnet-api.ekubo.org/price/${token}/${otherToken}/history?interval=7000`)
 
   const data = await response.json()
 
@@ -102,7 +102,7 @@ export const generateSwapCalls = (ROUTER_CONTRACT: RouterContract, purchaseToken
 
   if (splits.length === 1) {
     const split = splits[0];
-    
+
     swapCalls = [
       {
         contractAddress: ROUTER_CONTRACT.address,

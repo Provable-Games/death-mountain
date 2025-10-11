@@ -66,6 +66,10 @@ const TokenSelectionContent = memo(
       handleClose();
     };
 
+    const hasEnoughBalance = useMemo(() => {
+      return Number(selectedTokenData.balance) >= Number(tokenQuote.amount);
+    }, [selectedTokenData, tokenQuote]);
+
     return (
       <Box
         sx={{
@@ -93,6 +97,17 @@ const TokenSelectionContent = memo(
             fullWidth
             sx={styles.mobileSelectButton}
           >
+            <Box
+              sx={{
+                fontSize: "0.6rem",
+                color: "text.primary",
+                marginLeft: "-5px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              ▼
+            </Box>
             <Box sx={styles.tokenRow}>
               <Box sx={styles.tokenLeft}>
                 <Typography sx={styles.tokenName}>
@@ -171,10 +186,10 @@ const TokenSelectionContent = memo(
             {tokenQuote.loading
               ? "Loading quote..."
               : tokenQuote.error
-                ? `Error: ${tokenQuote.error}`
-                : tokenQuote.amount
-                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-                  : "Loading..."}
+              ? `Error: ${tokenQuote.error}`
+              : tokenQuote.amount
+              ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+              : "Loading..."}
           </Typography>
         </Box>
 
@@ -184,9 +199,13 @@ const TokenSelectionContent = memo(
             sx={styles.activateButton}
             onClick={buyDungeonTicket}
             fullWidth
-            disabled={tokenQuote.loading || !!tokenQuote.error}
+            disabled={
+              tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance
+            }
           >
-            <Typography sx={styles.buttonText}>Enter Dungeon</Typography>
+            <Typography sx={styles.buttonText}>
+              {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
+            </Typography>
           </Button>
         </Box>
       </Box>
@@ -267,7 +286,6 @@ export default function PaymentOptionsModal({
       setSelectedToken(userTokens[0].symbol);
     }
   }, [userTokens]);
-
 
   const handleCreditCardSelect = () => {
     openBuyTicket();
@@ -701,8 +719,7 @@ export default function PaymentOptionsModal({
                         component="button"
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
-                      >
-                      </Link>
+                      ></Link>
                     ))}
 
                   {currentView === "dungeon" &&
@@ -719,8 +736,7 @@ export default function PaymentOptionsModal({
                         component="button"
                         onClick={() => setCurrentView("credit")}
                         sx={styles.footerLink}
-                      >
-                      </Link>
+                      ></Link>
                     ))}
 
                   {currentView === "token" && (
@@ -942,6 +958,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
+    marginLeft: "10px",
   },
   tokenLeft: {
     display: "flex",

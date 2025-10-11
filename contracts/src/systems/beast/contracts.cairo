@@ -211,7 +211,7 @@ mod beast_systems {
 
         fn get_entity_stats(self: @ContractState, dungeon: ContractAddress, entity_hash: felt252) -> EntityStats {
             let world: WorldStorage = self.world(@DEFAULT_NS());
-            let dungeon = _get_correct_dungeon(dungeon);
+            let dungeon = _get_correct_entity_stats(dungeon);
             world.read_model((dungeon, entity_hash))
         }
 
@@ -219,6 +219,7 @@ mod beast_systems {
             self: @ContractState, dungeon: ContractAddress, entity_hash: felt252, kill_index: u64,
         ) -> AdventurerKilled {
             let world: WorldStorage = self.world(@DEFAULT_NS());
+            let kill_index = _get_correct_index(dungeon, kill_index);
             let dungeon = _get_correct_dungeon(dungeon);
             world.read_model((dungeon, entity_hash, kill_index))
         }
@@ -245,11 +246,33 @@ mod beast_systems {
         }
     }
 
+    // DEV NOTE: this is a fix for BEAST NFTS to get correct dungeon, as the value is set incorrectly
+    // in the beast contract
     fn _get_correct_dungeon(dungeon: ContractAddress) -> ContractAddress {
         if dungeon == starknet::get_contract_address() {
             0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42.try_into().unwrap()
         } else {
             dungeon
+        }
+    }
+
+    // DEV NOTE: this is a fix for BEAST NFTS to get correct stats, as the key of entity_stats
+    // is set to minted_by game_id instead of minted_by_address
+    fn _get_correct_entity_stats(dungeon: ContractAddress) -> ContractAddress {
+        if dungeon == starknet::get_contract_address() {
+            0x6.try_into().unwrap()
+        } else {
+            dungeon
+        }
+    }
+
+    // DEV NOTE: this is a fix for BEAST NFTS to get correct index of adventurer_killed, as the index
+    // starts at 0 instead of 1
+    fn _get_correct_index(dungeon: ContractAddress, index: u64) -> u64 {
+        if dungeon == starknet::get_contract_address() {
+            index + 1
+        } else {
+            index
         }
     }
 }

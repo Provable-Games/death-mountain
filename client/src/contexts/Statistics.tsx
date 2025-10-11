@@ -2,6 +2,7 @@ import { getPriceChart, getSwapQuote } from "@/api/ekubo";
 import { useStarknetApi } from "@/api/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { NETWORKS } from "@/utils/networkConfig";
+import { delay } from "@/utils/utils";
 import {
   createContext,
   PropsWithChildren,
@@ -13,6 +14,7 @@ import {
 export interface StatisticsContext {
   gamePrice: string | null;
   gamePriceHistory: any[];
+  lordsPrice: string | null;
   strkPrice: string | null;
   fetchRewardTokensClaimed: () => Promise<void>;
   fetchGamePrice: () => Promise<void>;
@@ -37,6 +39,9 @@ const STRK = NETWORKS.SN_MAIN.paymentTokens.find(
 const USDC = NETWORKS.SN_MAIN.paymentTokens.find(
   (token) => token.name === "USDC"
 )?.address!;
+const LORDS = NETWORKS.SN_MAIN.paymentTokens.find(
+  (token) => token.name === "LORDS"
+)?.address!;
 
 // Create a provider component
 export const StatisticsProvider = ({ children }: PropsWithChildren) => {
@@ -44,7 +49,10 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   const { countBeasts } = useGameTokens();
 
   const [gamePrice, setGamePrice] = useState<string | null>(null);
+  const [lordsPrice, setLordsPrice] = useState<string | null>(null);
   const [gamePriceHistory, setGamePriceHistory] = useState<any[]>([]);
+
+
   const [remainingSurvivorTokens, setRemainingSurvivorTokens] = useState<
     number | null
   >(null);
@@ -57,8 +65,15 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   };
 
   const fetchPriceHistory = async () => {
-    const strkPrice = await getPriceChart(DungeonTicket, STRK);
-    setGamePriceHistory(strkPrice.data);
+    await delay(1000);
+    const priceChart = await getPriceChart(DungeonTicket, LORDS);
+    setGamePriceHistory(priceChart.data);
+  };
+
+  const fetchGameLordsPrice = async () => {
+    await delay(1000);
+    const lordsPrice = await getSwapQuote(-1e18, DungeonTicket, LORDS);
+    setLordsPrice(((lordsPrice.total * -1) / 1e18).toFixed(2));
   };
 
   const fetchGamePrice = async () => {
@@ -79,9 +94,10 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    fetchPriceHistory();
     fetchGamePrice();
     fetchStrkPrice();
+    fetchPriceHistory();
+    fetchGameLordsPrice();
     fetchRewardTokensClaimed();
     fetchCollectedBeasts();
   }, []);
@@ -91,6 +107,7 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
       value={{
         gamePrice,
         gamePriceHistory,
+        lordsPrice,
         strkPrice,
         fetchRewardTokensClaimed,
         fetchGamePrice,

@@ -45,13 +45,13 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_9",
-    slot: "pg-mainnet-5",
+    slot: "pg-mainnet-6",
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-mainnet-5/torii",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-6/torii",
     tokens: {
       erc20: [
         "0x042dd777885ad2c116be96d4d634abc90a26a790ffb5871e037dd5ae7d2ec86b",
-        "0x035f581b050a39958b7188ab5c75daaa1f9d3571a0c032203038c898663f31f8"
+        "0x035f581b050a39958b7188ab5c75daaa1f9d3571a0c032203038c898663f31f8",
       ],
     },
     manifest: manifest_mainnet,

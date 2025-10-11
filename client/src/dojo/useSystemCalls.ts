@@ -402,6 +402,7 @@ export const useSystemCalls = () => {
 
     try {
       await waitForClaimBeast();
+      await delay(1000);
 
       let tx = await account!.execute(
         [
