@@ -1,6 +1,7 @@
-import { BEAST_NAMES } from "@/constants/beast";
+import { BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { useAnalytics } from "@/utils/analytics";
 import { screenVariants } from "@/utils/animations";
@@ -23,6 +24,7 @@ export default function DeathScreen() {
     quest,
     adventurer,
   } = useGameStore();
+  const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
 
@@ -71,6 +73,12 @@ export default function DeathScreen() {
       });
     }
   }, [gameId, adventurer]);
+
+  useEffect(() => {
+    if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+      refreshDungeonStats(beast, 3000);
+    }
+  }, []);
 
   const GAME_TOKEN_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,

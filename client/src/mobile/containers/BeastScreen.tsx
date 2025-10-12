@@ -22,7 +22,7 @@ const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
   const { currentNetworkConfig } = useDynamicConnector();
-  const { executeGameAction, actionFailed } = useGameDirector();
+  const { executeGameAction, actionFailed, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { gameId, adventurer, adventurerState, beast, battleEvent, bag,
     equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
   const [untilDeath, setUntilDeath] = useState(false);
@@ -141,6 +141,10 @@ export default function BeastScreen() {
     setEquipInProgress(true);
     setCombatLog(equipMessage);
     executeGameAction({ type: 'equip' });
+  };
+
+  const handleSkipCombat = () => {
+    setSkipCombat(true);
   };
 
   const getOffsetY = (isWeapon: boolean, isNameMatch: boolean, level: number, specialSeed: number) => {
@@ -364,7 +368,8 @@ export default function BeastScreen() {
                     {`${calculateAttackDamage(adventurer!.equipment.weapon!, adventurer!, beast!).baseDamage} damage`}
                   </Typography>
                 </Box>
-                <Box sx={styles.actionButtonContainer}>
+
+                {!showSkipCombat && <Box sx={styles.actionButtonContainer}>
                   <Button
                     variant="contained"
                     size="small"
@@ -377,7 +382,22 @@ export default function BeastScreen() {
                   <Typography sx={styles.probabilityText}>
                     {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}
                   </Typography>
-                </Box>
+                </Box>}
+
+                {showSkipCombat && <Box sx={styles.actionButtonContainer}>
+                  <Box sx={styles.actionButtonContainer}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleSkipCombat}
+                      sx={[styles.fleeButton, { mb: '20px' }]}
+                      disabled={skipCombat}
+                    >
+                      SKIP ▶▶
+                    </Button>
+                  </Box>
+                </Box>}
+
                 <Box sx={styles.deathCheckboxContainer} onClick={() => {
                   if (!attackInProgress && !fleeInProgress && !equipInProgress) {
                     setUntilDeath(!untilDeath);

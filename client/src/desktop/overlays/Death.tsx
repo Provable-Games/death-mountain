@@ -1,7 +1,9 @@
+import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useStatistics } from '@/contexts/Statistics';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useSystemCalls } from '@/dojo/useSystemCalls';
 import RewardsOverlay from '@/dungeons/beasts/RewardsOverlay';
 import { useGameStore } from '@/stores/gameStore';
 import { useAnalytics } from '@/utils/analytics';
@@ -19,6 +21,7 @@ export default function DeathOverlay() {
   const { spectating } = useGameDirector();
   const { remainingSurvivorTokens } = useStatistics();
   const { gameId, exploreLog, battleEvent, beast, quest, adventurer } = useGameStore();
+  const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
   const [showRewards, setShowRewards] = useState(false);
@@ -57,6 +60,12 @@ export default function DeathOverlay() {
       backToMenu();
     }
   }
+
+  useEffect(() => {
+    if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+      refreshDungeonStats(beast, 3000);
+    }
+  }, []);
 
   useEffect(() => {
     if (gameId && adventurer) {
@@ -312,10 +321,10 @@ const styles = {
       transform: 'scale(1.02)',
     },
     '@keyframes claimRewardGlow': {
-      '0%, 100%': { 
+      '0%, 100%': {
         boxShadow: '0 0 20px rgba(208, 201, 141, 0.4), 0 0 40px rgba(208, 201, 141, 0.2)',
       },
-      '50%': { 
+      '50%': {
         boxShadow: '0 0 30px rgba(208, 201, 141, 0.6), 0 0 60px rgba(208, 201, 141, 0.4)',
       },
     },

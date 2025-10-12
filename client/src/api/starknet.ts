@@ -464,7 +464,6 @@ export const useStarknetApi = () => {
         AND suffix = "${suffix}"
         LIMIT 1`;
 
-      console.log('Torii URL', toriiUrl)
       const sqlResponse = await fetch(toriiUrl, {
         method: "GET",
         headers: {
@@ -498,7 +497,6 @@ export const useStarknetApi = () => {
       });
 
       const mintedData = await mintedResponse.json();
-      console.log('Minted Data', mintedData)
       const minted = parseInt(mintedData.result[0], 16);
 
       return minted === 0;

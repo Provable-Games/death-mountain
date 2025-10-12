@@ -5,6 +5,7 @@ import { NETWORKS } from "@/utils/networkConfig";
 import { getShortNamespace } from "@/utils/utils";
 import { gql, request } from "graphql-request";
 import { GameTokenData } from "metagame-sdk";
+import { Beast } from "@/types/game";
 
 export const useGameTokens = () => {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -137,9 +138,42 @@ export const useGameTokens = () => {
     }
   }
 
+  const getBeastTokenId = async (beast: Beast) => {
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT token_id
+      FROM token_attributes
+      WHERE trait_name = 'Beast ID' AND trait_value = ${beast.id}
+      INTERSECT
+      SELECT token_id
+      FROM token_attributes
+      WHERE trait_name = 'Prefix' AND trait_value = "${beast.specialPrefix}"
+      INTERSECT
+      SELECT token_id
+      FROM token_attributes
+      WHERE trait_name = 'Suffix' AND trait_value = "${beast.specialSuffix}"
+      LIMIT 1;
+    `
+
+    try {
+      let sql = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      let data = await sql.json()
+      return parseInt(data[0].token_id.split(":")[1], 16)
+    } catch (error) {
+      console.error("Error getting beast token id:", error);
+      return null;
+    }
+  }
+
   return {
     fetchAdventurerData,
     getGameTokens,
     countBeasts,
+    getBeastTokenId
   };
 };

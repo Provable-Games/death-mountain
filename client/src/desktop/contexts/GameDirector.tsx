@@ -1,5 +1,5 @@
 import { useStarknetApi } from "@/api/starknet";
-import { JACKPOT_BEASTS } from "@/constants/beast";
+import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK, JACKPOT_BEASTS } from "@/constants/beast";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useGameEvents } from "@/dojo/useGameEvents";
 import { Settings } from "@/dojo/useGameSettings";
@@ -83,6 +83,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     equip,
     drop,
     claimBeast,
+    refreshDungeonStats,
   } = useSystemCalls();
   const { getSettingsDetails, getTokenMetadata, getGameState, unclaimedBeast } =
     useStarknetApi();
@@ -91,6 +92,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   const {
     gameId,
+    beast,
     adventurer,
     adventurerState,
     collectable,
@@ -261,7 +263,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         !skipDelay &&
         event.adventurer!.item_specials_seed &&
         event.adventurer!.item_specials_seed !==
-          adventurer?.item_specials_seed &&
+        adventurer?.item_specials_seed &&
         !skipAllAnimations
       ) {
         setShowOverlay(false);
@@ -333,7 +335,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setVideoQueue((prev) => [
         ...prev,
         streamIds[
-          `jackpot_${event.beast!.baseName!.toLowerCase()}` as keyof typeof streamIds
+        `jackpot_${event.beast!.baseName!.toLowerCase()}` as keyof typeof streamIds
         ],
       ]);
     }
@@ -357,7 +359,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           )
         );
       }
-      
+
       txs.push(startGame(action.gameId!));
     }
 
@@ -424,6 +426,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (events.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
+
+      if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+        refreshDungeonStats(beast, 5000);
+      }
     }
 
     if (

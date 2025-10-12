@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
+import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -32,6 +33,10 @@ export interface GameDirectorContext {
   eventsProcessed: number;
   setEventQueue: (events: any) => void;
   setEventsProcessed: (eventsProcessed: number) => void;
+  setSkipCombat: (skipCombat: boolean) => void;
+  skipCombat: boolean;
+  setShowSkipCombat: (showSkipCombat: boolean) => void;
+  showSkipCombat: boolean;
 }
 
 const GameDirectorContext = createContext<GameDirectorContext>(
@@ -87,6 +92,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     equip,
     drop,
     claimBeast,
+    refreshDungeonStats,
   } = useSystemCalls();
   const { currentNetworkConfig } = useDynamicConnector();
   const { getGameState, getSettingsDetails, getTokenMetadata, unclaimedBeast } =
@@ -96,6 +102,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
   const {
     gameId,
+    beast,
     adventurer,
     adventurerState,
     collectable,
@@ -124,6 +131,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [eventsProcessed, setEventsProcessed] = useState(0);
   const [actionFailed, setActionFailed] = useReducer((x) => x + 1, 0);
 
+  const [skipCombat, setSkipCombat] = useState(false);
+  const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
 
   useEffect(() => {
@@ -161,7 +170,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       if (eventQueue.length > 0 && !isProcessing) {
         setIsProcessing(true);
         const event = eventQueue[0];
-        await processEvent(event);
+        await processEvent(event, skipCombat);
         setEventQueue((prev) => prev.slice(1));
         setIsProcessing(false);
         setEventsProcessed((prev) => prev + 1);
@@ -244,6 +253,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const processEvent = async (event: GameEvent, skipDelay: boolean = false) => {
     if (event.type === "adventurer") {
       setAdventurer(event.adventurer!);
+      setSkipCombat(false);
+      setShowSkipCombat(false);
     }
 
     if (event.type === "bag") {
@@ -378,6 +389,16 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     if (events.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
+
+      if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+        refreshDungeonStats(beast, 5000);
+      }
+    }
+
+    if (
+      events.filter((event: any) => event.type === "beast_attack").length >= 2
+    ) {
+      setShowSkipCombat(true);
     }
 
     setEventQueue((prev) => [...prev, ...events]);
@@ -394,6 +415,10 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setEventQueue,
         setSpectating,
         spectating,
+        setSkipCombat,
+        skipCombat,
+        setShowSkipCombat,
+        showSkipCombat,
       }}
     >
       {children}

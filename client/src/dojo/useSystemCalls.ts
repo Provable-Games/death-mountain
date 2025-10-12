@@ -16,11 +16,13 @@ import { delay, stringToFelt } from "@/utils/utils";
 import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
 import { useSnackbar } from "notistack";
+import { useGameTokens } from "./useGameTokens";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
+  const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const { txRevertedEvent } = useAnalytics();
@@ -452,6 +454,20 @@ export const useSystemCalls = () => {
     }], () => { });
   };
 
+  const refreshDungeonStats = async (beast: Beast, waitTime: number) => {
+    if (currentNetworkConfig.name !== "Beast Mode") return;
+
+    let tokenId = await getBeastTokenId(beast);
+    if (!tokenId) return;
+
+    await delay(waitTime);
+    await executeAction([{
+      contractAddress: currentNetworkConfig.beasts,
+      entrypoint: "refresh_dungeon_stats",
+      calldata: [tokenId],
+    }], () => { });
+  };
+
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
       item_1: settings.bag[0]
@@ -543,5 +559,6 @@ export const useSystemCalls = () => {
     requestRandom,
     executeAction,
     claimSurvivorTokens,
+    refreshDungeonStats
   };
 };
