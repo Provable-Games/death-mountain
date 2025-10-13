@@ -76,7 +76,7 @@ export default function DeathScreen() {
 
   useEffect(() => {
     if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
-      refreshDungeonStats(beast, 3000);
+      refreshDungeonStats(beast, 10000);
     }
   }, []);
 

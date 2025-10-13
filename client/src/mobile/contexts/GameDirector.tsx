@@ -391,7 +391,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       setBeastDefeated(true);
 
       if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
-        refreshDungeonStats(beast, 5000);
+        refreshDungeonStats(beast, 10000);
       }
     }
 
