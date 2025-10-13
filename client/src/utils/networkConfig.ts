@@ -45,9 +45,9 @@ export const NETWORKS = {
     name: "Beast Mode",
     status: "online",
     namespace: "ls_0_0_9",
-    slot: "pg-mainnet-6",
+    slot: "pg-mainnet-7",
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-mainnet-6/torii",
+    torii: "https://api.cartridge.gg/x/pg-mainnet-7/torii",
     tokens: {
       erc20: [
         "0x042dd777885ad2c116be96d4d634abc90a26a790ffb5871e037dd5ae7d2ec86b",
