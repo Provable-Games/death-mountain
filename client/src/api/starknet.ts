@@ -379,6 +379,45 @@ export const useStarknetApi = () => {
     return null;
   }
 
+  const getUnclaimedAdventurerRewards = async (adventurerIds: number[]) => {
+    const BATCH_SIZE = 50;
+    const results: any[] = [];
+    
+    // Process in batches of 50
+    for (let i = 0; i < adventurerIds.length; i += BATCH_SIZE) {
+      const batch = adventurerIds.slice(i, i + BATCH_SIZE);
+      const calls = batch.map((adventurerId, index) => ({
+        id: index + 1,
+        jsonrpc: "2.0",
+        method: "starknet_call",
+        params: [
+          {
+            contract_address: NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].dungeon,
+            entry_point_selector: "0x01733c9b1238072d517a4d739fc8882257424284a5f9c78832bfa60d0cd61024",
+            calldata: [num.toHex(adventurerId)]
+          },
+          "latest"
+        ]
+      }));
+
+      const response = await fetch(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(calls),
+      });
+
+      const batchData = await response.json();
+      results.push(...batchData);
+      
+      // Wait 1 second before next batch (except for last batch)
+      if (i + BATCH_SIZE < adventurerIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    return results;
+  }
+
   const getTokenMetadata = async (tokenId: number) => {
     try {
       const response = await fetch(currentNetworkConfig.rpcUrl, {
@@ -552,5 +591,6 @@ export const useStarknetApi = () => {
     getAdventurerState,
     getRewardTokensClaimed,
     unclaimedBeast,
+    getUnclaimedAdventurerRewards,
   };
 };

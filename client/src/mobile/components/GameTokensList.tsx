@@ -160,7 +160,7 @@ export default function GameTokensList() {
                   {game.player_name}
                 </Typography>
 
-                <Typography color="text.secondary">
+                <Typography color="text.secondary" noWrap>
                   ID: #{game.adventurer_id}
                 </Typography>
               </Box>

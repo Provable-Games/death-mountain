@@ -78,7 +78,7 @@ export const useGameTokens = () => {
         let adventurer = adventurerData?.details?.adventurer || {};
         let tokenId = game.token_id;
         let expires_at = (game.lifecycle.end || 0) * 1000;
-        let available_at = (game.lifecycle.start || 1) * 1000;
+        let available_at = (game.lifecycle.start || 0) * 1000;
 
         return {
           ...adventurer,

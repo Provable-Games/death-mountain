@@ -9,6 +9,7 @@ import { default as MobileGamePage } from "@/mobile/pages/GamePage";
 import { default as MobileStartPage } from "@/mobile/pages/StartPage";
 import { default as MobileWatchPage } from "@/mobile/pages/WatchPage";
 import { default as MobileNotFoundPage } from "@/mobile/pages/NotFoundPage";
+import { default as MobileClaimPage } from "@/mobile/pages/ClaimPage";
 
 export const desktopRoutes = [
   {
@@ -57,6 +58,10 @@ export const mobileRoutes = [
   {
     path: '/survivor/campaign',
     content: <MobileCampaignPage />
+  },
+  {
+    path: '/survivor/claim',
+    content: <MobileClaimPage />
   },
   {
     path: '*',
