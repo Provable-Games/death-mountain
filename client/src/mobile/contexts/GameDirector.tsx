@@ -302,17 +302,16 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     let txs: any[] = [];
 
     if (action.type === "start_game") {
-      if (
-        action.settings.game_seed === 0 &&
-        action.settings.adventurer.xp !== 0
-      ) {
+      if (action.settings.adventurer.xp !== 0 && action.settings.game_seed === 0) {
         txs.push(
           requestRandom(
-            generateSalt(action.gameId!, action.settings.adventurer.xp)
+            action.settings.in_battle
+              ? generateBattleSalt(action.gameId!, action.settings.adventurer.xp, 0)
+              : generateSalt(action.gameId!, action.settings.adventurer.xp)
           )
         );
       }
-      delay(2000); // Small delay to ensure UI updates before transaction
+
       txs.push(startGame(action.gameId!));
     }
 
