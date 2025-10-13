@@ -465,7 +465,7 @@ export const useSystemCalls = () => {
     await executeAction([{
       contractAddress: currentNetworkConfig.beasts,
       entrypoint: "refresh_dungeon_stats",
-      calldata: [num.toHex(tokenId)],
+      calldata: [num.toHex(tokenId), "0x0"],
     }], () => { });
   };
 
