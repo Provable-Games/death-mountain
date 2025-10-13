@@ -302,7 +302,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     let txs: any[] = [];
 
     if (action.type === "start_game") {
-      if (action.settings.adventurer.xp !== 0) {
+      if (action.settings.adventurer.xp !== 0 && action.settings.game_seed === 0) {
         txs.push(
           requestRandom(
             action.settings.in_battle
