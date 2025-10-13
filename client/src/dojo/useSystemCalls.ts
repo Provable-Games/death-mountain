@@ -434,7 +434,7 @@ export const useSystemCalls = () => {
       return tokenId;
     } catch (error) {
       console.error("Error claiming beast:", error);
-      await delay(3000);
+      await delay(1000);
       return claimBeast(gameId, beast, retries + 1);
     }
   };
