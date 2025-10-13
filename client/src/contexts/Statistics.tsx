@@ -10,6 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useDynamicConnector } from "./starknet";
 
 export interface StatisticsContext {
   gamePrice: string | null;
@@ -47,11 +48,11 @@ const LORDS = NETWORKS.SN_MAIN.paymentTokens.find(
 export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   const { getRewardTokensClaimed } = useStarknetApi();
   const { countBeasts } = useGameTokens();
+  const { currentNetworkConfig } = useDynamicConnector();
 
   const [gamePrice, setGamePrice] = useState<string | null>(null);
   const [lordsPrice, setLordsPrice] = useState<string | null>(null);
   const [gamePriceHistory, setGamePriceHistory] = useState<any[]>([]);
-
 
   const [remainingSurvivorTokens, setRemainingSurvivorTokens] = useState<
     number | null
@@ -87,10 +88,15 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   };
 
   const fetchRewardTokensClaimed = async () => {
-    const result = await getRewardTokensClaimed();
-    setRemainingSurvivorTokens(
-      result !== null ? totalSurvivorTokens - result : null
-    );
+    if (
+      currentNetworkConfig.dungeon ===
+      "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42"
+    ) {
+      const result = await getRewardTokensClaimed();
+      setRemainingSurvivorTokens(
+        result !== null ? totalSurvivorTokens - result : null
+      );
+    }
   };
 
   useEffect(() => {
