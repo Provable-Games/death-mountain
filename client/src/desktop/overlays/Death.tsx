@@ -75,7 +75,7 @@ export default function DeathOverlay() {
       currentNetworkConfig.dungeon ===
       "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
     ) {
-      window.open("https://budokan.gg/tournament/12", "_blank");
+      window.open("https://budokan.gg/tournament/14", "_blank");
       return;
     } else if (
       currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT &&
