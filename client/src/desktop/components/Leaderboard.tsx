@@ -57,7 +57,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     context: {
       name: "Budokan",
       attributes: {
-        "Tournament ID": "10",
+        "Tournament ID": "11",
       },
     },
     sortBy: "score",
@@ -76,7 +76,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     context: {
       name: "Budokan",
       attributes: {
-        "Tournament ID": "10",
+        "Tournament ID": "11",
       },
     },
   });
