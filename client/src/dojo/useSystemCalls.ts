@@ -17,6 +17,7 @@ import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
 import { useSnackbar } from "notistack";
 import { useGameTokens } from "./useGameTokens";
+import { num } from "starknet";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -464,7 +465,7 @@ export const useSystemCalls = () => {
     await executeAction([{
       contractAddress: currentNetworkConfig.beasts,
       entrypoint: "refresh_dungeon_stats",
-      calldata: [tokenId],
+      calldata: [num.toHex(tokenId)],
     }], () => { });
   };
 
