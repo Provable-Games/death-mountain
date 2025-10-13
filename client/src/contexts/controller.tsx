@@ -159,6 +159,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
         .goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
+    console.log('allTokens', allTokens);
     if (allTokens.length > 0) {
       const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
       setGoldenPassIds(cooldowns);

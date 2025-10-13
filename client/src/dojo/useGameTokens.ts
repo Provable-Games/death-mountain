@@ -102,7 +102,7 @@ export const useGameTokens = () => {
   const getGameTokens = async (accountAddress: string, tokenAddress: string) => {
     let url = `${SQL_ENDPOINT}/sql?query=
       SELECT token_id FROM token_balances
-      WHERE account_address = "${accountAddress.replace(/^0x0+/, "0x")}" AND contract_address = "${tokenAddress.replace(/^0x0+/, "0x")}"
+      WHERE account_address = "${addAddressPadding(accountAddress)}" AND contract_address = "${addAddressPadding(tokenAddress)}"
       LIMIT 10000`
 
     const sql = await fetch(url, {
@@ -120,7 +120,7 @@ export const useGameTokens = () => {
     let beast_address = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].beasts;
     let url = `${SQL_ENDPOINT}/sql?query=
       SELECT COUNT(*) as count FROM tokens
-      WHERE contract_address = "${beast_address.replace(/^0x0+/, "0x")}"`
+      WHERE contract_address = "${addAddressPadding(beast_address)}"`
 
     try {
       const sql = await fetch(url, {
