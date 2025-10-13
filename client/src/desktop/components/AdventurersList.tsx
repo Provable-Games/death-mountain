@@ -52,6 +52,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
         games = games.filter((game: any) => !game.dead && !game.expired);
       }
 
+      console.log('games', games);
       setGameTokens(
         games.sort((a: any, b: any) => b.adventurer_id - a.adventurer_id)
       );
@@ -216,7 +217,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
                     width: "50px",
                   }}
                 >
-                  {game.available_at !== 0 && game.expires_at > 0 && (
+                  {(game.available_at > 0 || game.expires_at > 0) && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                       {game.available_at < Date.now() ? (
                         <Box sx={{ display: "flex", alignItems: "center" }}>

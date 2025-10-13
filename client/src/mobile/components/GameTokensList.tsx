@@ -189,7 +189,7 @@ export default function GameTokensList() {
                 width: "50px",
               }}
             >
-              {game.available_at !== 0 && (
+              {(game.available_at > 0 || game.expires_at > 0) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                   {game.available_at < Date.now() ? (
                     <Box sx={{ display: "flex", alignItems: "center" }}>
