@@ -297,7 +297,7 @@ export const translateGameEvent = (event: any, manifest: any, gameId: number | n
         tier: getBeastTier(parsedFields.id),
         specialPrefix: parsedFields.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[parsedFields.specials.special2] : null,
         specialSuffix: parsedFields.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[parsedFields.specials.special3] : null,
-        isCollectable: parsedFields.is_collectable,
+        isCollectable: false,
       }
     }
   } else {
