@@ -47,7 +47,14 @@ export default function LandingPage() {
   }, []);
 
   const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
+    if (
+      currentNetworkConfig.dungeon ===
+      "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+    ) {
+      window.open("https://budokan.gg/tournament/10", "_blank");
+    } else if (
+      currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN
+    ) {
       if (!account) {
         login();
         return;
@@ -120,7 +127,10 @@ export default function LandingPage() {
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
                 <Typography color="secondary" sx={styles.modeTitle}>
-                  {currentNetworkConfig.name}
+                  {currentNetworkConfig.dungeon ===
+                  "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+                    ? "Silky Smooth"
+                    : currentNetworkConfig.name}
                 </Typography>
               </Box>
 
@@ -153,7 +163,10 @@ export default function LandingPage() {
                     disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"
                   }
                 >
-                  {currentNetworkConfig.name === "Beast Mode"
+                  {currentNetworkConfig.dungeon ===
+                  "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+                    ? "Enter on Budokan"
+                    : currentNetworkConfig.name === "Beast Mode"
                     ? "Buy Game"
                     : "Start Game"}
                 </Typography>
@@ -262,7 +275,11 @@ export default function LandingPage() {
                 </Button>
               )}
 
-              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
+              {currentNetworkConfig.name === "Beast Mode" &&
+                currentNetworkConfig.dungeon ===
+                  "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42" && (
+                  <PriceIndicator />
+                )}
             </>
           )}
 

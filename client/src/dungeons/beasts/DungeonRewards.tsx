@@ -201,7 +201,11 @@ export default function DungeonRewards() {
               mt={0.5}
               letterSpacing={0.2}
             >
-              Each beast holds a bounty valued at ~${Math.round(Number(strkPrice || 0) * JACKPOT_AMOUNT).toLocaleString()}!
+              Each beast holds a bounty valued at ~$
+              {Math.round(
+                Number(strkPrice || 0) * JACKPOT_AMOUNT
+              ).toLocaleString()}
+              !
             </Typography>
           </Box>
         </Box>

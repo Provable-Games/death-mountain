@@ -84,7 +84,14 @@ export default function MainMenu() {
   }, []);
 
   const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
+    if (
+      currentNetworkConfig.dungeon ===
+      "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+    ) {
+      window.open("https://budokan.gg/tournament/10", "_blank");
+    } else if (
+      currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN
+    ) {
       if (!account) {
         login();
         return;
@@ -148,9 +155,13 @@ export default function MainMenu() {
     } else if (hours > 0) {
       return `${hours}h`;
     } else {
-      return 'Less than 1h';
+      return "Less than 1h";
     }
   };
+
+  const isBeastMode =
+    currentNetworkConfig.dungeon ===
+    "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42";
 
   return (
     <>
@@ -169,7 +180,10 @@ export default function MainMenu() {
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
                 <Typography color="secondary" sx={styles.modeTitle}>
-                  {currentNetworkConfig.name}
+                  {currentNetworkConfig.dungeon ===
+                  "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+                    ? "Silky Smooth"
+                    : currentNetworkConfig.name}
                 </Typography>
               </Box>
 
@@ -199,7 +213,10 @@ export default function MainMenu() {
                         : "#d0c98d",
                     }}
                   >
-                    {currentNetworkConfig.name === "Beast Mode"
+                    {currentNetworkConfig.dungeon ===
+                    "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
+                      ? "Enter on Budokan"
+                      : currentNetworkConfig.name === "Beast Mode"
                       ? "Buy Game"
                       : "Start Game"}
                   </Typography>
@@ -331,33 +348,40 @@ export default function MainMenu() {
               </Button> */}
 
               {currentNetworkConfig.name === "Beast Mode" &&
-                <>
-                  <PriceIndicator />
+                currentNetworkConfig.dungeon ===
+                  "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42" && (
+                  <>
+                    <PriceIndicator />
 
-                  <Link
-                    href="#"
-                    sx={styles.learnMoreLink}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open('https://docs.provable.games/lootsurvivor/dungeon-tickets', '_blank');
-                    }}
-                  >
-                    Learn more about Dungeon Tickets
-                  </Link>
-                </>
-              }
+                    <Link
+                      href="#"
+                      sx={styles.learnMoreLink}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open(
+                          "https://docs.provable.games/lootsurvivor/dungeon-tickets",
+                          "_blank"
+                        );
+                      }}
+                    >
+                      Learn more about Dungeon Tickets
+                    </Link>
+                  </>
+                )}
 
               <Box sx={styles.bottom}>
-                {showBoost && (
-                  <Box sx={styles.boostIndicator}>
-                    <Typography sx={styles.boostText}>
-                      🔥 4x Survivor Token Rewards
-                    </Typography>
-                    <Typography sx={styles.countdownText}>
-                      {formatTimeRemaining(timeRemaining)} remaining
-                    </Typography>
-                  </Box>
-                )}
+                {showBoost &&
+                  currentNetworkConfig.dungeon ===
+                    "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42" && (
+                    <Box sx={styles.boostIndicator}>
+                      <Typography sx={styles.boostText}>
+                        🔥 4x Survivor Token Rewards
+                      </Typography>
+                      <Typography sx={styles.countdownText}>
+                        {formatTimeRemaining(timeRemaining)} remaining
+                      </Typography>
+                    </Box>
+                  )}
                 <WalletConnect />
 
                 <Box sx={styles.bottomRow}>
@@ -427,9 +451,11 @@ export default function MainMenu() {
         />
       )}
 
-      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
-        <DungeonRewards />
-      </Box>
+      {isBeastMode && (
+        <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+          <DungeonRewards />
+        </Box>
+      )}
     </>
   );
 }
@@ -587,36 +613,37 @@ const styles = {
     },
   },
   learnMoreLink: {
-    fontSize: '0.9rem',
-    color: 'rgba(208, 201, 141, 0.6)',
-    textDecoration: 'underline !important',
-    cursor: 'pointer',
-    '&:hover': {
-      color: 'rgba(208, 201, 141, 0.8)',
+    fontSize: "0.9rem",
+    color: "rgba(208, 201, 141, 0.6)",
+    textDecoration: "underline !important",
+    cursor: "pointer",
+    "&:hover": {
+      color: "rgba(208, 201, 141, 0.8)",
     },
   },
   boostIndicator: {
-    background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(139, 195, 74, 0.2))',
-    border: '1px solid #4caf50',
-    borderRadius: '8px',
-    padding: '5px 10px',
-    marginBottom: '4px',
-    textAlign: 'center',
-    width: '100%',
-    boxSizing: 'border-box',
+    background:
+      "linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(139, 195, 74, 0.2))",
+    border: "1px solid #4caf50",
+    borderRadius: "8px",
+    padding: "5px 10px",
+    marginBottom: "4px",
+    textAlign: "center",
+    width: "100%",
+    boxSizing: "border-box",
   },
   boostText: {
-    fontSize: '0.8rem',
-    fontWeight: 'bold',
-    color: '#4caf50',
-    textShadow: '0 0 5px rgba(76, 175, 80, 0.5)',
-    letterSpacing: '0.3px',
+    fontSize: "0.8rem",
+    fontWeight: "bold",
+    color: "#4caf50",
+    textShadow: "0 0 5px rgba(76, 175, 80, 0.5)",
+    letterSpacing: "0.3px",
   },
   countdownText: {
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    color: '#8bc34a',
-    textShadow: '0 0 3px rgba(139, 195, 74, 0.4)',
-    letterSpacing: '0.2px',
+    fontSize: "0.7rem",
+    fontWeight: "600",
+    color: "#8bc34a",
+    textShadow: "0 0 3px rgba(139, 195, 74, 0.4)",
+    letterSpacing: "0.2px",
   },
 };
