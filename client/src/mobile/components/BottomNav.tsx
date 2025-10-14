@@ -35,12 +35,8 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
     clearCart();
   }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
 
-  const isMarketAvailable = adventurer?.beast_health === 0 && adventurer?.stat_upgrades_available === 0;
-  const marketTooltipText = adventurer?.beast_health! > 0
-    ? 'Not available during battle'
-    : adventurer?.stat_upgrades_available! > 0
-      ? 'Not available during stat selection'
-      : '';
+  const isMarketAvailable = adventurer?.beast_health === 0;
+  const marketTooltipText = adventurer?.beast_health! > 0 ? 'Not available during battle' : '';
 
   const navItems = [
     {
@@ -117,7 +113,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNav
                       }}
                     >
                       {item.icon}
-                      {item.key === 'MARKET' && item.hasNew && (
+                      {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && (
                         <Box sx={styles.newIndicator}>!</Box>
                       )}
                     </Box>

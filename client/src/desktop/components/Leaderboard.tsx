@@ -11,6 +11,8 @@ import {
   IconButton,
   Pagination,
   Skeleton,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import { motion } from "framer-motion";
@@ -29,9 +31,14 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const { currentNetworkConfig } = useDynamicConnector();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   const handleChange = (event: any, newValue: number) => {
     goToPage(newValue - 1);
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   const GAME_TOKEN_ADDRESS = getContractByName(
@@ -64,6 +71,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     sortOrder: "desc",
     mintedByAddress,
     settings_id,
+    owner: activeTab === 1 ? address : undefined,
   });
 
   const { games: playerBestGames } = useGameTokens({
@@ -131,6 +139,18 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
             </Box>
           </Box>
         )}
+      </Box>
+
+      <Box sx={styles.tabsContainer}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={styles.tabs}
+        >
+          <Tab label="All" sx={styles.tab} />
+          <Tab label="My Games" sx={styles.tab} />
+        </Tabs>
       </Box>
 
       <Box sx={styles.listContainer}>
@@ -242,13 +262,37 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    mb: 1,
+    mb: 0.5,
     pr: 1,
     boxSizing: "border-box",
   },
   backButton: {
     minWidth: "auto",
     px: 1,
+  },
+  tabsContainer: {
+    width: "100%",
+    mb: 1,
+  },
+  tabs: {
+    minHeight: "20px",
+    "& .MuiTabs-indicator": {
+      backgroundColor: "primary.main",
+    },
+  },
+  tab: {
+    padding: "5px 0px",
+    minHeight: "20px",
+    color: "text.primary",
+    fontSize: "12px",
+    opacity: 0.7,
+    "&.Mui-selected": {
+      color: "primary.main",
+      opacity: 1,
+    },
+    "&:hover": {
+      opacity: 0.9,
+    },
   },
   listContainer: {
     width: "100%",

@@ -1,14 +1,14 @@
+import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { calculateLevel } from '@/utils/game';
-import { ItemUtils, slotIcons, typeIcons, Tier } from '@/utils/loot';
+import { ItemUtils, Tier, slotIcons, typeIcons } from '@/utils/loot';
 import { MarketItem, generateMarketItems, potionPrice } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
-import { Box, Button, IconButton, Modal, Paper, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import { useCallback, useMemo, useState } from 'react';
-import JewelryTooltip from '@/components/JewelryTooltip';
+import { Box, Button, IconButton, Paper, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { useCallback, useMemo } from 'react';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -79,8 +79,6 @@ export default function MarketScreen() {
     setShowFilters,
   } = useMarketStore();
 
-  const [showCart, setShowCart] = useState(false);
-
   // Function to check if an item is already owned (in equipment or bag)
   const isItemOwned = useCallback((itemId: number) => {
     if (!adventurer) return false;
@@ -126,7 +124,7 @@ export default function MarketScreen() {
         return b.price - a.price; // Both unaffordable, sort by price
       }
     });
-  }, [marketItemIds, adventurer?.gold]);
+  }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
 
   const handleBuyItem = (item: MarketItem) => {
     addToCart(item);
@@ -181,6 +179,7 @@ export default function MarketScreen() {
   const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
   const inventoryFull = bag.length + cart.items.length === MAX_BAG_SIZE;
+  const marketAvailable = adventurer?.stat_upgrades_available! === 0;
 
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
@@ -192,7 +191,7 @@ export default function MarketScreen() {
   return (
     <Box sx={styles.container}>
       {/* Top Bar */}
-      <Box sx={styles.topBar}>
+      {marketAvailable && <Box sx={styles.topBar}>
         <Box sx={styles.healthDisplay}>
           <Typography sx={styles.healthLabel}>Health</Typography>
           <Typography sx={styles.healthValue}>
@@ -217,143 +216,13 @@ export default function MarketScreen() {
             : `Purchase (${cart.potions + cart.items.length})`
           }
         </Button>
-      </Box>
+      </Box>}
 
-      {/* Cart Modal */}
-      <Modal
-        open={showCart}
-        onClose={() => {
-          setShowCart(false);
-          setInProgress(false);
-        }}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{
-          background: 'rgba(17, 17, 17, 1)',
-          borderRadius: '5px',
-          padding: '16px',
-          width: '100%',
-          maxWidth: '400px',
-          maxHeight: '80dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          border: '1px solid rgba(128, 255, 0, 0.1)',
-          position: 'relative',
-        }}>
-          <Button
-            onClick={() => {
-              setShowCart(false);
-              setInProgress(false);
-            }}
-            sx={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              minWidth: '32px',
-              height: '32px',
-              padding: 0,
-              fontSize: '24px',
-              color: 'rgba(255, 255, 255, 0.9)',
-              '&:hover': {
-                color: '#80FF00',
-              },
-            }}
-          >
-            x
-          </Button>
-          <Typography sx={styles.cartTitle}>Market Cart</Typography>
-          <Box sx={styles.cartItems}>
-            {cart.potions > 0 && (
-              <Box sx={styles.cartItem}>
-                <Typography sx={styles.cartItemName}>Health Potion x{cart.potions}</Typography>
-                <Typography sx={styles.cartItemPrice}>{potionCost * cart.potions} Gold</Typography>
-                <Button
-                  onClick={handleRemovePotion}
-                  sx={styles.removeButton}
-                >
-                  x
-                </Button>
-              </Box>
-            )}
-            {cart.items.map((item, index) => (
-              <Box key={index} sx={styles.cartItem}>
-                <Typography sx={styles.cartItemName}>{item.name}</Typography>
-                <Typography sx={styles.cartItemPrice}>{item.price} Gold</Typography>
-                <Button
-                  onClick={() => handleRemoveItem(item)}
-                  sx={styles.removeButton}
-                >
-                  x
-                </Button>
-              </Box>
-            ))}
-          </Box>
-
-          {(adventurer?.stats?.charisma || 0) > 0 && <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px',
-            pr: '12px',
-            background: 'rgba(237, 207, 51, 0.1)',
-            borderRadius: '4px',
-            marginBottom: '8px',
-          }}>
-            <Typography sx={{
-              color: 'rgba(237, 207, 51, 0.8)',
-              fontSize: '0.9rem',
-              fontFamily: 'VT323, monospace',
-            }}>
-              Gold Saved from Charisma
-            </Typography>
-            <Typography sx={{
-              color: '#EDCF33',
-              fontSize: '0.9rem',
-              fontFamily: 'VT323, monospace',
-              fontWeight: 'bold',
-            }}>
-              {Math.round(
-                (potionPrice(calculateLevel(adventurer?.xp || 0), 0) * cart.potions) - (potionCost * cart.potions) +
-                cart.items.reduce((total, item) => {
-                  const maxDiscount = (6 - item.tier) * 4;
-                  const charismaDiscount = Math.min(adventurer?.stats?.charisma || 0, maxDiscount);
-                  return total + charismaDiscount;
-                }, 0)
-              )} Gold
-            </Typography>
-          </Box>}
-
-          <Box sx={styles.cartTotal}>
-            <Typography sx={styles.totalLabel}>Total</Typography>
-            <Typography sx={styles.totalValue}>{totalCost} Gold</Typography>
-          </Box>
-
-          <Box sx={styles.cartActions}>
-            <Button
-              variant="contained"
-              onClick={handleCheckout}
-              disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
-              sx={styles.checkoutButton}
-            >
-              {inProgress
-                ? <Box display={'flex'} alignItems={'baseline'}>
-                  <Typography variant='h5'>
-                    Processing
-                  </Typography>
-                  <div className='dotLoader green' />
-                </Box>
-                : <Typography variant='h5'>
-                  Checkout
-                </Typography>
-              }
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
+      {!marketAvailable && <Box sx={[styles.topBar, { justifyContent: 'center' }]}>
+        <Typography fontWeight={600}>
+          Market Opens After Stat Selection
+        </Typography>
+      </Box>}
 
       {/* Main Content */}
       <Box sx={styles.mainContent}>
@@ -372,13 +241,13 @@ export default function MarketScreen() {
                 <Box sx={styles.potionControls}>
                   <Typography sx={styles.potionCost}>Cost: {potionCost} Gold</Typography>
                 </Box>
-                <Slider
+                {marketAvailable && <Slider
                   value={cart.potions}
                   onChange={(_, value) => handleBuyPotion(value as number)}
                   min={0}
                   max={maxPotions}
                   sx={styles.potionSlider}
-                />
+                />}
               </Box>
             </Box>
           </Box>
@@ -513,7 +382,7 @@ export default function MarketScreen() {
                           In Cart
                         </Typography>
                       )}
-                      <Button
+                      {marketAvailable && <Button
                         variant="contained"
                         onClick={() => cart.items.some(cartItem => cartItem.id === item.id) ? handleRemoveItem(item) : handleBuyItem(item)}
                         disabled={!cart.items.some(cartItem => cartItem.id === item.id) && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull)}
@@ -527,7 +396,7 @@ export default function MarketScreen() {
                         size="small"
                       >
                         {cart.items.some(cartItem => cartItem.id === item.id) ? 'Undo' : isItemOwned(item.id) ? 'Owned' : inventoryFull ? 'Bag Full' : 'Buy'}
-                      </Button>
+                      </Button>}
                     </Box>
                   </Box>
                 </Box>

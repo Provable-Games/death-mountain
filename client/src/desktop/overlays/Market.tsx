@@ -1,14 +1,14 @@
-import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
+import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { calculateLevel } from '@/utils/game';
-import { ItemUtils, slotIcons, typeIcons, Tier } from '@/utils/loot';
+import { ItemUtils, Tier, slotIcons, typeIcons } from '@/utils/loot';
 import { MarketItem, generateMarketItems, potionPrice } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
-import { Box, Button, IconButton, Modal, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import JewelryTooltip from '@/components/JewelryTooltip';
+import { Box, Button, IconButton, Slider, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo } from 'react';
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -82,8 +82,6 @@ export default function MarketOverlay() {
     clearCart,
   } = useMarketStore();
 
-  const [showCart, setShowCart] = useState(false);
-
   const handleOpen = () => {
     setIsOpen(!isOpen);
 
@@ -104,7 +102,6 @@ export default function MarketOverlay() {
       }
 
       setIsOpen(false);
-      setShowCart(false);
       setInProgress(false);
     }
 
@@ -160,7 +157,7 @@ export default function MarketOverlay() {
         return b.price - a.price; // Both unaffordable, sort by price
       }
     });
-  }, [marketItemIds, adventurer?.gold]);
+  }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
 
   const handleBuyItem = (item: MarketItem) => {
     addToCart(item);
@@ -189,10 +186,6 @@ export default function MarketOverlay() {
     removeFromCart(itemToRemove);
   };
 
-  const handleRemovePotion = () => {
-    setPotions(0);
-  };
-
   const handleSlotFilter = (_: React.MouseEvent<HTMLElement>, newSlot: string | null) => {
     setSlotFilter(newSlot);
   };
@@ -213,6 +206,7 @@ export default function MarketOverlay() {
   const maxPotionsByGold = Math.floor((adventurer!.gold - cart.items.reduce((sum, item) => sum + item.price, 0)) / potionCost);
   const maxPotions = Math.min(maxPotionsByHealth, maxPotionsByGold);
   const inventoryFull = bag.length + cart.items.length === MAX_BAG_SIZE;
+  const marketAvailable = adventurer?.stat_upgrades_available! === 0;
 
   const filteredItems = marketItems.filter(item => {
     if (slotFilter && item.slot !== slotFilter) return false;
@@ -229,7 +223,7 @@ export default function MarketOverlay() {
           ...(newMarket && styles.buttonWrapperHighlighted)
         }} onClick={handleOpen}>
           <img src={'/images/market.png'} alt="Market" style={{ width: '90%', height: '90%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(50deg) brightness(0.93) saturate(1.05)' }} />
-          {newMarket && (
+          {newMarket && marketAvailable && (
             <Box sx={styles.newIndicator}>!</Box>
           )}
         </Box>
@@ -240,7 +234,7 @@ export default function MarketOverlay() {
           {/* Market popup */}
           <Box sx={styles.popup}>
             {/* Top Bar */}
-            <Box sx={styles.topBar}>
+            {marketAvailable && <Box sx={styles.topBar}>
               <Box sx={styles.goldDisplay}>
                 <Typography sx={styles.goldLabel} variant='h6'>Gold left:</Typography>
                 <Typography sx={styles.goldValue} variant='h6'>{remainingGold}</Typography>
@@ -263,102 +257,13 @@ export default function MarketOverlay() {
                   </Typography>
                 }
               </Button>
-            </Box>
+            </Box>}
 
-            {/* Cart Modal */}
-            <Modal
-              open={showCart}
-              onClose={() => {
-                setShowCart(false);
-                setInProgress(false);
-              }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box sx={styles.cartModal}>
-                <Button
-                  onClick={() => {
-                    setShowCart(false);
-                    setInProgress(false);
-                  }}
-                  sx={styles.closeButton}
-                >
-                  x
-                </Button>
-                <Typography sx={styles.cartTitle}>Market Cart</Typography>
-                <Box sx={styles.cartItems}>
-                  {cart.potions > 0 && (
-                    <Box sx={styles.cartItem}>
-                      <Typography sx={styles.cartItemName}>Health Potion x{cart.potions}</Typography>
-                      <Typography sx={styles.cartItemPrice}>{potionCost * cart.potions} Gold</Typography>
-                      <Button
-                        onClick={handleRemovePotion}
-                        sx={styles.removeButton}
-                      >
-                        x
-                      </Button>
-                    </Box>
-                  )}
-                  {cart.items.map((item, index) => (
-                    <Box key={index} sx={styles.cartItem}>
-                      <Typography sx={styles.cartItemName}>{item.name}</Typography>
-                      <Typography sx={styles.cartItemPrice}>{item.price} Gold</Typography>
-                      <Button
-                        onClick={() => handleRemoveItem(item)}
-                        sx={styles.removeButton}
-                      >
-                        x
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-
-                {(adventurer?.stats?.charisma || 0) > 0 && <Box sx={styles.charismaDiscount}>
-                  <Typography sx={styles.charismaLabel}>
-                    Gold Saved from Charisma
-                  </Typography>
-                  <Typography sx={styles.charismaValue}>
-                    {Math.round(
-                      (potionPrice(calculateLevel(adventurer?.xp || 0), 0) * cart.potions) - (potionCost * cart.potions) +
-                      cart.items.reduce((total, item) => {
-                        const maxDiscount = (6 - item.tier) * 4;
-                        const charismaDiscount = Math.min(adventurer?.stats?.charisma || 0, maxDiscount);
-                        return total + charismaDiscount;
-                      }, 0)
-                    )} Gold
-                  </Typography>
-                </Box>}
-
-                <Box sx={styles.cartTotal}>
-                  <Typography sx={styles.totalLabel}>Total</Typography>
-                  <Typography sx={styles.totalValue}>{totalCost} Gold</Typography>
-                </Box>
-
-                <Box sx={styles.cartActions}>
-                  <Button
-                    variant="contained"
-                    onClick={handleCheckout}
-                    disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
-                    sx={styles.checkoutButton}
-                  >
-                    {inProgress
-                      ? <Box display={'flex'} alignItems={'baseline'}>
-                        <Typography variant='h5'>
-                          Processing
-                        </Typography>
-                        <div className='dotLoader yellow' />
-                      </Box>
-                      : <Typography variant='h5'>
-                        Checkout
-                      </Typography>
-                    }
-                  </Button>
-                </Box>
-              </Box>
-            </Modal>
+            {!marketAvailable && <Box sx={styles.topBar}>
+              <Typography fontWeight={600} sx={styles.goldLabel}>
+                Market Opens After Stat Selection
+              </Typography>
+            </Box>}
 
             {/* Main Content */}
             <Box sx={styles.mainContent}>
@@ -377,13 +282,13 @@ export default function MarketOverlay() {
                       <Box sx={styles.potionControls}>
                         <Typography sx={styles.potionCost}>Cost: {potionCost} Gold</Typography>
                       </Box>
-                      <Slider
+                      {marketAvailable && <Slider
                         value={cart.potions}
                         onChange={(_, value) => handleBuyPotion(value as number)}
                         min={0}
                         max={maxPotions}
                         sx={styles.potionSlider}
-                      />
+                      />}
                     </Box>
                   </Box>
                 </Box>
@@ -508,7 +413,7 @@ export default function MarketOverlay() {
                                 In Cart
                               </Typography>
                             )}
-                            <Button
+                            {marketAvailable && <Button
                               variant="outlined"
                               onClick={() => inCart ? handleRemoveItem(item) : handleBuyItem(item)}
                               disabled={!inCart && (remainingGold < item.price || isItemOwned(item.id) || inventoryFull)}
@@ -524,7 +429,7 @@ export default function MarketOverlay() {
                               <Typography textTransform={'none'}>
                                 {inCart ? 'Undo' : isItemOwned(item.id) ? 'Owned' : inventoryFull ? 'Bag Full' : 'Buy'}
                               </Typography>
-                            </Button>
+                            </Button>}
                           </Box>
                         </Box>
                       </Box>
