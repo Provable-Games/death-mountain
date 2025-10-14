@@ -158,6 +158,7 @@ export const useSystemCalls = () => {
     payment: Payment,
     name: string,
     preCalls: any[],
+    amount: number,
     callback: () => void
   ) => {
     let paymentData =
@@ -169,7 +170,7 @@ export const useSystemCalls = () => {
       preCalls.push({
         contractAddress: DUNGEON_TICKET,
         entrypoint: "approve",
-        calldata: CallData.compile([DUNGEON_ADDRESS, 1e18, "0"]),
+        calldata: CallData.compile([DUNGEON_ADDRESS, amount * 1e18, "0"]),
       });
     }
 
@@ -177,7 +178,7 @@ export const useSystemCalls = () => {
       let tx = await account!.execute(
         [
           ...preCalls,
-          {
+          ...Array.from({ length: amount }, () => ({
             contractAddress: DUNGEON_ADDRESS,
             entrypoint: "buy_game",
             calldata: CallData.compile([
@@ -186,7 +187,7 @@ export const useSystemCalls = () => {
               account!.address, // send game to this address
               false, // soulbound
             ]),
-          },
+          })),
         ]
       );
 

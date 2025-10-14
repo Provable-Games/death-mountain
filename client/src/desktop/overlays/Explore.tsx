@@ -163,7 +163,7 @@ export default function ExploreOverlay() {
       <TipsOverlay />
       <SettingsOverlay />
 
-      {adventurer?.stat_upgrades_available! === 0 && <MarketOverlay />}
+      <MarketOverlay />
 
       {/* Bottom Buttons */}
       {!spectating && <Box sx={styles.buttonContainer}>

@@ -34,6 +34,7 @@ export interface ControllerContext {
   showTermsOfService: boolean;
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
+  bulkMintGames: (amount: number) => void;
 }
 
 // Create a context
@@ -121,6 +122,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       payment,
       userName || "Adventurer",
       txs,
+      1,
       () => {
         navigate(`/survivor/play?mode=entering`);
       }
@@ -136,6 +138,17 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     } else {
       navigate(`/`, { replace: true });
     }
+  };
+
+  const bulkMintGames = async (amount: number) => {
+    await buyGame(
+      account,
+      { paymentType: "Ticket" },
+      userName || "Adventurer",
+      [],
+      Math.min(amount, 100),
+      () => { }
+    );
   };
 
   const createBurner = async () => {
@@ -196,6 +209,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
           }),
         logout: () => disconnect(),
         enterDungeon,
+        bulkMintGames,
       }}
     >
       {children}

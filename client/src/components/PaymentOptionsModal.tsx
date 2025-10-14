@@ -186,10 +186,10 @@ const TokenSelectionContent = memo(
             {tokenQuote.loading
               ? "Loading quote..."
               : tokenQuote.error
-              ? `Error: ${tokenQuote.error}`
-              : tokenQuote.amount
-              ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-              : "Loading..."}
+                ? `Error: ${tokenQuote.error}`
+                : tokenQuote.amount
+                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+                  : "Loading..."}
           </Typography>
         </Box>
 
@@ -217,7 +217,7 @@ export default function PaymentOptionsModal({
   open,
   onClose,
 }: PaymentOptionsModalProps) {
-  const { tokenBalances, goldenPassIds, enterDungeon, openBuyTicket } =
+  const { tokenBalances, goldenPassIds, enterDungeon, openBuyTicket, bulkMintGames } =
     useController();
 
   // Use the provider from StarknetConfig
@@ -566,8 +566,8 @@ export default function PaymentOptionsModal({
                             src="/images/dungeon_ticket.png"
                             alt="Dungeon Ticket"
                             style={{
-                              width: "130px",
-                              height: "130px",
+                              width: "120px",
+                              height: "120px",
                               objectFit: "contain",
                               display: "block",
                             }}
@@ -584,7 +584,9 @@ export default function PaymentOptionsModal({
                           sx={{
                             display: "flex",
                             justifyContent: "center",
-                            mb: 1,
+                            alignItems: "center",
+                            gap: 0.5,
+                            mb: 0.5,
                           }}
                         >
                           <Typography sx={styles.ticketCount}>
@@ -593,9 +595,19 @@ export default function PaymentOptionsModal({
                           </Typography>
                         </Box>
 
+
                         <ActionButton onClick={useDungeonTicket}>
                           Enter Dungeon
                         </ActionButton>
+
+                        {dungeonTicketCount > 1 && <Box
+                          onClick={() => bulkMintGames(dungeonTicketCount)}
+                          textAlign="center"
+                          mt={'-10px'}
+                        >
+                          <Typography sx={styles.mintAll}>Bulk Mint {dungeonTicketCount > 100 ? "100" : "All"} Games</Typography>
+                        </Box>}
+
                       </Box>
                     </MotionWrapper>
                   )}
@@ -1022,6 +1034,18 @@ const styles = {
     color: "#FFD700",
     opacity: 0.9,
     letterSpacing: 0.5,
+  },
+  mintAll: {
+    fontFamily: "Tiems",
+    fontSize: 13,
+    color: "#FFD700",
+    opacity: 0.9,
+    textDecoration: "underline",
+    cursor: "pointer",
+    "&:hover": {
+      color: "text.primary",
+      textDecoration: "underline",
+    },
   },
   activateButton: {
     background: "#d0c98d",

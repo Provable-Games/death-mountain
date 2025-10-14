@@ -136,7 +136,6 @@ export default function GamePage() {
   const isBeastDefeated = showBeastRewards && adventurer?.beast_health === 0;
   const isQuestCompleted = quest && adventurer && adventurer.xp >= quest.targetScore;
 
-
   return (
     <Box className="container" sx={styles.container}>
       {isLoading ? (
