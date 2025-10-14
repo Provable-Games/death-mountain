@@ -124,7 +124,7 @@ export default function MarketScreen() {
         return b.price - a.price; // Both unaffordable, sort by price
       }
     });
-  }, [marketItemIds, adventurer?.gold]);
+  }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
 
   const handleBuyItem = (item: MarketItem) => {
     addToCart(item);
