@@ -34,7 +34,7 @@ export interface ControllerContext {
   showTermsOfService: boolean;
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
-  bulkMintGames: (amount: number) => void;
+  bulkMintGames: (amount: number, callback: () => void) => void;
 }
 
 // Create a context
@@ -140,14 +140,22 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
-  const bulkMintGames = async (amount: number) => {
+  const bulkMintGames = async (amount: number, callback: () => void) => {
+    amount = Math.min(amount, 100);
+
     await buyGame(
       account,
       { paymentType: "Ticket" },
       userName || "Adventurer",
       [],
-      Math.min(amount, 100),
-      () => { }
+      amount,
+      () => {
+        setTokenBalances(prev => ({
+          ...prev,
+          "TICKET": (Number((prev as any)["TICKET"]) - amount).toString()
+        }));
+        callback();
+      }
     );
   };
 
@@ -172,7 +180,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
         .goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
-    console.log('allTokens', allTokens);
+
     if (allTokens.length > 0) {
       const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
       setGoldenPassIds(cooldowns);

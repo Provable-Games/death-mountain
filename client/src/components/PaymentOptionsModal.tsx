@@ -601,7 +601,7 @@ export default function PaymentOptionsModal({
                         </ActionButton>
 
                         {dungeonTicketCount > 1 && <Box
-                          onClick={() => bulkMintGames(dungeonTicketCount)}
+                          onClick={() => bulkMintGames(dungeonTicketCount, onClose)}
                           textAlign="center"
                           mt={'-10px'}
                         >
