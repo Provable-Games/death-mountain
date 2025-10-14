@@ -52,7 +52,6 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
         games = games.filter((game: any) => !game.dead && !game.expired);
       }
 
-      console.log('games', games);
       setGameTokens(
         games.sort((a: any, b: any) => b.adventurer_id - a.adventurer_id)
       );

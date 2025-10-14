@@ -511,7 +511,6 @@ export const useStarknetApi = () => {
       });
 
       const collectableData = await sqlResponse.json();
-      console.log('Collectable Data', collectableData)
 
       if (!collectableData || collectableData.length === 0 || parseInt(collectableData[0].killed_by, 16) !== gameId) {
         return false;
