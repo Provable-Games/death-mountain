@@ -215,7 +215,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
               >
                 <Typography>{game.score || 0} xp</Typography>
 
-                <Box textAlign={"center"}>
+                {/* <Box textAlign={"center"}>
                   {game.game_over ? (
                     <IconButton onClick={() => watchGame(game.token_id)}>
                       <TheatersIcon fontSize="small" color="primary" />
@@ -225,7 +225,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                       <VisibilityIcon fontSize="small" color="primary" />
                     </IconButton>
                   )}
-                </Box>
+                </Box> */}
               </Box>
             </Box>
           ))
