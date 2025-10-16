@@ -130,6 +130,7 @@ export interface Collectable {
 
 export interface Metadata {
   player_name: string;
+  minted_at: number;
   settings_id: number;
   minted_by: string;
   expires_at: number;

@@ -605,7 +605,7 @@ export default function PaymentOptionsModal({
                           textAlign="center"
                           mt={'-10px'}
                         >
-                          <Typography sx={styles.mintAll}>Bulk Mint {dungeonTicketCount > 100 ? "100" : "All"} Games</Typography>
+                          <Typography sx={styles.mintAll}>Bulk Mint {dungeonTicketCount > 50 ? "50" : "All"} Games</Typography>
                         </Box>}
 
                       </Box>

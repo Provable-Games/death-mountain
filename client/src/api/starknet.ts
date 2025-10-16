@@ -382,7 +382,6 @@ export const useStarknetApi = () => {
   const getUnclaimedAdventurerRewards = async (adventurerIds: number[]) => {
     const BATCH_SIZE = 50;
     const results: any[] = [];
-    
     // Process in batches of 50
     for (let i = 0; i < adventurerIds.length; i += BATCH_SIZE) {
       const batch = adventurerIds.slice(i, i + BATCH_SIZE);
@@ -408,13 +407,11 @@ export const useStarknetApi = () => {
 
       const batchData = await response.json();
       results.push(...batchData);
-      
       // Wait 1 second before next batch (except for last batch)
       if (i + BATCH_SIZE < adventurerIds.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    
     return results;
   }
 
@@ -460,6 +457,7 @@ export const useStarknetApi = () => {
 
       let tokenMetadata: Metadata = {
         player_name: hexToAscii(data[1].result[0]),
+        minted_at: parseInt(data[0].result[1], 16) * 1000,
         settings_id: parseInt(data[0].result[2]),
         expires_at: parseInt(data[0].result[3], 16) * 1000,
         available_at: parseInt(data[0].result[4], 16) * 1000,

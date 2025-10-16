@@ -1,6 +1,7 @@
 import { useController } from '@/contexts/controller';
 import { OPENING_TIME, useStatistics } from '@/contexts/Statistics';
 import { useSystemCalls } from '@/dojo/useSystemCalls';
+import { useGameStore } from '@/stores/gameStore';
 import { formatRewardNumber } from '@/utils/utils';
 import { keyframes } from '@emotion/react';
 import { Box, Button, Link, Typography } from '@mui/material';
@@ -17,7 +18,7 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
   const { claimSurvivorTokens } = useSystemCalls();
   const { tokenBalances } = useController();
   const { remainingSurvivorTokens, fetchRewardTokensClaimed } = useStatistics();
-
+  const { metadata } = useGameStore();
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentBalance] = useState(Number(tokenBalances.SURVIVOR || 0));
   const [rewardAmount, setRewardAmount] = useState(0);
@@ -26,12 +27,12 @@ export default function RewardsOverlay({ gameId, adventurerLevel, onClose }: Rew
   const [animatedWalletBalance, setAnimatedWalletBalance] = useState(Number(tokenBalances.SURVIVOR || 0));
   const [showMovingToken, setShowMovingToken] = useState(false);
 
-  const now = Math.floor(Date.now() / 1000);
+  const mintedAt = Math.floor((metadata?.minted_at || Date.now()) / 1000);
   let levelMultiplier;
 
-  if (now < OPENING_TIME + 1209600) {
+  if (mintedAt < OPENING_TIME + 1209600) {
     levelMultiplier = 1;
-  } else if (now < OPENING_TIME + 1209600 + 1209600) {
+  } else if (mintedAt < OPENING_TIME + 1209600 + 1209600) {
     levelMultiplier = 4;
   } else {
     levelMultiplier = 2;

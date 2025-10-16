@@ -141,7 +141,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   const bulkMintGames = async (amount: number, callback: () => void) => {
-    amount = Math.min(amount, 100);
+    amount = Math.min(amount, 50);
 
     await buyGame(
       account,
