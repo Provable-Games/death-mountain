@@ -35,7 +35,9 @@ export default function DeathOverlay() {
     limit: 1,
   });
 
-  const tournamentId = Number(games[0].context?.contexts["Tournament ID"] ?? 0);
+  const tournamentId = Number(
+    games[0]?.context?.contexts?.["Tournament ID"] ?? 0
+  );
 
   let battleMessage = "";
   if (finalBattleEvent?.type === "obstacle") {

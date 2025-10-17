@@ -25,7 +25,9 @@ export default function DeathScreen() {
     limit: 1,
   });
 
-  const tournamentId = Number(games[0].context?.contexts["Tournament ID"] ?? 0);
+  const tournamentId = Number(
+    games[0]?.context?.contexts?.["Tournament ID"] ?? 0
+  );
 
   let collectableCount = parseInt(
     localStorage.getItem(`beast_collected_${gameId}`) || "0"
