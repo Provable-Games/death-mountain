@@ -13,6 +13,7 @@ import { useGameTokenRanking } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
+import { useGameTokens } from "metagame-sdk/sql";
 
 export default function DeathOverlay() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -29,6 +30,12 @@ export default function DeathOverlay() {
   let collectableCount = parseInt(
     localStorage.getItem(`beast_collected_${gameId}`) || "0"
   );
+  const { games } = useGameTokens({
+    tokenIds: [Number(gameId)],
+    limit: 1,
+  });
+
+  const tournamentId = Number(games[0].context?.contexts["Tournament ID"] ?? 0);
 
   let battleMessage = "";
   if (finalBattleEvent?.type === "obstacle") {
@@ -75,7 +82,7 @@ export default function DeathOverlay() {
       currentNetworkConfig.dungeon ===
       "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
     ) {
-      window.open("https://budokan.gg/tournament/14", "_blank");
+      window.open(`https://budokan.gg/tournament/${tournamentId}`, "_blank");
       return;
     } else if (
       currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT &&

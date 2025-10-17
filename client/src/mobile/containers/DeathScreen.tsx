@@ -12,6 +12,7 @@ import { useGameTokenRanking } from "metagame-sdk/sql";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
+import { useGameTokens } from "metagame-sdk";
 
 export default function DeathScreen() {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -19,6 +20,12 @@ export default function DeathScreen() {
     useGameStore();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
+  const { games } = useGameTokens({
+    tokenIds: [Number(gameId)],
+    limit: 1,
+  });
+
+  const tournamentId = Number(games[0].context?.contexts["Tournament ID"] ?? 0);
 
   let collectableCount = parseInt(
     localStorage.getItem(`beast_collected_${gameId}`) || "0"
@@ -62,7 +69,7 @@ export default function DeathScreen() {
       currentNetworkConfig.dungeon ===
       "0x58f888ba5897efa811eca5e5818540d35b664f4281660cd839cd5a4b0bf4582"
     ) {
-      window.open("https://budokan.gg/tournament/14", "_blank");
+      window.open(`https://budokan.gg/tournament/${tournamentId}`, "_blank");
       return;
     } else if (quest) {
       navigate(`/survivor/campaign?chapter=${quest.chapterId}`, {
