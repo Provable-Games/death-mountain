@@ -221,7 +221,15 @@ mod beast_systems {
             let world: WorldStorage = self.world(@DEFAULT_NS());
             let kill_index = _get_correct_index(dungeon, kill_index);
             let dungeon = _get_correct_dungeon(dungeon);
-            world.read_model((dungeon, entity_hash, kill_index))
+            let adventurer_killed: AdventurerKilled = world.read_model((dungeon, entity_hash, kill_index));
+
+            AdventurerKilled {
+                dungeon: adventurer_killed.dungeon,
+                entity_hash: adventurer_killed.entity_hash,
+                kill_index: adventurer_killed.kill_index,
+                adventurer_id: adventurer_killed.adventurer_id,
+                timestamp: starknet::get_current_timestamp(),
+            }
         }
 
         fn get_starter_beast(self: @ContractState, starter_weapon_type: Type) -> Beast {
@@ -259,7 +267,8 @@ mod beast_systems {
     // DEV NOTE: this is a fix for BEAST NFTS to get correct stats, as the key of entity_stats
     // is set to minted_by game_id instead of minted_by_address
     fn _get_correct_entity_stats(dungeon: ContractAddress) -> ContractAddress {
-        if dungeon == starknet::get_contract_address() {
+        if dungeon == starknet::get_contract_address()
+            || dungeon == 0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42.try_into().unwrap() {
             0x6.try_into().unwrap()
         } else {
             dungeon
