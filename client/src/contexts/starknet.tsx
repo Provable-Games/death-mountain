@@ -29,14 +29,14 @@ const controllerConfig = getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN);
 const cartridgeController =
   typeof window !== "undefined"
     ? new ControllerConnector({
-      policies: controllerConfig.policies,
-      namespace: controllerConfig.namespace,
-      slot: controllerConfig.slot,
-      preset: controllerConfig.preset,
-      chains: controllerConfig.chains,
-      defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
-      tokens: controllerConfig.tokens,
-    })
+        policies: controllerConfig.policies,
+        namespace: controllerConfig.namespace,
+        slot: controllerConfig.slot,
+        preset: controllerConfig.preset,
+        chains: controllerConfig.chains,
+        defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
+        tokens: controllerConfig.tokens,
+      })
     : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {

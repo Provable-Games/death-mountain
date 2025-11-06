@@ -10,7 +10,11 @@ import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { useUIStore } from "@/stores/uiStore";
 import { streamIds } from "@/utils/cloudflare";
-import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
+import {
+  ChainId,
+  getNetworkConfig,
+  NetworkConfig,
+} from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
@@ -37,15 +41,11 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 
 export default function GamePage() {
   const navigate = useNavigate();
-  const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
+  const { setCurrentNetworkConfig, currentNetworkConfig } =
+    useDynamicConnector();
   const { mintGame } = useSystemCalls();
 
-  const {
-    account,
-    playerName,
-    login,
-    isPending,
-  } = useController();
+  const { account, playerName, login, isPending } = useController();
   const { address: controllerAddress } = useAccount();
   const {
     gameId,
@@ -79,8 +79,13 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    if (
+      mode === "practice" &&
+      currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT
+    ) {
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
+      );
       return;
     }
 
@@ -89,8 +94,14 @@ export default function GamePage() {
       return;
     }
 
-    if (mode !== "entering" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT && game_id === 0) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    if (
+      mode !== "entering" &&
+      currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT &&
+      game_id === 0
+    ) {
+      setCurrentNetworkConfig(
+        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
+      );
       return;
     }
 
@@ -103,8 +114,14 @@ export default function GamePage() {
       return;
     }
 
-    if (!controllerAddress && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      login();
+    if (
+      !controllerAddress &&
+      currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT
+    ) {
+      // wait 2 secoonds before prompting login
+      setTimeout(() => {
+        login();
+      }, 2000);
       return;
     }
 
@@ -117,7 +134,14 @@ export default function GamePage() {
     } else if (game_id === 0) {
       mint();
     }
-  }, [game_id, controllerAddress, isPending, account, currentNetworkConfig.chainId, mode]);
+  }, [
+    game_id,
+    controllerAddress,
+    isPending,
+    account,
+    currentNetworkConfig.chainId,
+    mode,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -132,7 +156,8 @@ export default function GamePage() {
 
     let tokenId = await mintGame(playerName, settings_id);
     navigate(
-      `/survivor/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
+      `/survivor/play?id=${tokenId}${
+        mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );

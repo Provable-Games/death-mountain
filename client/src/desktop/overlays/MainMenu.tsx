@@ -93,7 +93,9 @@ export default function MainMenu() {
       currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN
     ) {
       if (!account) {
-        login();
+        setTimeout(() => {
+          login();
+        }, 2000);
         return;
       }
 
@@ -108,7 +110,9 @@ export default function MainMenu() {
       currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN &&
       !account
     ) {
-      login();
+      setTimeout(() => {
+        login();
+      }, 2000);
       return;
     }
 

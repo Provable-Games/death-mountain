@@ -117,7 +117,10 @@ export default function GamePage() {
       !controllerAddress &&
       currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT
     ) {
-      login();
+      // wait 2 secoonds before prompting login
+      setTimeout(() => {
+        login();
+      }, 2000);
       return;
     }
 
