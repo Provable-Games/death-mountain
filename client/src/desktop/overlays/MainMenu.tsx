@@ -132,7 +132,7 @@ export default function MainMenu() {
                 fullWidth
                 size="large"
                 onClick={handleStartGame}
-                disabled={currentNetworkConfig.name === "Beast Mode"}
+                disabled={disableGameButtons}
                 sx={{
                   px: 1,
                   display: "flex",
@@ -281,7 +281,7 @@ export default function MainMenu() {
 
               {currentNetworkConfig.name === "Beast Mode" && (
                 <>
-                  {/* <PriceIndicator /> */}
+                  <PriceIndicator />
 
                   <Link
                     href="#"
