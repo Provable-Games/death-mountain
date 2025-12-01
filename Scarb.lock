@@ -5,6 +5,15 @@ version = 1
 name = "death_mountain"
 version = "1.0.0"
 dependencies = [
+ "death_mountain_beast",
+ "death_mountain_combat",
+ "snforge_std",
+]
+
+[[package]]
+name = "death_mountain_beast"
+version = "1.0.0"
+dependencies = [
  "death_mountain_combat",
  "snforge_std",
 ]

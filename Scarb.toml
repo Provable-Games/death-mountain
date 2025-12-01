@@ -2,6 +2,7 @@
 [workspace]
 members = [
     "packages/combat",
+    "packages/beast",
 ]
 
 [package]
@@ -33,6 +34,7 @@ snforge_std = "0.52.0"
 [dependencies]
 starknet.workspace = true
 death_mountain_combat = { path = "packages/combat" }
+death_mountain_beast = { path = "packages/beast" }
 
 [dev-dependencies]
 snforge_std.workspace = true

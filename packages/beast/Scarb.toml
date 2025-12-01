@@ -1,6 +1,6 @@
 
 [package]
-name = "death_mountain_interfaces"
+name = "death_mountain_beast"
 version = "1.0.0"
 
 keywords.workspace = true
@@ -19,6 +19,7 @@ scarb.workspace = true
 
 [dependencies]
 starknet.workspace = true
+death_mountain_combat = { path = "../combat" }
 
 [dev-dependencies]
 assert_macros.workspace = true
