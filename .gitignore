@@ -1,4 +1,5 @@
 node_modules
+target
 contracts/target
 contracts/torii.db
 contracts/KATANA.toml
