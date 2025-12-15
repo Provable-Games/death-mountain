@@ -12,13 +12,14 @@ import XIcon from '@mui/icons-material/X';
 import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import WalletConnect from '../components/WalletConnect';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function SettingsOverlay() {
+  const dungeon = useDungeon();
   const { showSettings, setShowSettings } = useGameStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
   const { skipAllAnimations, setSkipAllAnimations } = useUIStore();
   const navigate = useNavigate();
-
   const handleExitGame = () => {
     navigate('/');
   };
@@ -61,7 +62,7 @@ export default function SettingsOverlay() {
               {/* Profile Section */}
               <Box sx={styles.section}>
                 <Typography sx={styles.sectionTitle}>Profile</Typography>
-                <WalletConnect />
+                {!dungeon.hideController ? <WalletConnect /> : null}
               </Box>
 
               <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />

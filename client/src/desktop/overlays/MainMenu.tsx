@@ -183,7 +183,7 @@ export default function MainMenu() {
                 variant="outlined"
                 fullWidth
                 size="large"
-                onClick={() => navigate(`/${dungeon.id}/play`)}
+                onClick={() => navigate(`/${dungeon.id}/play?mode=practice`)}
                 sx={{ pl: 1, height: "36px" }}
               >
                 <img
@@ -267,7 +267,7 @@ export default function MainMenu() {
               )}
 
               <Box sx={styles.bottom}>
-                <WalletConnect />
+                {!dungeon.hideController ? <WalletConnect /> : null}
 
                 <Box sx={styles.bottomRow}>
                   <Typography sx={styles.alphaVersion}>

@@ -17,9 +17,15 @@ import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
 import GameTokensList from "../components/GameTokensList";
 import Leaderboard from "../components/Leaderboard";
+import NotFoundPage from "./NotFoundPage";
 
 export default function LandingPage() {
   const dungeon = useDungeon();
+
+  if (!dungeon) {
+    return <NotFoundPage />
+  }
+
   const { account } = useAccount();
   const { login } = useController();
   const { currentNetworkConfig, setCurrentNetworkConfig } =
@@ -199,7 +205,7 @@ export default function LandingPage() {
                 variant="contained"
                 size="large"
                 color="secondary"
-                onClick={() => navigate(`/${dungeon.id}/play`)}
+                onClick={() => navigate(`/${dungeon.id}/play?mode=practice`)}
                 sx={{ height: "36px", mt: 1, mb: 1 }}
               >
                 <Typography variant="h5" color="#111111">

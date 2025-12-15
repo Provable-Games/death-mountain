@@ -5,11 +5,12 @@ import { useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import SettingsMenu from './HeaderMenu';
 import WalletConnect from './WalletConnect';
+import { useDungeon } from '@/dojo/useDungeon';
 
 function Header() {
   const { gameId, adventurer } = useGameStore();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
+  const dungeon = useDungeon();
   const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -27,7 +28,7 @@ function Header() {
 
 
       <Box sx={styles.headerButtons}>
-        <WalletConnect />
+        {!dungeon.hideController ? <WalletConnect /> : null}
 
         <IconButton
           onClick={handleSettingsClick}
