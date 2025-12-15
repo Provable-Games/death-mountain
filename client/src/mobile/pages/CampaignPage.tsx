@@ -10,9 +10,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function CampaignPage() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const [searchParams] = useSearchParams();
   const { setQuest } = useGameStore();
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -38,7 +40,7 @@ export default function CampaignPage() {
         }));
 
         setChapters(updatedCampaign);
-        
+
         // Check for chapter parameter in URL
         const chapterId = searchParams.get('chapter');
         if (chapterId) {
@@ -47,7 +49,7 @@ export default function CampaignPage() {
             setSelectedChapter(chapter);
           }
         }
-        
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching campaign:', error);
@@ -93,7 +95,7 @@ export default function CampaignPage() {
       setSelectedChapter(chapter);
       setSelectedQuest(null);
       // Update URL with selected chapter
-      navigate(`/survivor/campaign?chapter=${chapter.id}`, { replace: true });
+      navigate(`/${dungeon.id}/campaign?chapter=${chapter.id}`, { replace: true });
     }
   };
 
@@ -115,15 +117,14 @@ export default function CampaignPage() {
         chapterId: selectedChapter!.id,
         targetScore: selectedQuest.targetScore,
       });
-      navigate(`/survivor/play?settingsId=${selectedQuest.settingsId}`);
+      navigate(`/${dungeon.id}/play?settingsId=${selectedQuest.settingsId}`);
     }
   };
 
   const handleBackToChapters = () => {
     setSelectedChapter(null);
     setSelectedQuest(null);
-    // Remove chapter parameter from URL
-          navigate('/survivor/campaign', { replace: true });
+    navigate(`/${dungeon.id}/campaign`, { replace: true });
   };
 
   const renderChapterStatus = (chapter: Chapter) => {

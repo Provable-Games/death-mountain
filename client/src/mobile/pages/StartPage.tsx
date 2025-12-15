@@ -2,8 +2,8 @@ import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import PriceIndicator from "@/components/PriceIndicator";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
-import { OPENING_TIME } from "@/contexts/Statistics";
-import DungeonRewards from "@/dungeons/beasts/DungeonRewards";
+import { useDungeon } from "@/dojo/useDungeon";
+import DungeonRewards from "@/dungeons/BeastModeRewards";
 import { ChainId, NetworkConfig, getNetworkConfig } from "@/utils/networkConfig";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -15,11 +15,11 @@ import { useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
-import CountdownMobile from "../components/CountdownMobile";
 import GameTokensList from "../components/GameTokensList";
 import Leaderboard from "../components/Leaderboard";
 
 export default function LandingPage() {
+  const dungeon = useDungeon();
   const { account } = useAccount();
   const { login } = useController();
   const { currentNetworkConfig, setCurrentNetworkConfig } =
@@ -29,36 +29,37 @@ export default function LandingPage() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDungeonRewards, setShowDungeonRewards] = useState(false);
-  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
 
   useEffect(() => {
-    const checkDungeonOpen = () => {
-      const now = Math.floor(Date.now() / 1000);
-      setIsDungeonOpen(now >= OPENING_TIME);
-    };
-
-    checkDungeonOpen();
-    const interval = setInterval(checkDungeonOpen, 1000);
-
-    return () => clearInterval(interval);
+    if (dungeon.network !== currentNetworkConfig.chainId) {
+      setCurrentNetworkConfig(
+        getNetworkConfig(dungeon.network) as NetworkConfig
+      );
+    }
   }, []);
 
-  const handleStartGame = () => {
-    if (currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN) {
-      if (!account) {
-        login();
-        return;
-      }
-
-      setShowPaymentOptions(true);
-    } else {
-      navigate(`/survivor/play`);
+  const handleMainButtonClick = () => {
+    if (dungeon.externalLink) {
+      window.open(dungeon.externalLink, "_blank");
+      return;
     }
+
+    if (dungeon.network === ChainId.WP_PG_SLOT) {
+      navigate(`/${dungeon.id}/play`);
+      return;
+    }
+
+    if (!account) {
+      login();
+      return;
+    }
+
+    setShowPaymentOptions(true);
   };
 
   const handleShowAdventurers = () => {
     if (
-      currentNetworkConfig.chainId === import.meta.env.VITE_PUBLIC_CHAIN &&
+      currentNetworkConfig.chainId === ChainId.SN_MAIN &&
       !account
     ) {
       login();
@@ -68,20 +69,7 @@ export default function LandingPage() {
     setShowAdventurers(true);
   };
 
-  const switchMode = () => {
-    if (currentNetworkConfig.name === "Beast Mode") {
-      setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig
-      );
-    } else {
-      setCurrentNetworkConfig(
-        getNetworkConfig(ChainId.SN_MAIN) as NetworkConfig
-      );
-    }
-  };
-
-  let disableGameButtons =
-    !isDungeonOpen && currentNetworkConfig.name === "Beast Mode";
+  let disableGameButtons = dungeon.status !== "online";
 
   const { totalCount } = useGameTokens({
     owner: account?.address || "0x0",
@@ -91,9 +79,7 @@ export default function LandingPage() {
     score: {
       max: 0,
     },
-    mintedByAddress: currentNetworkConfig.dungeon
-      ? addAddressPadding(currentNetworkConfig.dungeon)
-      : "0",
+    mintedByAddress: addAddressPadding(dungeon.address),
     countOnly: true,
   });
 
@@ -117,17 +103,15 @@ export default function LandingPage() {
               <Box sx={styles.headerBox}>
                 <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
                 <Typography color="secondary" sx={styles.modeTitle}>
-                  {currentNetworkConfig.name}
+                  {dungeon.name}
                 </Typography>
               </Box>
-
-              {!isDungeonOpen && <CountdownMobile />}
 
               <Button
                 fullWidth
                 variant="contained"
                 size="large"
-                onClick={handleStartGame}
+                onClick={handleMainButtonClick}
                 disabled={disableGameButtons}
                 startIcon={
                   <img
@@ -150,9 +134,7 @@ export default function LandingPage() {
                     disableGameButtons ? "rgba(208, 201, 141, 0.4)" : "#111111"
                   }
                 >
-                  {currentNetworkConfig.name === "Beast Mode"
-                    ? "Buy Game"
-                    : "Start Game"}
+                  {dungeon.mainButtonText}
                 </Typography>
               </Button>
 
@@ -212,20 +194,18 @@ export default function LandingPage() {
                 </Box>
               </Button>
 
-              <Button
+              {dungeon.includePractice && <Button
                 fullWidth
                 variant="contained"
                 size="large"
                 color="secondary"
-                onClick={switchMode}
+                onClick={() => navigate(`/${dungeon.id}/play`)}
                 sx={{ height: "36px", mt: 1, mb: 1 }}
               >
                 <Typography variant="h5" color="#111111">
-                  {currentNetworkConfig.name === "Beast Mode"
-                    ? "Practice for Free"
-                    : "Play for Real"}
+                  Practice for Free
                 </Typography>
-              </Button>
+              </Button>}
 
               <Divider sx={{ width: "100%", my: 0.5 }} />
 
@@ -243,7 +223,7 @@ export default function LandingPage() {
                 </Typography>
               </Button>
 
-              {currentNetworkConfig.name === "Beast Mode" && (
+              {dungeon.ticketAddress && (
                 <Button
                   fullWidth
                   variant="contained"
@@ -259,7 +239,7 @@ export default function LandingPage() {
                 </Button>
               )}
 
-              {currentNetworkConfig.name === "Beast Mode" && <PriceIndicator />}
+              {dungeon.ticketAddress && <PriceIndicator />}
             </>
           )}
 

@@ -12,7 +12,7 @@ export const useGameTokens = () => {
 
   const namespace = currentNetworkConfig.namespace;
   const NS_SHORT = getShortNamespace(namespace);
-  const SQL_ENDPOINT = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].torii;
+  const SQL_ENDPOINT = NETWORKS.SN_MAIN.torii;
 
   const fetchAdventurerData = async (gamesData: GameTokenData[]) => {
     const formattedTokenIds = gamesData.map(
@@ -117,7 +117,7 @@ export const useGameTokens = () => {
   }
 
   const countBeasts = async () => {
-    let beast_address = NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].beasts;
+    let beast_address = NETWORKS.SN_MAIN.beasts;
     let url = `${SQL_ENDPOINT}/sql?query=
       SELECT COUNT(*) as count FROM tokens
       WHERE contract_address = "${addAddressPadding(beast_address)}"`

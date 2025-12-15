@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
 import { delay } from "@/utils/utils";
+import { useDungeon } from "@/dojo/useDungeon";
 
 export interface ControllerContext {
   account: any;
@@ -50,6 +51,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount, getTokenBalances, goldenPassReady } =
     useStarknetApi();
@@ -124,19 +126,19 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       txs,
       1,
       () => {
-        navigate(`/survivor/play?mode=entering`);
+        navigate(`/${dungeon.id}/play?mode=entering`);
       }
     );
 
     if (gameId) {
       await delay(2000);
-      navigate(`/survivor/play?id=${gameId}`, { replace: true });
+      navigate(`/${dungeon.id}/play?id=${gameId}`, { replace: true });
       fetchTokenBalances();
       if (!skipIntroOutro) {
         setShowOverlay(false);
       }
     } else {
-      navigate(`/`, { replace: true });
+      navigate(`/${dungeon.id}`, { replace: true });
     }
   };
 
@@ -170,15 +172,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   async function fetchTokenBalances() {
-    let balances = await getTokenBalances(
-      NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-        .paymentTokens
-    );
+    let balances = await getTokenBalances(NETWORKS.SN_MAIN.paymentTokens);
     setTokenBalances(balances);
 
-    let goldenTokenAddress =
-      NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-        .goldenToken;
+    let goldenTokenAddress = NETWORKS.SN_MAIN.goldenToken;
     const allTokens = await getGameTokens(address!, goldenTokenAddress);
 
     if (allTokens.length > 0) {

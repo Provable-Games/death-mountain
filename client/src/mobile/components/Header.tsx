@@ -4,7 +4,6 @@ import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import SettingsMenu from './HeaderMenu';
-import Network from './Network';
 import WalletConnect from './WalletConnect';
 
 function Header() {

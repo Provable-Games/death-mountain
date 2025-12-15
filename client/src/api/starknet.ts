@@ -1,5 +1,6 @@
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { Beast, Metadata } from "@/types/game";
 import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
@@ -9,6 +10,7 @@ import { useAccount } from "@starknet-react/core";
 import { Account, CallData, ec, hash, num, RpcProvider, stark } from "starknet";
 
 export const useStarknetApi = () => {
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const { address } = useAccount();
 
@@ -27,7 +29,7 @@ export const useStarknetApi = () => {
       ]
     }));
 
-    const response = await fetch(NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS].rpcUrl, {
+    const response = await fetch(NETWORKS.SN_MAIN.rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(calls),
@@ -46,7 +48,7 @@ export const useStarknetApi = () => {
         method: "starknet_call",
         params: [
           {
-            contract_address: currentNetworkConfig.dungeon,
+            contract_address: dungeon.address,
             entry_point_selector: "0x02f6ca94ed3ceec9e8b907a11317d8d624f94cf62d9c8112c658fd4d9f02b2d8",
             calldata: [goldenPassAddress, num.toHex(tokenId)]
           },
@@ -83,7 +85,7 @@ export const useStarknetApi = () => {
             {
               contract_address: "0x042DD777885AD2C116be96d4D634abC90A26A790ffB5871E037Dd5Ae7d2Ec86B",
               entry_point_selector: "0x02e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
-              calldata: [currentNetworkConfig.dungeon]
+              calldata: [dungeon.address]
             },
             "latest"
           ]

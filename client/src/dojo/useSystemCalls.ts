@@ -2,6 +2,7 @@ import { useStarknetApi } from "@/api/starknet";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { useGameStore } from "@/stores/gameStore";
 import {
   Beast,
@@ -26,12 +27,13 @@ export const useSystemCalls = () => {
   const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+  const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
-  const DUNGEON_ADDRESS = currentNetworkConfig.dungeon;
-  const DUNGEON_TICKET = currentNetworkConfig.dungeonTicket;
+  const DUNGEON_ADDRESS = dungeon.address;
+  const DUNGEON_TICKET = dungeon.ticketAddress;
   const GAME_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,
     namespace,
@@ -81,7 +83,7 @@ export const useSystemCalls = () => {
       }
 
       const translatedEvents = receipt.events.map((event: any) =>
-        translateGameEvent(event, currentNetworkConfig.manifest, gameId)
+        translateGameEvent(event, currentNetworkConfig.manifest, gameId, dungeon)
       );
 
       if (translatedEvents.includes('Fatal Error')) {
@@ -457,8 +459,6 @@ export const useSystemCalls = () => {
   };
 
   const refreshDungeonStats = async (beast: Beast, waitTime: number) => {
-    if (currentNetworkConfig.name !== "Beast Mode") return;
-
     let tokenId = await getBeastTokenId(beast);
     if (!tokenId) return;
 

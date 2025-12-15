@@ -1,6 +1,7 @@
 import { BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { useAnalytics } from "@/utils/analytics";
@@ -16,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
 
 export default function DeathScreen() {
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const {
     gameId,
@@ -52,18 +54,12 @@ export default function DeathScreen() {
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
-      } in the Loot Survivor 2 dungeon. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } in Loot Survivor 2: ${dungeon.name}. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
       } ended my journey. \n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in the Loot Survivor 2 dungeon. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
+      : `I got a score of ${adventurer?.xp} in Loot Survivor 2: ${dungeon.name}. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
-    if (quest) {
-      navigate(`/survivor/campaign?chapter=${quest.chapterId}`, {
-        replace: true,
-      });
-    } else {
-      navigate("/survivor", { replace: true });
-    }
+    navigate(`/${dungeon.id}`, { replace: true });
   };
 
   useEffect(() => {
@@ -76,7 +72,8 @@ export default function DeathScreen() {
   }, [gameId, adventurer]);
 
   useEffect(() => {
-    if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+    if (dungeon.id === "survivor" && beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
+      && !beast.isCollectable && currentNetworkConfig.beasts) {
       refreshDungeonStats(beast, 10000);
     }
   }, []);
@@ -89,7 +86,7 @@ export default function DeathScreen() {
 
   let tokenResult = useGameTokenRanking({
     tokenId: gameId!,
-    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon),
+    mintedByAddress: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(dungeon.address),
     settings_id: currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined
   });
 
@@ -152,7 +149,7 @@ export default function DeathScreen() {
         <Box sx={styles.buttonContainer}>
           <Button
             variant="outlined"
-            onClick={() => navigate(`/survivor/watch?id=${gameId}`)}
+            onClick={() => navigate(`/${dungeon.id}/watch?id=${gameId}`)}
             sx={styles.shareButton}
           >
             Watch Replay

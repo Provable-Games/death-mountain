@@ -6,6 +6,7 @@ import CombatOverlay from "@/desktop/overlays/Combat";
 import DeathOverlay from "@/desktop/overlays/Death";
 import ExploreOverlay from "@/desktop/overlays/Explore";
 import LoadingOverlay from "@/desktop/overlays/Loading";
+import { useDungeon } from "@/dojo/useDungeon";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -59,7 +60,7 @@ export default function GamePage() {
   const { skipIntroOutro } = useUIStore();
   const { setVideoQueue, actionFailed, spectating } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
-
+  const dungeon = useDungeon();
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
   const settings_id = Number(searchParams.get("settingsId"));
@@ -132,7 +133,7 @@ export default function GamePage() {
 
     let tokenId = await mintGame(playerName, settings_id);
     navigate(
-      `/survivor/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
+      `/${dungeon.id}/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );

@@ -1,3 +1,4 @@
+import { useDungeon } from "@/dojo/useDungeon";
 import {
   ChainId,
   getNetworkConfig,
@@ -12,8 +13,7 @@ import {
   PropsWithChildren,
   useCallback,
   useContext,
-  useEffect,
-  useState,
+  useState
 } from "react";
 
 interface DynamicConnectorContext {
@@ -25,7 +25,7 @@ const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(
   null
 );
 
-const controllerConfig = getNetworkConfig(import.meta.env.VITE_PUBLIC_CHAIN);
+const controllerConfig = getNetworkConfig(ChainId.SN_MAIN);
 const cartridgeController =
   typeof window !== "undefined"
     ? new ControllerConnector({
@@ -40,20 +40,14 @@ const cartridgeController =
     : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
+  const dungeon = useDungeon();
+
   const getInitialNetwork = (): NetworkConfig => {
-    return getNetworkConfig(
-      import.meta.env.VITE_PUBLIC_DEFAULT_CHAIN as ChainId
-    );
+    return getNetworkConfig(dungeon.network as ChainId);
   };
 
   const [currentNetworkConfig, setCurrentNetworkConfig] =
     useState<NetworkConfig>(getInitialNetwork);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lastSelectedNetwork", currentNetworkConfig.chainId);
-    }
-  }, [currentNetworkConfig.chainId]);
 
   const rpc = useCallback(() => {
     return { nodeUrl: controllerConfig.chains[0].rpcUrl };

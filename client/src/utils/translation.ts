@@ -2,6 +2,7 @@ import { hexToAscii } from "@dojoengine/utils";
 import { getBeastName, getBeastTier, getBeastType } from "./beast";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { BEAST_NAMES } from "@/constants/beast";
+import { Dungeon } from "@/dojo/useDungeon";
 
 const parseData = (values: string[], type: string): any => {
   const value = values.splice(0, 1)[0];
@@ -250,7 +251,7 @@ export const components: any = {
   },
 }
 
-export const translateGameEvent = (event: any, manifest: any, gameId: number | null): any => {
+export const translateGameEvent = (event: any, manifest: any, gameId: number | null, dungeon: Dungeon): any => {
   const eventDefinition = manifest.events.find((definition: any) => definition.selector === event.keys[1]);
   const name = eventDefinition?.tag?.split('-')[1];
   const data = event.data;
@@ -297,7 +298,7 @@ export const translateGameEvent = (event: any, manifest: any, gameId: number | n
         tier: getBeastTier(parsedFields.id),
         specialPrefix: parsedFields.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[parsedFields.specials.special2] : null,
         specialSuffix: parsedFields.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[parsedFields.specials.special3] : null,
-        isCollectable: parsedFields.is_collectable,
+        isCollectable: dungeon.id === 'survivor' && parsedFields.is_collectable,
       }
     }
   } else {

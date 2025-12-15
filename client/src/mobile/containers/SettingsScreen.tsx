@@ -7,14 +7,16 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, Button, Slider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { muted, setMuted, volume, setVolume } = useSound();
   const { account, address, playerName, login, openProfile } = useController();
 
   const handleExitGame = () => {
-    navigate('/survivor');
+    navigate(`/${dungeon.id}`);
   };
 
   const handleCopyGameLink = async () => {

@@ -6,6 +6,7 @@ import { getBeastImageById, getBeastName, getBeastTier, getBeastType } from "./b
 import { getLocationName } from "./game";
 import { streamIds } from "./cloudflare";
 import { ItemUtils } from "./loot";
+import { Dungeon } from "@/dojo/useDungeon";
 
 export interface GameEvent {
   type: 'adventurer' | 'bag' | 'beast' | 'discovery' | 'obstacle' | 'defeated_beast' | 'fled_beast' | 'stat_upgrade' |
@@ -35,16 +36,7 @@ export interface GameEvent {
 
 }
 
-export const processRawGameEvent = (rawEvent: any): GameEvent => {
-  let event = {
-    action_count: rawEvent.action_count,
-    details: rawEvent.details.variant
-  }
-
-  return processGameEvent(event);
-}
-
-export const processGameEvent = (event: any): GameEvent => {
+export const processGameEvent = (event: any, dungeon: Dungeon): GameEvent => {
   const { action_count, details } = event;
 
   if ('adventurer' in details) {
@@ -79,7 +71,7 @@ export const processGameEvent = (event: any): GameEvent => {
         tier: getBeastTier(beast.id),
         specialPrefix: beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_PREFIXES[beast.specials.special2] : null,
         specialSuffix: beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK ? BEAST_NAME_SUFFIXES[beast.specials.special3] : null,
-        isCollectable: beast.is_collectable
+        isCollectable: dungeon.id === 'survivor' && beast.is_collectable
       }
     };
   }

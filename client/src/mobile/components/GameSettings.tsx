@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EncountersDialog from './EncountersDialog';
 import ItemList from './ItemList';
+import { useDungeon } from '@/dojo/useDungeon';
 
 const DEFAULT_SETTINGS: GameSettingsData = {
   vrf_address: '0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f',
@@ -62,6 +63,7 @@ const DEFAULT_SETTINGS: GameSettingsData = {
 
 export default function GameSettings() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { createSettings } = useSystemCalls()
   const { getSettingsList } = useGameSettings();
   const { isGameSettingsDialogOpen, setGameSettingsDialogOpen, gameSettingsEdit, setGameSettingsListOpen,
@@ -95,7 +97,7 @@ export default function GameSettings() {
   }, [gameSettings.in_battle, gameSettings.adventurer.xp, gameSettings.game_seed]);
 
   const handlePlay = () => {
-    navigate(`/survivor/play?settingsId=${selectedSettingsId}`)
+    navigate(`/${dungeon.id}/play?settingsId=${selectedSettingsId}`)
     setGameSettingsDialogOpen(false)
     setGameSettingsListOpen(false)
     setSelectedSettingsId(null)

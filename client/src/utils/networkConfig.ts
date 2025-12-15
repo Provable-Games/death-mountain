@@ -1,22 +1,18 @@
-import { getContractByName } from "@dojoengine/core";
 import manifest_mainnet from "../../manifest_mainnet.json";
-import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
 
 export interface NetworkConfig {
   chainId: ChainId;
-  name: string;
-  status: string;
   namespace: string;
   manifest: any;
   slot: string;
   preset: string;
   policies:
-    | Array<{
-        target: string;
-        method: string;
-      }>
-    | undefined;
+  | Array<{
+    target: string;
+    method: string;
+  }>
+  | undefined;
   vrf: boolean;
   rpcUrl: string;
   toriiUrl: string;
@@ -28,8 +24,6 @@ export interface NetworkConfig {
   paymentTokens: any[];
   goldenToken: string;
   ekuboRouter: string;
-  dungeon: string;
-  dungeonTicket: string;
   beasts: string;
 }
 
@@ -42,8 +36,6 @@ export enum ChainId {
 export const NETWORKS = {
   SN_MAIN: {
     chainId: ChainId.SN_MAIN,
-    name: "Beast Mode",
-    status: "online",
     namespace: "ls_0_0_9",
     slot: "pg-mainnet-10",
     rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_9",
@@ -58,10 +50,6 @@ export const NETWORKS = {
     vrf: true,
     denshokan:
       "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
-    dungeon:
-      "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42",
-    dungeonTicket:
-      "0x0452810188C4Cb3AEbD63711a3b445755BC0D6C4f27B923fDd99B1A118858136",
     beasts:
       "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
     goldenToken:
@@ -108,63 +96,8 @@ export const NETWORKS = {
       },
     ],
   },
-  SN_SEPOLIA: {
-    chainId: ChainId.SN_SEPOLIA,
-    name: "Beast Mode",
-    status: "online",
-    namespace: "ls_0_0_6",
-    slot: "pg-sepolia",
-    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9",
-    torii: "https://api.cartridge.gg/x/pg-sepolia/torii",
-    tokens: {
-      erc20: [],
-    },
-    manifest: manifest_sepolia,
-    vrf: true,
-    denshokan:
-      "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
-    dungeon:
-      "0x03b72a0ac53ca6ca07c0c0914157b731d795c6ce2302766ec87ade6435d20fda",
-    dungeonTicket:
-      "0x041EAc42266703c6D05CB76778aFf31145dC471AaeB5A806eF2a0a100494Db3a",
-    beasts:
-      "0x03d6e75fd8270a5098987713fa2c766a3edd0b03161ffeebe81b27dc48a3f335",
-    goldenToken:
-      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter:
-      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
-    paymentTokens: [
-      {
-        name: "ETH",
-        address:
-          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        displayDecimals: 4,
-      },
-      {
-        name: "STRK",
-        address:
-          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-        displayDecimals: 2,
-      },
-      {
-        name: "USDC",
-        address:
-          "0x053b40a647cedfca6ca84f542a0fe36736031905a9639a7f19a3c1e66bfd5080",
-        displayDecimals: 2,
-        decimals: 6,
-      },
-      {
-        name: "TICKET",
-        address:
-          "0x041EAc42266703c6D05CB76778aFf31145dC471AaeB5A806eF2a0a100494Db3a",
-        displayDecimals: 0,
-      },
-    ],
-  },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
-    name: "Practice Mode",
-    status: "online",
     namespace: "ls_0_0_6",
     slot: "pg-slot-4",
     rpcUrl: "https://api.cartridge.gg/x/pg-slot-4/katana",
@@ -179,8 +112,6 @@ export const NETWORKS = {
       "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
     goldenToken: "",
     ekuboRouter: "",
-    dungeon: "",
-    dungeonTicket: "",
     beasts: "",
   },
 };
@@ -189,94 +120,10 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
   if (!network) throw new Error(`Network ${networkKey} not found`);
 
-  const namespace = network.namespace;
-  const manifest = network.manifest;
-
-  // Get contract addresses from manifest
-  const game_systems = getContractByName(
-    manifest,
-    namespace,
-    "game_systems"
-  )?.address;
-  const game_token_systems = getContractByName(
-    manifest,
-    namespace,
-    "game_token_systems"
-  )?.address;
-  const vrf_provider = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
-
-  // Base policies that are common across networks
-  const policies =
-    network.chainId === ChainId.SN_MAIN
-      ? undefined
-      : [
-          {
-            target:
-              "0x025ff15ffd980fa811955d471abdf0d0db40f497a0d08e1fedd63545d1f7ab0d",
-            method: "approve",
-          },
-          {
-            target: game_token_systems,
-            method: "mint_game",
-          },
-          {
-            target: game_systems,
-            method: "start_game",
-          },
-          {
-            target: game_systems,
-            method: "explore",
-          },
-          {
-            target: game_systems,
-            method: "attack",
-          },
-          {
-            target: game_systems,
-            method: "flee",
-          },
-          {
-            target: game_systems,
-            method: "buy_items",
-          },
-          {
-            target: game_systems,
-            method: "equip",
-          },
-          {
-            target: game_systems,
-            method: "drop",
-          },
-          {
-            target: game_systems,
-            method: "select_stat_upgrades",
-          },
-          {
-            target: vrf_provider,
-            method: "request_random",
-          },
-          {
-            target: network.dungeon,
-            method: "buy_game",
-          },
-          {
-            target: network.dungeon,
-            method: "claim_beast",
-          },
-          {
-            target: network.dungeon,
-            method: "claim_reward_token",
-          },
-          {
-            target: network.dungeon,
-            method: "claim_jackpot",
-          },
-        ];
+  const policies = undefined;
 
   return {
     chainId: network.chainId,
-    name: network.name,
-    status: network.status,
     namespace: network.namespace,
     manifest: network.manifest,
     slot: network.slot,
@@ -291,8 +138,6 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     denshokan: network.denshokan,
     goldenToken: network.goldenToken,
     ekuboRouter: network.ekuboRouter,
-    dungeon: network.dungeon,
-    dungeonTicket: network.dungeonTicket,
     beasts: network.beasts,
   };
 }

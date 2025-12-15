@@ -68,7 +68,6 @@ sozo test          # Run contract tests
 ### Environment Variables (client/.env)
 - `VITE_PUBLIC_NODE_URL` - StarkNet RPC endpoint
 - `VITE_PUBLIC_TORII` - Torii indexer URL
-- `VITE_PUBLIC_CHAIN` - Network (sepolia/mainnet)
 - Contract addresses for ETH, LORDS tokens, and game contracts
 
 ### Network Configurations

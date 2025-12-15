@@ -1,5 +1,6 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { calculateLevel } from "@/utils/game";
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from "@dojoengine/core";
@@ -20,6 +21,7 @@ interface LeaderboardProps {
 export default function Leaderboard({ onBack }: LeaderboardProps) {
   const navigate = useNavigate();
   const { address } = useController();
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
@@ -38,7 +40,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     currentNetworkConfig.namespace,
     "game_token_systems"
   )?.address;
-  let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon);
+  let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(dungeon.address);
   let settings_id = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined;
 
   const {
@@ -82,7 +84,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   }, [tokenResult.ranking]);
 
   const watchGame = (gameId: number) => {
-    navigate(`/survivor/watch?id=${gameId}`);
+    navigate(`/${dungeon.id}/watch?id=${gameId}`);
   };
 
   return (

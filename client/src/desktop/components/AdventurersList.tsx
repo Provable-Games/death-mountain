@@ -1,5 +1,6 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { useGameTokens } from "@/dojo/useGameTokens";
 import { calculateLevel } from "@/utils/game";
 import { ChainId } from "@/utils/networkConfig";
@@ -23,6 +24,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
   const navigate = useNavigate();
   const { address } = useController();
   const { fetchAdventurerData } = useGameTokens();
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const namespace = currentNetworkConfig.namespace;
   const GAME_TOKEN_ADDRESS = getContractByName(
@@ -34,13 +36,12 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     mintedByAddress:
       currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
         ? GAME_TOKEN_ADDRESS
-        : addAddressPadding(currentNetworkConfig.dungeon),
+        : addAddressPadding(dungeon.address),
     owner: address,
     limit: 10000,
   });
   const [gameTokens, setGameTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [includeDead, setIncludeDead] = useState(false);
 
   useEffect(() => {
     async function fetchAdventurers() {
@@ -48,9 +49,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
 
       let games = await fetchAdventurerData(gamesData);
 
-      if (!includeDead) {
-        games = games.filter((game: any) => !game.dead && !game.expired);
-      }
+      games = games.filter((game: any) => !game.dead && !game.expired);
 
       setGameTokens(
         games.sort((a: any, b: any) => b.adventurer_id - a.adventurer_id)
@@ -61,7 +60,7 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
   }, [gamesData]);
 
   const handleResumeGame = (gameId: number) => {
-    navigate(`/survivor/play?id=${gameId}`);
+    navigate(`/${dungeon.id}/play?id=${gameId}`);
   };
 
   const renderTimeRemaining = (timestamp: number) => {

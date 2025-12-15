@@ -23,6 +23,7 @@ import {
 } from "react";
 import { useAnalytics } from "@/utils/analytics";
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
+import { useDungeon } from "@/dojo/useDungeon";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -94,6 +95,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     claimBeast,
     refreshDungeonStats,
   } = useSystemCalls();
+  const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const { getGameState, getSettingsDetails, getTokenMetadata, unclaimedBeast } =
     useStarknetApi();
@@ -148,7 +150,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       getSettingsDetails(metadata.settings_id).then((settings) => {
         setGameSettings(settings);
         setVRFEnabled(currentNetworkConfig.vrf && settings.game_seed === 0);
-        initializeGame(settings, currentNetworkConfig.name);
+        initializeGame(settings);
       });
     }
   }, [metadata, gameId]);
@@ -206,7 +208,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     }
   }, [gameId]);
 
-  const initializeGame = async (settings: Settings, mode: string) => {
+  const initializeGame = async (settings: Settings) => {
     if (spectating) return;
 
     const gameState = await getGameState(gameId!);
@@ -217,7 +219,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       executeGameAction({ type: "start_game", gameId: gameId!, settings });
       gameStartedEvent({
         adventurerId: gameId!,
-        dungeon: mode,
+        dungeon: dungeon.id,
         settingsId: settings.settings_id,
       });
     }
@@ -244,7 +246,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       let beast = processGameEvent({
         action_count: 0,
         details: { beast: gameState.beast },
-      }).beast!;
+      }, dungeon).beast!;
       setBeast(beast);
       setCollectable(beast.isCollectable ? beast : null);
     }
@@ -387,10 +389,11 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
 
     const events = await executeAction(txs, setActionFailed);
 
-    if (events.some((event: any) => event.type === "defeated_beast")) {
+    if (dungeon.id === "survivor" && events.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
 
-      if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK && !beast.isCollectable) {
+      if (beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
+        && !beast.isCollectable && currentNetworkConfig.beasts) {
         refreshDungeonStats(beast, 10000);
       }
     }

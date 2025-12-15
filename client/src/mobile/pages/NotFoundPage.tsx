@@ -1,11 +1,13 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
 
-  const handleGoToSurvivor = () => {
-    navigate('/survivor');
+  const handleGoToDeathMountain = () => {
+    navigate(`/${dungeon.id}`);
   };
 
   return (
@@ -21,10 +23,10 @@ export default function NotFoundPage() {
           fullWidth
           variant="contained"
           size="large"
-          onClick={handleGoToSurvivor}
+          onClick={handleGoToDeathMountain}
           sx={styles.button}
         >
-          Play Survivor
+          Back to Death Mountain
         </Button>
       </Box>
     </Box>

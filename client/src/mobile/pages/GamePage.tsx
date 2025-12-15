@@ -20,9 +20,11 @@ import QuestCompletedScreen from "../containers/QuestCompletedScreen";
 import SettingsScreen from "../containers/SettingsScreen";
 import StatSelectionScreen from "../containers/StatSelectionScreen";
 import { useGameDirector } from "../contexts/GameDirector";
+import { useDungeon } from "@/dojo/useDungeon";
 
 export default function GamePage() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
   const { spectating } = useGameDirector();
@@ -59,7 +61,7 @@ export default function GamePage() {
     setLoadingProgress(45);
     let tokenId = await mintGame(playerName, settings_id);
     navigate(
-      `/survivor/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
+      `/${dungeon.id}/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );
@@ -67,7 +69,7 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!account && gameId && adventurer) {
-      navigate("/survivor");
+      navigate(`/${dungeon.id}`);
     }
   }, [account]);
 

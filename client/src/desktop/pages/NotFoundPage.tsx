@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 export default function NotFoundPage() {
   const navigate = useNavigate();
 
-  const handleGoToSurvivor = () => {
-    navigate('/survivor');
+  const handleGoToDeathMountain = () => {
+    navigate('/');
   };
 
   return (
@@ -20,10 +20,10 @@ export default function NotFoundPage() {
         <Button
           variant="outlined"
           size="large"
-          onClick={handleGoToSurvivor}
+          onClick={handleGoToDeathMountain}
           sx={styles.button}
         >
-          Play Survivor
+          Back to Death Mountain
         </Button>
       </Box>
     </Box>

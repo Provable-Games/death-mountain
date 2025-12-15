@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { isMobile } from "react-device-detect";
 
-export default function DungeonRewards() {
+export default function BeastModeRewards() {
   const { strkPrice } = useStatistics();
   const { useMobileClient } = useUIStore();
   const { remainingSurvivorTokens, collectedBeasts } = useStatistics();

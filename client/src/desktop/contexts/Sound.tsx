@@ -1,4 +1,5 @@
 import { useGameStore } from '@/stores/gameStore';
+import { useDungeon } from '@/dojo/useDungeon';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -117,11 +118,11 @@ class AudioManager {
         // Ensure combined volume never exceeds target volume
         const fromVolume = fromStartVolume * (1 - easeInOut);
         const toVolume = toStartVolume + (targetVolume - toStartVolume) * easeInOut;
-        
+
         // Scale down both volumes if their sum exceeds target volume
         const combinedVolume = fromVolume + toVolume;
         const scaleFactor = combinedVolume > targetVolume ? targetVolume / combinedVolume : 1;
-        
+
         from.volume = fromVolume * scaleFactor;
         to.volume = toVolume * scaleFactor;
 
@@ -210,6 +211,7 @@ const SoundContext = createContext<SoundContextType>({
 export const SoundProvider = ({ children }: PropsWithChildren) => {
   const { gameId, adventurer, beast } = useGameStore();
   const location = useLocation();
+  const dungeon = useDungeon();
 
   const savedVolume = typeof window !== 'undefined' ? localStorage.getItem('soundVolume') : null;
   const savedMuted = typeof window !== 'undefined' ? localStorage.getItem('soundMuted') : null;
@@ -285,9 +287,9 @@ export const SoundProvider = ({ children }: PropsWithChildren) => {
     let newTrack = null;
     let isCriticalTrack = false;
 
-    if (location.pathname === '/survivor/watch') {
+    if (location.pathname === `/${dungeon.id}/watch`) {
       newTrack = null;
-    } else if (location.pathname !== '/survivor/play') {
+    } else if (location.pathname !== `/${dungeon.id}/play`) {
       newTrack = tracks.Intro;
       setStartTimestamp(0);
       audioManager.current.resetBackgroundMusic();

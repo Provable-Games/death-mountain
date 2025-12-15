@@ -13,6 +13,7 @@ import { useController } from "@/contexts/controller";
 import { useEffect, useState } from "react";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { calculateLevel } from "@/utils/game";
+import { useDungeon } from "@/dojo/useDungeon";
 
 interface LeaderboardProps {
   onBack: () => void;
@@ -22,6 +23,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const navigate = useNavigate();
   const { address } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
+  const dungeon = useDungeon();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -39,7 +41,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     currentNetworkConfig.namespace,
     "game_token_systems"
   )?.address;
-  let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(currentNetworkConfig.dungeon);
+  let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(dungeon.address);
   let settings_id = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined;
 
   const {
@@ -83,7 +85,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   }, [tokenResult.ranking]);
 
   const watchGame = (gameId: number) => {
-    navigate(`/survivor/watch?id=${gameId}`);
+    navigate(`/${dungeon.id}/watch?id=${gameId}`);
   };
 
   return (

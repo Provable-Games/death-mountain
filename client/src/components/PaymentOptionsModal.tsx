@@ -1,6 +1,7 @@
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
+import { useDungeon } from "@/dojo/useDungeon";
 import { NETWORKS } from "@/utils/networkConfig";
 import { formatAmount } from "@/utils/utils";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,9 +22,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Contract } from "starknet";
 
-let DUNGEON_TICKET_ADDRESS =
-  NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-    .dungeonTicket;
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;
@@ -222,14 +220,13 @@ export default function PaymentOptionsModal({
 
   // Use the provider from StarknetConfig
   const { provider } = useProvider();
+  const dungeon = useDungeon();
 
   const routerContract = useMemo(
     () =>
       new Contract({
         abi: ROUTER_ABI,
-        address:
-          NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-            .ekuboRouter,
+        address: NETWORKS.SN_MAIN.ekuboRouter,
         providerOrAccount: provider,
       }),
     [provider]
@@ -237,9 +234,7 @@ export default function PaymentOptionsModal({
 
   // Get payment tokens from network config
   const paymentTokens = useMemo(() => {
-    const network =
-      NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS];
-    return (network as any)?.paymentTokens || [];
+    return NETWORKS.SN_MAIN.paymentTokens || [];
   }, []);
 
   const userTokens = useMemo(() => {
@@ -254,14 +249,14 @@ export default function PaymentOptionsModal({
       .filter(
         (token: any) =>
           Number(token.balance) > 0 &&
-          token.address !== DUNGEON_TICKET_ADDRESS &&
+          token.address !== dungeon.ticketAddress &&
           token.name !== "SURVIVOR"
       );
   }, [paymentTokens, tokenBalances]);
 
   const dungeonTicketCount = useMemo(() => {
     const dungeonTicketToken = paymentTokens.find(
-      (token: any) => token.address === DUNGEON_TICKET_ADDRESS
+      (token: any) => token.address === dungeon.ticketAddress
     );
     return dungeonTicketToken
       ? Number(tokenBalances[dungeonTicketToken.name])
@@ -298,7 +293,7 @@ export default function PaymentOptionsModal({
         (t: any) => t.symbol === tokenSymbol
       );
 
-      if (!selectedTokenData?.address || !DUNGEON_TICKET_ADDRESS) {
+      if (!selectedTokenData?.address || !dungeon.ticketAddress) {
         setTokenQuote({
           amount: "",
           loading: false,
@@ -312,7 +307,7 @@ export default function PaymentOptionsModal({
       try {
         const quote = await getSwapQuote(
           -1e18,
-          DUNGEON_TICKET_ADDRESS,
+          dungeon.ticketAddress,
           selectedTokenData.address
         );
         if (quote) {
@@ -352,9 +347,7 @@ export default function PaymentOptionsModal({
       {
         paymentType: "Golden Pass",
         goldenPass: {
-          address:
-            NETWORKS[import.meta.env.VITE_PUBLIC_CHAIN as keyof typeof NETWORKS]
-              .goldenToken,
+          address: NETWORKS.SN_MAIN.goldenToken,
           tokenId: goldenPassIds[0],
         },
       },
@@ -372,12 +365,12 @@ export default function PaymentOptionsModal({
     );
     const quote = await getSwapQuote(
       -1e18,
-      DUNGEON_TICKET_ADDRESS,
+      dungeon.ticketAddress!,
       selectedTokenData!.address
     );
 
     let tokenSwapData = {
-      tokenAddress: DUNGEON_TICKET_ADDRESS,
+      tokenAddress: dungeon.ticketAddress!,
       minimumAmount: 1,
       quote: quote,
     };

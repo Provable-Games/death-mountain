@@ -8,9 +8,11 @@ import { motion } from "framer-motion";
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, useGameSettings } from '@/dojo/useGameSettings';
+import { useDungeon } from '@/dojo/useDungeon';
 
 function GameSettingsList() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { account } = useAccount();
   const { getRecommendedSettings, getSettingsList } = useGameSettings();
   const {
@@ -62,7 +64,7 @@ function GameSettingsList() {
   }, [isGameSettingsListOpen, tab, search]);
 
   const startNewGame = async () => {
-    navigate(`/survivor/play?settingsId=${selectedSettings?.settings_id}`)
+    navigate(`/${dungeon.id}/play?settingsId=${selectedSettings?.settings_id}`)
     setGameSettingsListOpen(false);
   };
 

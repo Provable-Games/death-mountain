@@ -1,3 +1,4 @@
+import { useDungeon } from '@/dojo/useDungeon';
 import { useGameStore } from '@/stores/gameStore';
 import { screenVariants } from '@/utils/animations';
 import { Box, Button, Typography } from '@mui/material';
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 export default function QuestCompletedScreen() {
   const { gameId, adventurer, quest } = useGameStore();
   const navigate = useNavigate();
+  const dungeon = useDungeon();
 
   const shareMessage = `I completed Quest ${quest?.id} in Loot Survivor 2! Want to see how I did it? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
 
@@ -20,7 +22,7 @@ export default function QuestCompletedScreen() {
       }
     }
 
-    navigate(`/survivor/campaign?chapter=${quest?.chapterId}`, { replace: true });
+    navigate(`/${dungeon.id}/campaign?chapter=${quest?.chapterId}`, { replace: true });
   }
 
   return (

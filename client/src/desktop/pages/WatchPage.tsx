@@ -15,9 +15,11 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
+import { useDungeon } from '@/dojo/useDungeon';
 
 export default function WatchPage() {
   const navigate = useNavigate();
+  const dungeon = useDungeon();
   const { getGameEvents } = useGameEvents();
   const { enqueueSnackbar } = useSnackbar()
   const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
@@ -38,7 +40,7 @@ export default function WatchPage() {
       subscribeEvents(game_id);
     } else {
       setSpectating(false);
-      navigate('/survivor');
+      navigate(`/${dungeon.id}`);
     }
   }, [game_id]);
 
@@ -98,7 +100,7 @@ export default function WatchPage() {
 
     if (!gameState || events.length === 0) {
       enqueueSnackbar('Failed to load game', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
-      return navigate("/survivor");
+      return navigate(`/${dungeon.id}`);
     }
 
     setReplayEvents(events);
@@ -106,7 +108,7 @@ export default function WatchPage() {
 
   const handleEndWatching = () => {
     setSpectating(false);
-    navigate('/survivor');
+    navigate(`/${dungeon.id}`);
   };
 
   const handlePlayPause = (play: boolean) => {

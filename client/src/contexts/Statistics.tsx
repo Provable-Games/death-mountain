@@ -1,6 +1,7 @@
 import { getPriceChart, getSwapQuote } from "@/api/ekubo";
 import { useStarknetApi } from "@/api/starknet";
 import { useGameTokens } from "@/dojo/useGameTokens";
+import { useDungeon } from "@/dojo/useDungeon";
 import { NETWORKS } from "@/utils/networkConfig";
 import { delay } from "@/utils/utils";
 import {
@@ -32,7 +33,6 @@ export const totalSurvivorTokens = 2258100;
 export const totalCollectableBeasts = 93225;
 export const JACKPOT_AMOUNT = 33333;
 
-const DungeonTicket = NETWORKS.SN_MAIN.dungeonTicket;
 const STRK = NETWORKS.SN_MAIN.paymentTokens.find(
   (token) => token.name === "STRK"
 )?.address!;
@@ -45,6 +45,7 @@ const LORDS = NETWORKS.SN_MAIN.paymentTokens.find(
 
 // Create a provider component
 export const StatisticsProvider = ({ children }: PropsWithChildren) => {
+  const dungeon = useDungeon();
   const { getSurvivorTokensLeft } = useStarknetApi();
   const { countBeasts } = useGameTokens();
 
@@ -66,18 +67,18 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
 
   const fetchPriceHistory = async () => {
     await delay(2000);
-    const priceChart = await getPriceChart(DungeonTicket, LORDS);
+    const priceChart = await getPriceChart(dungeon.ticketAddress!, LORDS);
     setGamePriceHistory(priceChart.data);
   };
 
   const fetchGameLordsPrice = async () => {
     await delay(2000);
-    const lordsPrice = await getSwapQuote(-1e18, DungeonTicket, LORDS);
+    const lordsPrice = await getSwapQuote(-1e18, dungeon.ticketAddress!, LORDS);
     setLordsPrice(((lordsPrice.total * -1) / 1e18).toFixed(2));
   };
 
   const fetchGamePrice = async () => {
-    const swap = await getSwapQuote(-1e18, DungeonTicket, USDC);
+    const swap = await getSwapQuote(-1e18, dungeon.ticketAddress!, USDC);
     setGamePrice(((swap.total * -1) / 1e6).toFixed(2));
   };
 
@@ -95,13 +96,15 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    fetchGamePrice();
-    fetchStrkPrice();
-    fetchPriceHistory();
-    fetchGameLordsPrice();
-    fetchSurvivorTokensLeft();
-    fetchCollectedBeasts();
-  }, []);
+    if (dungeon.id === "survivor") {
+      fetchGamePrice();
+      fetchStrkPrice();
+      fetchPriceHistory();
+      fetchGameLordsPrice();
+      fetchSurvivorTokensLeft();
+      fetchCollectedBeasts();
+    }
+  }, [dungeon]);
 
   return (
     <StatisticsContext.Provider
