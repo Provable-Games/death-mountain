@@ -3,7 +3,6 @@ import PriceIndicator from "@/components/PriceIndicator";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
-import DungeonRewards from "@/dungeons/BeastModeRewards";
 import { ChainId } from "@/utils/networkConfig";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -11,10 +10,8 @@ import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { Box, Button, Divider, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
-import { useGameTokens } from "metagame-sdk/sql";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { addAddressPadding } from "starknet";
 import GameTokensList from "../components/GameTokensList";
 import Leaderboard from "../components/Leaderboard";
 
@@ -61,20 +58,7 @@ export default function LandingPage() {
   };
 
   let disableGameButtons = dungeon.status !== "online";
-
-  const { totalCount } = useGameTokens({
-    owner: account?.address || "0x0",
-    sortBy: "minted_at",
-    sortOrder: "desc",
-    gameOver: false,
-    score: {
-      max: 0,
-    },
-    mintedByAddress: addAddressPadding(dungeon.address),
-    countOnly: true,
-  });
-
-  const gamesCount = totalCount ?? 0;
+  let DungeonRewards = dungeon.rewards;
 
   return (
     <>
@@ -149,19 +133,10 @@ export default function LandingPage() {
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: gamesCount > 0 ? "space-between" : "center",
+                    justifyContent: "center",
                     width: "100%",
                   }}
                 >
-                  {gamesCount > 0 && (
-                    <Typography
-                      color="black"
-                      fontWeight={500}
-                      visibility={"hidden"}
-                    >
-                      {gamesCount} NEW
-                    </Typography>
-                  )}
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <SportsEsportsIcon
                       sx={{ opacity: disableGameButtons ? 0.4 : 1, mr: 1 }}
@@ -177,11 +152,6 @@ export default function LandingPage() {
                       My Games
                     </Typography>
                   </Box>
-                  {gamesCount > 0 && (
-                    <Typography variant="h5" color="black" fontWeight={500}>
-                      {gamesCount} NEW
-                    </Typography>
-                  )}
                 </Box>
               </Button>
 
@@ -296,11 +266,11 @@ export default function LandingPage() {
                 </Box>
               </Box>
 
-              <Box
+              {DungeonRewards ? <Box
                 sx={{ width: "100%", maxHeight: "365px", overflowY: "auto" }}
               >
                 <DungeonRewards />
-              </Box>
+              </Box> : null}
             </>
           )}
         </Box>
