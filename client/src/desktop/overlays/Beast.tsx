@@ -8,11 +8,16 @@ import { Box, LinearProgress, Typography, keyframes } from '@mui/material';
 import { useEffect, useState } from 'react';
 import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
+import { useDungeon } from '@/dojo/useDungeon';
+import { useGameTokens } from '@/dojo/useGameTokens';
 
 export default function Beast() {
+  const dungeon = useDungeon();
+  const { getBeastOwner } = useGameTokens();
   const { currentNetworkConfig } = useDynamicConnector();
   const { adventurer, beast, battleEvent, setShowInventory } = useGameStore();
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
+  const [ownerName, setOwnerName] = useState<string | null>(null);
 
   const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
   const collectable = beast ? beast!.isCollectable : false;
@@ -28,6 +33,12 @@ export default function Beast() {
   useEffect(() => {
     setShowInventory(true);
   }, []);
+
+  useEffect(() => {
+    if (beast && beast.specialPrefix && dungeon.id === "survivor" && !collectable) {
+      getBeastOwner(beast).then((name: string | null) => setOwnerName(name));
+    }
+  }, [beast]);
 
   return (
     <>
@@ -65,6 +76,14 @@ export default function Beast() {
         <Box sx={styles.collectableIndicator}>
           <Typography sx={styles.collectableText}>
             {currentNetworkConfig.beasts ? "Defeat this beast to collect it" : "Collectable Beast (beast mode only)"}
+          </Typography>
+        </Box>
+      )}
+
+      {ownerName && (
+        <Box sx={styles.collectableIndicator}>
+          <Typography sx={styles.ownerNameText}>
+            Owned by {ownerName}
           </Typography>
         </Box>
       )}
@@ -345,6 +364,13 @@ const styles = {
     fontSize: '0.75rem',
     textAlign: 'center',
     textShadow: '0 0 8px rgba(237, 207, 51, 0.3)',
+    lineHeight: '1.1',
+  },
+  ownerNameText: {
+    color: '#FFFFFF',
+    fontSize: '0.75rem',
+    opacity: 0.9,
+    textAlign: 'center',
     lineHeight: '1.1',
   },
   wantedBeastText: {

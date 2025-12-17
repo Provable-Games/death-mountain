@@ -15,12 +15,16 @@ import { useEffect, useMemo, useState } from 'react';
 import strikeAnim from "../assets/animations/strike.json";
 import AnimatedText from '../components/AnimatedText';
 import BeastTooltip from '../components/BeastTooltip';
+import { useDungeon } from '@/dojo/useDungeon';
+import { useGameTokens } from '@/dojo/useGameTokens';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
 export default function BeastScreen() {
+  const dungeon = useDungeon();
+  const { getBeastOwner } = useGameTokens();
   const { currentNetworkConfig } = useDynamicConnector();
   const { executeGameAction, actionFailed, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { gameId, adventurer, adventurerState, beast, battleEvent, bag,
@@ -36,6 +40,13 @@ export default function BeastScreen() {
   const [combatLog, setCombatLog] = useState("");
   const [health, setHealth] = useState(adventurer!.health);
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
+  const [ownerName, setOwnerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (beast && beast.specialPrefix && dungeon.id === "survivor" && !collectable) {
+      getBeastOwner(beast).then((name: string | null) => setOwnerName(name));
+    }
+  }, [beast]);
 
   const strike = useLottie({
     animationData: strikeAnim,
@@ -275,6 +286,14 @@ export default function BeastScreen() {
               <Box sx={styles.collectableContainer}>
                 <Typography sx={styles.collectableText}>
                   {currentNetworkConfig.beasts ? "Collectable Beast" : ""}
+                </Typography>
+              </Box>
+            )}
+
+            {ownerName && (
+              <Box sx={styles.collectableContainer}>
+                <Typography sx={styles.ownerNameText}>
+                  Owned by {ownerName}
                 </Typography>
               </Box>
             )}
@@ -974,6 +993,13 @@ const styles = {
     marginTop: '4px',
     textShadow: '0 0 8px rgba(237, 207, 51, 0.5)',
     fontWeight: 'bold',
+  },
+  ownerNameText: {
+    color: '#FFFFFF',
+    fontSize: '0.8rem',
+    opacity: 0.8,
+    textAlign: 'center',
+    lineHeight: '0.9',
   },
   middleSection: {
     display: 'flex',
