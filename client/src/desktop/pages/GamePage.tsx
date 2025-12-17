@@ -82,7 +82,6 @@ export default function GamePage() {
 
   useEffect(() => {
     if (mode === "practice" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
       return;
     }
 
@@ -91,8 +90,13 @@ export default function GamePage() {
       return;
     }
 
-    if (mode !== "entering" && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT && game_id === 0) {
-      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+    if (mode !== "entering" && game_id === 0 && currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) {
+      if (dungeon.includePractice) {
+        navigate(`/${dungeon.id}/play?mode=practice`, { replace: true })
+      } else {
+        navigate(`/${dungeon.id}`, { replace: true })
+      }
+
       return;
     }
 

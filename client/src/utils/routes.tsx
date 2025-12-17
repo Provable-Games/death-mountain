@@ -11,26 +11,33 @@ import { default as MobileWatchPage } from "@/mobile/pages/WatchPage";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { ReactNode, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { getNetworkConfig, NetworkConfig } from "./networkConfig";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { ChainId, getNetworkConfig, NetworkConfig } from "./networkConfig";
 
 function DungeonRoute({ children }: { children: ReactNode }) {
+  const [searchParams] = useSearchParams();
   let dungeon = useDungeon();
   const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+  const mode = searchParams.get("mode");
 
   useEffect(() => {
-    if (dungeon) {
+    if (mode === "practice") {
+      setCurrentNetworkConfig(getNetworkConfig(ChainId.WP_PG_SLOT) as NetworkConfig);
+      return;
+    }
+
+    if (dungeon && dungeon.network !== currentNetworkConfig.chainId) {
       setCurrentNetworkConfig(
         getNetworkConfig(dungeon.network) as NetworkConfig
       );
     }
-  }, [dungeon]);
+  }, [dungeon, mode]);
 
   if (!dungeon) {
     return <NotFoundPage />
   }
 
-  if (dungeon.network !== currentNetworkConfig.chainId) {
+  if (mode !== "practice" && dungeon.network !== currentNetworkConfig.chainId) {
     return null;
   }
 
