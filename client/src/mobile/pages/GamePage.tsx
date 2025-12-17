@@ -1,5 +1,6 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
@@ -19,15 +20,12 @@ import MarketScreen from "../containers/MarketScreen";
 import QuestCompletedScreen from "../containers/QuestCompletedScreen";
 import SettingsScreen from "../containers/SettingsScreen";
 import StatSelectionScreen from "../containers/StatSelectionScreen";
-import { useGameDirector } from "../contexts/GameDirector";
-import { useDungeon } from "@/dojo/useDungeon";
 
 export default function GamePage() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
   const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
-  const { spectating } = useGameDirector();
   const {
     account,
     playerName,
@@ -43,6 +41,7 @@ export default function GamePage() {
     beast,
     showBeastRewards,
     quest,
+    spectating,
   } = useGameStore();
 
 
@@ -79,7 +78,7 @@ export default function GamePage() {
       return;
     }
 
-    if (spectating) {
+    if (spectating && game_id) {
       setLoadingProgress(99);
       setGameId(game_id);
       return;

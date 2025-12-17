@@ -22,8 +22,8 @@ export default function WatchPage() {
   const navigate = useNavigate();
   const { getGameEvents } = useGameEvents();
   const { enqueueSnackbar } = useSnackbar()
-  const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
-  const { gameId, adventurer, popExploreLog } = useGameStore();
+  const { processEvent } = useGameDirector();
+  const { gameId, adventurer, popExploreLog, spectating, setSpectating } = useGameStore();
   const { getGameState } = useStarknetApi();
 
   const [replayEvents, setReplayEvents] = useState<any[]>([]);

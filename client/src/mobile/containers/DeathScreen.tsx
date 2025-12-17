@@ -8,14 +8,13 @@ import { useAnalytics } from "@/utils/analytics";
 import { screenVariants } from "@/utils/animations";
 import { ChainId } from "@/utils/networkConfig";
 import { getContractByName } from "@dojoengine/core";
+import ShareIcon from "@mui/icons-material/Share";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import ShareIcon from "@mui/icons-material/Share";
 import { useGameTokenRanking } from "metagame-sdk/sql";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
-import { useGameDirector } from "@/desktop/contexts/GameDirector";
 
 export default function DeathScreen() {
   const dungeon = useDungeon();
@@ -26,8 +25,8 @@ export default function DeathScreen() {
     battleEvent,
     beast,
     adventurer,
+    spectating,
   } = useGameStore();
-  const { spectating } = useGameDirector();
   const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();

@@ -1,4 +1,3 @@
-import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import { ItemUtils, Tier } from '@/utils/loot';
@@ -12,8 +11,7 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNavProps) {
-  const { adventurer, marketItemIds, newMarket, setNewMarket, setNewInventoryItems, equipItem } = useGameStore();
-  const { spectating } = useGameDirector();
+  const { adventurer, marketItemIds, newMarket, setNewMarket, setNewInventoryItems, equipItem, spectating } = useGameStore();
   const { cart, inProgress, clearCart, setInProgress } = useMarketStore();
 
   useEffect(() => {

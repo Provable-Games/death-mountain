@@ -7,19 +7,17 @@ import { useGameStore } from '@/stores/gameStore';
 import { useAnalytics } from '@/utils/analytics';
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from '@dojoengine/core';
-import { Box, Button, IconButton, Typography } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import { useGameTokenRanking } from 'metagame-sdk/sql';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addAddressPadding } from 'starknet';
-import { useGameDirector } from '@/desktop/contexts/GameDirector';
 
 export default function DeathOverlay() {
   const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { gameId, exploreLog, battleEvent, beast, adventurer } = useGameStore();
-  const { spectating } = useGameDirector();
+  const { gameId, exploreLog, battleEvent, beast, adventurer, spectating } = useGameStore();
   const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();

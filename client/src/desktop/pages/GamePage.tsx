@@ -51,6 +51,7 @@ export default function GamePage() {
   const {
     gameId,
     adventurer,
+    spectating,
     exitGame,
     setGameId,
     beast,
@@ -58,7 +59,7 @@ export default function GamePage() {
     setShowOverlay,
   } = useGameStore();
   const { skipIntroOutro } = useUIStore();
-  const { setVideoQueue, actionFailed, spectating } = useGameDirector();
+  const { setVideoQueue, actionFailed } = useGameDirector();
   const [padding, setPadding] = useState(getMenuLeftOffset());
   const dungeon = useDungeon();
   const [searchParams] = useSearchParams();
@@ -85,7 +86,7 @@ export default function GamePage() {
       return;
     }
 
-    if (spectating) {
+    if (spectating && game_id) {
       setGameId(game_id);
       return;
     }

@@ -28,8 +28,6 @@ import { useDungeon } from "@/dojo/useDungeon";
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
   actionFailed: number;
-  setSpectating: (spectating: boolean) => void;
-  spectating: boolean;
   processEvent: (event: any, skipDelay?: boolean) => void;
   eventsProcessed: number;
   setEventQueue: (events: any) => void;
@@ -123,9 +121,9 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     setCollectable,
     setMetadata,
     setClaimInProgress,
+    spectating,
   } = useGameStore();
 
-  const [spectating, setSpectating] = useState(false);
   const [VRFEnabled, setVRFEnabled] = useState(VRF_ENABLED);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -416,8 +414,6 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
         setEventsProcessed,
         processEvent,
         setEventQueue,
-        setSpectating,
-        spectating,
         setSkipCombat,
         skipCombat,
         setShowSkipCombat,

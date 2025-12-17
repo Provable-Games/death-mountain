@@ -23,8 +23,8 @@ export default function WatchPage() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
   const { enqueueSnackbar } = useSnackbar()
-  const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
-  const { gameId, adventurer, popExploreLog } = useGameStore();
+  const { processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
+  const { gameId, adventurer, popExploreLog, spectating, setSpectating } = useGameStore();
   const { getGameState } = useStarknetApi();
   const { getGameEvents } = useGameEvents();
 
