@@ -60,7 +60,7 @@ export default function GamePage() {
     setLoadingProgress(45);
     let tokenId = await mintGame(playerName, settings_id);
     navigate(
-      `/${dungeon.id}/play?id=${tokenId}${(mode === "practice" || dungeon.includePractice) ? "&mode=practice" : ""
+      `/${dungeon.id}/play?id=${tokenId}${mode === "practice" ? "&mode=practice" : ""
       }`,
       { replace: true }
     );

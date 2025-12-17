@@ -40,10 +40,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     currentNetworkConfig.namespace,
     "game_token_systems"
   )?.address;
-  
-  let gameAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
-    ? "0x056a32ac6baa3d3e2634d55e6f2ca07bfee4ab09c6c6f0b93d456b0a6da4c84c"
-    : "0x05e2dfbdc3c193de629e5beb116083b06bd944c1608c9c793351d5792ba29863";
+
   let mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? GAME_TOKEN_ADDRESS : addAddressPadding(dungeon.address);
   let settings_id = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT ? 0 : undefined;
 
@@ -62,7 +59,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     sortBy: "score",
     sortOrder: "desc",
     mintedByAddress,
-    gameAddresses: [gameAddress],
+    gameAddresses: [currentNetworkConfig.gameAddress],
     settings_id,
     owner: activeTab === 1 ? address : undefined,
   });
@@ -73,7 +70,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     sortBy: "score",
     sortOrder: "desc",
     mintedByAddress,
-    gameAddresses: [gameAddress],
+    gameAddresses: [currentNetworkConfig.gameAddress],
     settings_id,
   });
 

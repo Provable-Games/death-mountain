@@ -25,6 +25,7 @@ export interface NetworkConfig {
   goldenToken: string;
   ekuboRouter: string;
   beasts: string;
+  gameAddress: string;
 }
 
 export enum ChainId {
@@ -50,6 +51,8 @@ export const NETWORKS = {
     vrf: true,
     denshokan:
       "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd",
+    gameAddress:
+      "0x05e2dfbdc3c193de629e5beb116083b06bd944c1608c9c793351d5792ba29863",
     beasts:
       "0x046da8955829adf2bda310099a0063451923f02e648cf25a1203aac6335cf0e4",
     goldenToken:
@@ -110,6 +113,8 @@ export const NETWORKS = {
     paymentTokens: [],
     denshokan:
       "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
+    gameAddress:
+      "0x056a32ac6baa3d3e2634d55e6f2ca07bfee4ab09c6c6f0b93d456b0a6da4c84c",
     goldenToken: "",
     ekuboRouter: "",
     beasts: "",
@@ -139,6 +144,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     goldenToken: network.goldenToken,
     ekuboRouter: network.ekuboRouter,
     beasts: network.beasts,
+    gameAddress: network.gameAddress,
   };
 }
 
