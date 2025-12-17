@@ -8,22 +8,63 @@ import { default as MobileNotFoundPage } from "@/mobile/pages/NotFoundPage";
 import { default as MobileStartPage } from "@/mobile/pages/StartPage";
 import { default as MobileWatchPage } from "@/mobile/pages/WatchPage";
 
+import { useDynamicConnector } from "@/contexts/starknet";
+import { useDungeon } from "@/dojo/useDungeon";
+import { ReactNode, useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import { getNetworkConfig, NetworkConfig } from "./networkConfig";
+
+function DungeonRoute({ children }: { children: ReactNode }) {
+  let dungeon = useDungeon();
+  const { currentNetworkConfig, setCurrentNetworkConfig } = useDynamicConnector();
+
+  useEffect(() => {
+    if (dungeon) {
+      setCurrentNetworkConfig(
+        getNetworkConfig(dungeon.network) as NetworkConfig
+      );
+    }
+  }, [dungeon]);
+
+  if (!dungeon) {
+    return <NotFoundPage />
+  }
+
+  if (dungeon.network !== currentNetworkConfig.chainId) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 export const desktopRoutes = [
   {
     path: '/',
-    content: <LandingPage />
+    content: <Navigate to="/survivor" replace />,
   },
   {
     path: '/:dungeonId',
-    content: <LandingPage />
+    content: (
+      <DungeonRoute>
+        <LandingPage />
+      </DungeonRoute>
+    )
   },
   {
     path: '/:dungeonId/play',
-    content: <GamePage />
+    content: (
+      <DungeonRoute>
+        <GamePage />
+      </DungeonRoute>
+    )
   },
   {
     path: '/:dungeonId/watch',
-    content: <WatchPage />
+    content: (
+      <DungeonRoute>
+        <WatchPage />
+      </DungeonRoute>
+    )
   },
   {
     path: '*',
@@ -34,19 +75,31 @@ export const desktopRoutes = [
 export const mobileRoutes = [
   {
     path: '/',
-    content: <MobileStartPage />
+    content: <Navigate to="/survivor" replace />,
   },
   {
     path: '/:dungeonId',
-    content: <MobileStartPage />
+    content: (
+      <DungeonRoute>
+        <MobileStartPage />
+      </DungeonRoute>
+    )
   },
   {
     path: '/:dungeonId/play',
-    content: <MobileGamePage />
+    content: (
+      <DungeonRoute>
+        <MobileGamePage />
+      </DungeonRoute>
+    )
   },
   {
     path: '/:dungeonId/watch',
-    content: <MobileWatchPage />
+    content: (
+      <DungeonRoute>
+        <MobileWatchPage />
+      </DungeonRoute>
+    )
   },
   {
     path: '*',

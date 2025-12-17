@@ -4,7 +4,7 @@ import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import DungeonRewards from "@/dungeons/BeastModeRewards";
-import { ChainId, NetworkConfig, getNetworkConfig } from "@/utils/networkConfig";
+import { ChainId } from "@/utils/networkConfig";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
@@ -12,37 +12,22 @@ import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { Box, Button, Divider, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { useGameTokens } from "metagame-sdk/sql";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
 import GameTokensList from "../components/GameTokensList";
 import Leaderboard from "../components/Leaderboard";
-import NotFoundPage from "./NotFoundPage";
 
 export default function LandingPage() {
   const dungeon = useDungeon();
-
-  if (!dungeon) {
-    return <NotFoundPage />
-  }
-
   const { account } = useAccount();
   const { login } = useController();
-  const { currentNetworkConfig, setCurrentNetworkConfig } =
-    useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const navigate = useNavigate();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDungeonRewards, setShowDungeonRewards] = useState(false);
-
-  useEffect(() => {
-    if (dungeon.network !== currentNetworkConfig.chainId) {
-      setCurrentNetworkConfig(
-        getNetworkConfig(dungeon.network) as NetworkConfig
-      );
-    }
-  }, []);
 
   const handleMainButtonClick = () => {
     if (dungeon.externalLink) {

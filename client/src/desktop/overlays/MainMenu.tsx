@@ -6,9 +6,7 @@ import AdventurersList from "@/desktop/components/AdventurersList";
 import Settings from "@/desktop/components/Settings";
 import { useDungeon } from "@/dojo/useDungeon";
 import {
-  ChainId,
-  getNetworkConfig,
-  NetworkConfig,
+  ChainId
 } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -37,8 +35,7 @@ export default function MainMenu() {
   const { account } = useAccount();
   const { login } = useController();
   const dungeon = useDungeon();
-  const { currentNetworkConfig, setCurrentNetworkConfig } =
-    useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const [showAdventurers, setShowAdventurers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -51,14 +48,6 @@ export default function MainMenu() {
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (dungeon.network !== currentNetworkConfig.chainId) {
-      setCurrentNetworkConfig(
-        getNetworkConfig(dungeon.network) as NetworkConfig
-      );
-    }
   }, []);
 
   const handleMainButtonClick = () => {
@@ -335,9 +324,9 @@ export default function MainMenu() {
         />
       )}
 
-      <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
-        {DungeonRewards ? <DungeonRewards /> : null}
-      </Box>
+      {DungeonRewards ? <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
+        <DungeonRewards />
+      </Box> : null}
     </>
   );
 }

@@ -15,6 +15,7 @@ import { useGameTokenRanking } from "metagame-sdk/sql";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
+import { useGameDirector } from "@/desktop/contexts/GameDirector";
 
 export default function DeathScreen() {
   const dungeon = useDungeon();
@@ -24,9 +25,9 @@ export default function DeathScreen() {
     exploreLog,
     battleEvent,
     beast,
-    quest,
     adventurer,
   } = useGameStore();
+  const { spectating } = useGameDirector();
   const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
@@ -63,7 +64,7 @@ export default function DeathScreen() {
   };
 
   useEffect(() => {
-    if (gameId && adventurer) {
+    if (!spectating && gameId && adventurer) {
       playerDiedEvent({
         adventurerId: gameId,
         xp: adventurer.xp,
@@ -72,7 +73,7 @@ export default function DeathScreen() {
   }, [gameId, adventurer]);
 
   useEffect(() => {
-    if (dungeon.id === "survivor" && beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
+    if (!spectating && dungeon.id === "survivor" && beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
       && !beast.isCollectable && currentNetworkConfig.beasts) {
       refreshDungeonStats(beast, 10000);
     }

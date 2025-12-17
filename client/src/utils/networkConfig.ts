@@ -99,9 +99,9 @@ export const NETWORKS = {
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
     namespace: "ls_0_0_6",
-    slot: "pg-slot-4",
+    slot: "pg-slot-5",
     rpcUrl: "https://api.cartridge.gg/x/pg-slot-4/katana",
-    torii: "https://api.cartridge.gg/x/pg-slot-4/torii",
+    torii: "https://api.cartridge.gg/x/pg-slot-5/torii",
     tokens: {
       erc20: [],
     },

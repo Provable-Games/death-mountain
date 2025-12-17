@@ -1,14 +1,11 @@
-import MainMenu from '@/desktop/overlays/MainMenu';
 import Countdown from '@/desktop/overlays/Countdown';
+import MainMenu from '@/desktop/overlays/MainMenu';
 import { gameAssets, prefetchStream, preloadAssets } from '@/utils/assetLoader';
 import { streamIds } from '@/utils/cloudflare';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { useDungeon } from '@/dojo/useDungeon';
-import NotFoundPage from './NotFoundPage';
 
 export default function LandingPage() {
-  const dungeon = useDungeon();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
@@ -22,10 +19,6 @@ export default function LandingPage() {
       prefetchStream(streamIds.start);
     };
   }, []);
-
-  if (!dungeon) {
-    return <NotFoundPage />
-  }
 
   return (
     <>

@@ -35,6 +35,7 @@ export default function WatchPage() {
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
+  const beast = searchParams.get('beast');
 
   useEffect(() => {
     if (game_id) {
@@ -47,7 +48,23 @@ export default function WatchPage() {
   }, [game_id]);
 
   useEffect(() => {
-    if (replayEvents.length > 0 && replayIndex === 0) {
+    if (beast && replayEvents.length > 0) {
+      let [prefix, suffix, name] = beast.toLowerCase().split(/[-_]/);
+      let replayIndex = replayEvents.findIndex((event) => event.type === 'beast'
+        && event.beast?.baseName.toLowerCase() === name && event.beast?.specialPrefix?.toLowerCase() === prefix && event.beast?.specialSuffix?.toLowerCase() === suffix);
+
+      if (replayIndex !== -1) {
+        let adventurerIndex = replayEvents.slice(replayIndex).findIndex((event) => event.type === 'adventurer');
+        jumpToIndex(replayIndex + adventurerIndex);
+      } else {
+        processEvent(replayEvents[0], true)
+        replayForward();
+      }
+    }
+  }, [beast, replayEvents]);
+
+  useEffect(() => {
+    if (replayEvents.length > 0 && replayIndex === 0 && !beast) {
       processEvent(replayEvents[0], true)
       replayForward();
     }

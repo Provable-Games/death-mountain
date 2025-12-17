@@ -1,5 +1,6 @@
 import { useStarknetApi } from '@/api/starknet';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useDungeon } from '@/dojo/useDungeon';
 import { useGameEvents } from '@/dojo/useGameEvents';
 import { useGameStore } from '@/stores/gameStore';
 import { ExplorerReplayEvents } from '@/utils/events';
@@ -15,11 +16,10 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
-import { useDungeon } from '@/dojo/useDungeon';
 
 export default function WatchPage() {
-  const navigate = useNavigate();
   const dungeon = useDungeon();
+  const navigate = useNavigate();
   const { getGameEvents } = useGameEvents();
   const { enqueueSnackbar } = useSnackbar()
   const { spectating, setSpectating, processEvent, setEventQueue, eventsProcessed, setEventsProcessed } = useGameDirector();
@@ -33,6 +33,7 @@ export default function WatchPage() {
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
+  const beast = searchParams.get('beast');
 
   useEffect(() => {
     if (game_id) {
@@ -45,7 +46,23 @@ export default function WatchPage() {
   }, [game_id]);
 
   useEffect(() => {
-    if (replayEvents.length > 0 && replayIndex === 0) {
+    if (beast && replayEvents.length > 0) {
+      let [prefix, suffix, name] = beast.toLowerCase().split(/[-_]/);
+      let replayIndex = replayEvents.findIndex((event) => event.type === 'beast'
+        && event.beast?.baseName.toLowerCase() === name && event.beast?.specialPrefix?.toLowerCase() === prefix && event.beast?.specialSuffix?.toLowerCase() === suffix);
+
+      if (replayIndex !== -1) {
+        let adventurerIndex = replayEvents.slice(replayIndex).findIndex((event) => event.type === 'adventurer');
+        jumpToIndex(replayIndex + adventurerIndex);
+      } else {
+        processEvent(replayEvents[0], true)
+        replayForward();
+      }
+    }
+  }, [beast, replayEvents]);
+
+  useEffect(() => {
+    if (replayEvents.length > 0 && replayIndex === 0 && !beast) {
       processEvent(replayEvents[0], true)
       replayForward();
     }
@@ -109,18 +126,6 @@ export default function WatchPage() {
   const handleEndWatching = () => {
     setSpectating(false);
     navigate(`/${dungeon.id}`);
-  };
-
-  const handlePlayPause = (play: boolean) => {
-    if (play) {
-      setEventQueue(replayEvents.slice(replayIndex));
-    } else {
-      setReplayIndex(prev => prev + eventsProcessed + 1);
-      setEventQueue([]);
-      setEventsProcessed(0);
-    }
-
-    setIsPlaying(play);
   };
 
   const replayForward = () => {

@@ -13,11 +13,13 @@ import { useGameTokenRanking } from 'metagame-sdk/sql';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addAddressPadding } from 'starknet';
+import { useGameDirector } from '@/desktop/contexts/GameDirector';
 
 export default function DeathOverlay() {
   const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
-  const { gameId, exploreLog, battleEvent, beast, quest, adventurer } = useGameStore();
+  const { gameId, exploreLog, battleEvent, beast, adventurer } = useGameStore();
+  const { spectating } = useGameDirector();
   const { refreshDungeonStats } = useSystemCalls();
   const navigate = useNavigate();
   const { playerDiedEvent } = useAnalytics();
@@ -47,7 +49,7 @@ export default function DeathOverlay() {
 
   useEffect(() => {
     if (
-      dungeon.id === "survivor" && beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
+      !spectating && dungeon.id === "survivor" && beast && beast.level >= BEAST_SPECIAL_NAME_LEVEL_UNLOCK
       && !beast.isCollectable && currentNetworkConfig.beasts
     ) {
       refreshDungeonStats(beast, 10000);
@@ -55,7 +57,7 @@ export default function DeathOverlay() {
   }, []);
 
   useEffect(() => {
-    if (gameId && adventurer) {
+    if (!spectating && gameId && adventurer) {
       playerDiedEvent({
         adventurerId: gameId,
         xp: adventurer.xp,

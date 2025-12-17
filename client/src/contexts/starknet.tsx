@@ -1,4 +1,3 @@
-import { useDungeon } from "@/dojo/useDungeon";
 import {
   ChainId,
   getNetworkConfig,
@@ -40,14 +39,8 @@ const cartridgeController =
     : null;
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
-  const dungeon = useDungeon();
-
-  const getInitialNetwork = (): NetworkConfig => {
-    return getNetworkConfig(dungeon.network as ChainId);
-  };
-
   const [currentNetworkConfig, setCurrentNetworkConfig] =
-    useState<NetworkConfig>(getInitialNetwork);
+    useState<NetworkConfig>(getNetworkConfig(ChainId.SN_MAIN));
 
   const rpc = useCallback(() => {
     return { nodeUrl: controllerConfig.chains[0].rpcUrl };
