@@ -470,6 +470,31 @@ export const useSystemCalls = () => {
     }], () => { });
   };
 
+  /**
+   * Updates the player name for a game token.
+   * @param tokenId The ID of the game token
+   * @param name The new name for the player
+   * @returns The transaction receipt
+   */
+  const updatePlayerName = async (tokenId: number, name: string) => {
+    try {
+      let tx = await account!.execute([
+        {
+          contractAddress: GAME_TOKEN_ADDRESS,
+          entrypoint: "update_player_name",
+          calldata: CallData.compile([tokenId, stringToFelt(name)]),
+        },
+      ]);
+
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
+
+      return receipt;
+    } catch (error) {
+      console.error("Error updating player name:", error);
+      throw error;
+    }
+  };
+
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
       item_1: settings.bag[0]
@@ -561,6 +586,7 @@ export const useSystemCalls = () => {
     requestRandom,
     executeAction,
     claimSurvivorTokens,
-    refreshDungeonStats
+    refreshDungeonStats,
+    updatePlayerName
   };
 };

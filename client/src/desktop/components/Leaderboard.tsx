@@ -1,13 +1,17 @@
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
+import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { calculateLevel } from "@/utils/game";
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from "@dojoengine/core";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import TheatersIcon from '@mui/icons-material/Theaters';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Button, IconButton, Pagination, Skeleton, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, IconButton, InputBase, Pagination, Skeleton, Tab, Tabs, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
@@ -23,9 +27,13 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const { address } = useController();
   const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
+  const { updatePlayerName } = useSystemCalls();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [editingGameId, setEditingGameId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const handleChange = (event: any, newValue: number) => {
     goToPage(newValue - 1);
@@ -88,6 +96,38 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
 
   const watchGame = (gameId: number) => {
     navigate(`/${dungeon.id}/watch?id=${gameId}`);
+  };
+
+  const startEditing = (game: any) => {
+    setEditingGameId(game.token_id);
+    setEditingName(game.player_name || "");
+  };
+
+  const cancelEditing = () => {
+    setEditingGameId(null);
+    setEditingName("");
+  };
+
+  const saveNewName = async (tokenId: number) => {
+    if (!editingName.trim()) {
+      cancelEditing();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updatePlayerName(tokenId, editingName.trim());
+      cancelEditing();
+    } catch (error) {
+      console.error("Error updating player name:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isOwner = (game: any) => {
+    if (!address || !game.owner) return false;
+    return addAddressPadding(game.owner).toLowerCase() === addAddressPadding(address).toLowerCase();
   };
 
   return (
@@ -162,21 +202,78 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                   flexDirection: "column",
                   textAlign: "left",
                   overflow: "hidden",
+                  flex: 1,
                 }}
               >
-                {loading ? <Skeleton variant="text" sx={{ fontSize: '12px' }} /> : <Typography
-                  color="primary"
-                  lineHeight={1}
-                  sx={{
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    width: "100%",
-                    maxWidth: "100px",
-                    overflow: "hidden",
-                  }}
-                >
-                  {game.player_name}
-                </Typography>}
+                {editingGameId === game.token_id ? (
+                  <Box sx={styles.editContainer}>
+                    <InputBase
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveNewName(game.token_id);
+                        } else if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      autoFocus
+                      disabled={isSaving}
+                      sx={styles.editInput}
+                      inputProps={{
+                        maxLength: 31,
+                      }}
+                    />
+                    <Box sx={styles.editActions}>
+                      {isSaving ? (
+                        <CircularProgress size={16} sx={{ color: '#d0c98d' }} />
+                      ) : (
+                        <>
+                          <IconButton
+                            size="small"
+                            onClick={() => saveNewName(game.token_id)}
+                            sx={styles.editActionButton}
+                          >
+                            <CheckIcon sx={{ fontSize: 14 }} />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={cancelEditing}
+                            sx={styles.editActionButton}
+                          >
+                            <CloseIcon sx={{ fontSize: 14 }} />
+                          </IconButton>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box sx={styles.nameContainer}>
+                    {loading ? <Skeleton variant="text" sx={{ fontSize: '12px' }} /> : (
+                      <Typography
+                        color="primary"
+                        lineHeight={1}
+                        sx={{
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "85px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {game.player_name}
+                      </Typography>
+                    )}
+                    {isOwner(game) && !loading && (
+                      <IconButton
+                        size="small"
+                        onClick={() => startEditing(game)}
+                        sx={styles.editIcon}
+                      >
+                        <EditIcon sx={{ fontSize: 12 }} />
+                      </IconButton>
+                    )}
+                  </Box>
+                )}
                 <Typography
                   color="secondary"
                   sx={{ fontSize: "12px", opacity: 0.8 }}
@@ -279,5 +376,50 @@ const styles = {
     background: "rgba(24, 40, 24, 0.3)",
     border: "1px solid rgba(8, 62, 34, 0.5)",
     borderRadius: "4px",
+  },
+  nameContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: 0.5,
+  },
+  editIcon: {
+    padding: "2px",
+    color: "rgba(208, 201, 141, 0.5)",
+    "&:hover": {
+      color: "#d0c98d",
+      backgroundColor: "rgba(208, 201, 141, 0.1)",
+    },
+  },
+  editContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: 0.5,
+  },
+  editInput: {
+    fontSize: "13px",
+    color: "#d0c98d",
+    padding: "2px 6px",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    border: "1px solid rgba(208, 201, 141, 0.4)",
+    borderRadius: "3px",
+    maxWidth: "80px",
+    "& input": {
+      padding: 0,
+    },
+    "&.Mui-focused": {
+      borderColor: "#d0c98d",
+    },
+  },
+  editActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 0,
+  },
+  editActionButton: {
+    padding: "2px",
+    color: "#d0c98d",
+    "&:hover": {
+      backgroundColor: "rgba(208, 201, 141, 0.15)",
+    },
   },
 };
