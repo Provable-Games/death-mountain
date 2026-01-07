@@ -477,10 +477,11 @@ export const useSystemCalls = () => {
    * @returns The transaction receipt
    */
   const updatePlayerName = async (tokenId: number, name: string) => {
+    const TOKEN_CONTRACT = "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd";
     try {
       let tx = await account!.execute([
         {
-          contractAddress: GAME_TOKEN_ADDRESS,
+          contractAddress: TOKEN_CONTRACT,
           entrypoint: "update_player_name",
           calldata: CallData.compile([tokenId, stringToFelt(name)]),
         },
