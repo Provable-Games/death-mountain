@@ -744,6 +744,7 @@ export default function PaymentOptionsModal({
                       ></Link>
                     ))}
 
+                  {/* TODO: Temporarily disabled - waiting for additional support from Cartridge
                   {currentView === "token" && (
                     <Link
                       component="button"
@@ -753,6 +754,7 @@ export default function PaymentOptionsModal({
                       Pay with credit card or other wallet
                     </Link>
                   )}
+                  */}
 
                   {currentView === "credit" &&
                     (userTokens.length > 0 ? (
