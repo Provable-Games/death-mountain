@@ -102,7 +102,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     if (!loading && games && games !== prevGamesRef.current) {
       prevGamesRef.current = games;
 
-      if (activeTab === 1) {
+      if (activeTab === 1 && address) {
         // My Games tab: only accept if all games are owned by user
         const allOwned = games.length === 0 || games.every((g: any) =>
           addAddressPadding(g.owner).toLowerCase() === addAddressPadding(address).toLowerCase()
@@ -111,7 +111,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
           setDisplayedGames(games);
         }
         // If not all owned, this is stale "All" data - ignore it
-      } else {
+      } else if (activeTab === 0) {
         // All tab: accept any data
         setDisplayedGames(games);
       }
