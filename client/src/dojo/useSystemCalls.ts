@@ -12,7 +12,7 @@ import {
   Stats,
 } from "@/types/game";
 import { useAnalytics } from "@/utils/analytics";
-import { optimisticGameEvents, translateGameEvent } from "@/utils/translation";
+import { isOptimisticCall, optimisticGameEvents, translateGameEvent } from "@/utils/translation";
 import { delay, stringToFelt } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
@@ -65,10 +65,9 @@ export const useSystemCalls = () => {
    *   - levelUp: Function to level up and purchase items
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
-    if (['buy_items', 'select_stat_upgrades', 'drop'].includes(calls[0].entrypoint) && calls.length === 1) {
-      setPreCalls([...preCalls, calls[0]]);
-      console.log('optimistic events', optimisticGameEvents(adventurer!, bag, calls[0]))
-      return optimisticGameEvents(adventurer!, bag, calls[0]);
+    if (isOptimisticCall(calls)) {
+      setPreCalls([...preCalls, ...calls]);
+      return optimisticGameEvents(adventurer!, bag, calls[calls.length - 1]);
     }
 
     try {
@@ -97,8 +96,7 @@ export const useSystemCalls = () => {
       }
 
       setPreCalls([]);
-      console.log('translated events', translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > adventurer!.action_count))
-      return translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > adventurer!.action_count);
+      return translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > (adventurer?.action_count || 0));
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();

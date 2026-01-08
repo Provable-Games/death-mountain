@@ -461,3 +461,11 @@ export const optimisticGameEvents = (adventurer: Adventurer, bag: Item[], call: 
 
   return events;
 }
+
+export const isOptimisticCall = (calls: any): boolean => {
+  if (['drop', 'select_stat_upgrades', 'buy_items'].includes(calls[0].entrypoint) && calls.length === 1) {
+    return true;
+  }
+
+  return false;
+}

@@ -148,6 +148,7 @@ export default function MarketScreen() {
       type: 'buy_items',
       potions: cart.potions,
       itemPurchases,
+      remainingGold,
     });
   };
 

@@ -14,6 +14,8 @@ import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
 import { useSnackbar } from 'notistack';
+import { potionPrice } from '@/utils/market';
+import { calculateLevel } from '@/utils/game';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
@@ -60,10 +62,15 @@ export default function ExploreOverlay() {
       equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
     }));
 
+    const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
+    const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
+    const remainingGold = (adventurer?.gold || 0) - totalCost;
+
     executeGameAction({
       type: 'buy_items',
       potions: cart.potions,
       itemPurchases,
+      remainingGold,
     });
   };
 
