@@ -101,8 +101,8 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
 
   const startEditing = useCallback((game: any) => {
     setEditingGameId(game.token_id);
-    setEditingName(game.player_name || "");
-  }, []);
+    setEditingName(localNameOverrides[game.token_id] ?? game.player_name ?? "");
+  }, [localNameOverrides]);
 
   const cancelEditing = useCallback(() => {
     setEditingGameId(null);
