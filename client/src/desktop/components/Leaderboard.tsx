@@ -14,7 +14,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, CircularProgress, IconButton, InputBase, Pagination, Skeleton, Tab, Tabs, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
 
@@ -34,14 +34,11 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const [editingGameId, setEditingGameId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [localNameOverrides, setLocalNameOverrides] = useState<Record<number, string>>({});
 
-  const handleChange = (event: any, newValue: number) => {
-    goToPage(newValue - 1);
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-  };
+  }, []);
 
   const GAME_TOKEN_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,
@@ -72,6 +69,10 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     owner: activeTab === 1 ? address : undefined,
   });
 
+  const handleChange = useCallback((event: any, newValue: number) => {
+    goToPage(newValue - 1);
+  }, [goToPage]);
+
   const { games: playerBestGames } = useGameTokens({
     owner: address,
     limit: 1,
@@ -94,41 +95,43 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     }
   }, [tokenResult.ranking]);
 
-  const watchGame = (gameId: number) => {
+  const watchGame = useCallback((gameId: number) => {
     navigate(`/${dungeon.id}/watch?id=${gameId}`);
-  };
+  }, [navigate, dungeon.id]);
 
-  const startEditing = (game: any) => {
+  const startEditing = useCallback((game: any) => {
     setEditingGameId(game.token_id);
     setEditingName(game.player_name || "");
-  };
+  }, []);
 
-  const cancelEditing = () => {
+  const cancelEditing = useCallback(() => {
     setEditingGameId(null);
     setEditingName("");
-  };
+  }, []);
 
-  const saveNewName = async (tokenId: number) => {
+  const saveNewName = useCallback(async (tokenId: number) => {
     if (!editingName.trim()) {
       cancelEditing();
       return;
     }
 
+    const newName = editingName.trim();
     setIsSaving(true);
     try {
-      await updatePlayerName(tokenId, editingName.trim());
+      await updatePlayerName(tokenId, newName);
+      setLocalNameOverrides(prev => ({ ...prev, [tokenId]: newName }));
       cancelEditing();
     } catch (error) {
       console.error("Error updating player name:", error);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [editingName, cancelEditing, updatePlayerName]);
 
-  const isOwner = (game: any) => {
+  const isOwner = useCallback((game: any) => {
     if (!address || !game.owner) return false;
     return addAddressPadding(game.owner).toLowerCase() === addAddressPadding(address).toLowerCase();
-  };
+  }, [address]);
 
   return (
     <motion.div
@@ -260,7 +263,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                           overflow: "hidden",
                         }}
                       >
-                        {game.player_name}
+                        {localNameOverrides[game.token_id] ?? game.player_name}
                       </Typography>
                     )}
                     {isOwner(game) && !loading && (
