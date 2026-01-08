@@ -15,13 +15,13 @@ type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | '
 
 const equipmentSlots = [
   { key: 'head' as EquipmentSlot, label: 'Head', style: { top: '8px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/head.svg' },
-  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '60px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/chest.svg' },
-  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '112px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/waist.svg' },
-  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '164px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/foot.svg' },
-  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '86px', left: '8px' }, icon: '/images/types/hand.svg' },
-  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '86px', right: '8px' }, icon: '/images/types/ring.svg' },
-  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '140px', left: '8px' }, icon: '/images/types/weapon.svg' },
-  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '30px', right: '8px' }, icon: '/images/types/neck.svg' },
+  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '68px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/chest.svg' },
+  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '128px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/waist.svg' },
+  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '188px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/foot.svg' },
+  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '98px', left: '8px' }, icon: '/images/types/hand.svg' },
+  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '98px', right: '8px' }, icon: '/images/types/ring.svg' },
+  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '158px', left: '8px' }, icon: '/images/types/weapon.svg' },
+  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '38px', right: '8px' }, icon: '/images/types/neck.svg' },
 ];
 
 interface InventoryOverlayProps {
@@ -185,6 +185,10 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
                         </Typography>
                       </Box>
                     )}
+                    {/* Level Label */}
+                    <Box sx={styles.levelLabel}>
+                      {level}
+                    </Box>
                   </Box>
                 ) : (
                   <Box sx={styles.emptySlot} title={slot.label}>
@@ -343,6 +347,10 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
                       </Typography>
                     </Box>
                   )}
+                  {/* Level Label */}
+                  <Box sx={styles.levelLabel}>
+                    {level}
+                  </Box>
                 </Box>
               </Box>
             </Tooltip>
@@ -563,7 +571,7 @@ const styles = {
     position: 'absolute',
     top: '120px',
     left: '24px',
-    width: '388px',
+    width: '440px',
     maxHeight: '90vh',
     background: 'rgba(24, 40, 24, 0.55)',
     border: '2px solid #083e22',
@@ -580,12 +588,13 @@ const styles = {
   inventoryRoot: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     justifyContent: 'space-between',
-    mb: 1
+    mb: 1,
+    gap: 1
   },
   equipmentPanel: {
-    height: '220px',
+    height: '250px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -599,8 +608,8 @@ const styles = {
   },
   characterPortraitWrapper: {
     position: 'relative',
-    width: 175,
-    height: 220,
+    width: 200,
+    height: 250,
     margin: '0 auto',
     background: 'rgba(20, 20, 20, 0.7)',
     borderRadius: '8px',
@@ -610,8 +619,8 @@ const styles = {
     height: 140,
   },
   equipmentSlot: {
-    width: 42,
-    height: 42,
+    width: 48,
+    height: 48,
     background: 'rgba(24, 40, 24, 0.95)',
     border: '2px solid #083e22',
     borderRadius: 0,
@@ -644,13 +653,13 @@ const styles = {
     zIndex: 1,
   },
   equipmentIcon: {
-    width: 36,
-    height: 36,
+    width: 42,
+    height: 42,
     zIndex: 2,
   },
   emptySlot: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     border: '1.5px dashed #666',
     borderRadius: 0,
     background: 'rgba(80,80,80,0.2)',
@@ -673,8 +682,8 @@ const styles = {
     gap: 0.5,
   },
   bagSlot: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     background: 'rgba(24, 40, 24, 0.95)',
     border: '2px solid #083e22',
     borderRadius: 0,
@@ -686,13 +695,13 @@ const styles = {
     overflow: 'hidden'
   },
   bagIcon: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     zIndex: 2,
   },
   dropButtonSlot: {
-    width: 42,
-    height: 42,
+    width: 48,
+    height: 48,
     background: 'rgba(255, 0, 0, 0.1)',
     border: '2px solid rgba(255, 0, 0, 0.2)',
     boxShadow: '0 0 4px #000a',
@@ -921,5 +930,21 @@ const styles = {
   damageIndicatorTextGreen: {
     color: '#FFFFFF',
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
+  },
+  levelLabel: {
+    position: 'absolute',
+    bottom: '1px',
+    left: '1px',
+    backgroundColor: '#000000',
+    color: '#FFFFFF',
+    fontSize: '0.65rem',
+    fontWeight: 'bold',
+    fontFamily: 'VT323, monospace',
+    padding: '1px 3px',
+    borderRadius: '2px',
+    lineHeight: 1,
+    zIndex: 20,
+    minWidth: '14px',
+    textAlign: 'center',
   },
 };

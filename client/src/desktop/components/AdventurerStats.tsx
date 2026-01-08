@@ -298,7 +298,7 @@ export default function AdventurerStats() {
         ...(adventurer?.stat_upgrades_available! > 0 && pointsRemaining > 0 && styles.statsPanelHighlighted),
         ...(adventurer?.stat_upgrades_available! > 0 && pointsRemaining === 0 && styles.statsPanelBorderOnly)
       }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           {adventurer?.stat_upgrades_available! > 0 ? (
             <Typography sx={styles.selectStatsText}>
               Select Stats
@@ -330,8 +330,7 @@ export default function AdventurerStats() {
 
 const styles = {
   statsPanel: {
-    height: '240px',
-    width: '185px',
+    flex: 1,
     background: 'rgba(24, 40, 24, 0.95)',
     border: '2px solid #083e22',
     borderRadius: '8px',
@@ -416,7 +415,7 @@ const styles = {
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: '13px',
+    fontSize: '14px',
     fontWeight: '500',
     pt: '1px'
   },

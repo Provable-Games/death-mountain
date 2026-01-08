@@ -268,6 +268,7 @@ export default function MarketOverlay() {
 
             {/* Main Content */}
             <Box sx={styles.mainContent}>
+
               {/* Potions Section */}
               <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-end', mb: '6px' }}>
                 <Box sx={styles.potionsSection}>
@@ -402,6 +403,15 @@ export default function MarketOverlay() {
                               {item.type}
                             </Typography>
                           </Box>
+                          {adventurer?.item_specials_seed !== 0 && (() => {
+                            const specials = ItemUtils.getSpecials(item.id, 15, adventurer!.item_specials_seed);
+                            const statBonus = specials.special1 ? ItemUtils.getStatBonus(specials.special1) : null;
+                            return statBonus ? (
+                              <Typography sx={styles.itemStatBonus}>
+                                {statBonus}
+                              </Typography>
+                            ) : null;
+                          })()}
                         </Box>
 
                         <Box sx={styles.itemFooter}>
@@ -912,5 +922,11 @@ const styles = {
   },
   itemUnaffordable: {
     opacity: 0.5,
+  },
+  itemStatBonus: {
+    color: '#80FF00',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    marginTop: '2px',
   },
 };
