@@ -14,7 +14,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, CircularProgress, IconButton, InputBase, Pagination, Skeleton, Tab, Tabs, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
 
@@ -35,6 +35,8 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const [editingName, setEditingName] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [localNameOverrides, setLocalNameOverrides] = useState<Record<number, string>>({});
+  const [displayedGames, setDisplayedGames] = useState<any[]>([]);
+  const prevGamesRef = useRef<any[]>([]);
 
   const handleTabChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -94,6 +96,27 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
       setPlayerBestGame(tokenResult.ranking);
     }
   }, [tokenResult.ranking]);
+
+  // Validate incoming games data to prevent race condition when switching tabs
+  useEffect(() => {
+    if (!loading && games && games !== prevGamesRef.current) {
+      prevGamesRef.current = games;
+
+      if (activeTab === 1) {
+        // My Games tab: only accept if all games are owned by user
+        const allOwned = games.length === 0 || games.every((g: any) =>
+          addAddressPadding(g.owner).toLowerCase() === addAddressPadding(address).toLowerCase()
+        );
+        if (allOwned) {
+          setDisplayedGames(games);
+        }
+        // If not all owned, this is stale "All" data - ignore it
+      } else {
+        // All tab: accept any data
+        setDisplayedGames(games);
+      }
+    }
+  }, [loading, games, activeTab, address]);
 
   const watchGame = useCallback((gameId: number) => {
     navigate(`/${dungeon.id}/watch?id=${gameId}`);
@@ -180,11 +203,11 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
       </Box>
 
       <Box sx={styles.listContainer}>
-        {(!games || games.length === 0) ? (
+        {(displayedGames.length === 0) ? (
           <Typography sx={{ textAlign: "center", py: 2 }}>
             Loading...
           </Typography>
-        ) : games.map((game: any, index: number) => (
+        ) : displayedGames.map((game: any, index: number) => (
           <Box sx={styles.listItem} key={game.token_id}>
             <Box
               sx={{
@@ -312,7 +335,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
           </Box>
         ))}
 
-        {games.length > 0 && <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', my: '2px' }}>
+        {displayedGames.length > 0 && <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', my: '2px' }}>
           <Pagination count={totalPages} shape="rounded" color='primary' size='small' page={currentPage + 1} onChange={handleChange} />
         </Box>}
       </Box>
