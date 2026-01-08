@@ -179,6 +179,7 @@ export default function MarketOverlay() {
       type: 'buy_items',
       potions: cart.potions,
       itemPurchases,
+      remainingGold,
     });
   };
 

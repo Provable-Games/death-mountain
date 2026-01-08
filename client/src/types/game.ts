@@ -108,6 +108,7 @@ export interface GameAction {
   items?: number[];
   itemPurchases?: ItemPurchase[];
   potions?: number;
+  remainingGold?: number;
   untilBeast?: boolean;
   untilDeath?: boolean;
   gameId?: number;

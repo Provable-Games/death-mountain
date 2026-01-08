@@ -11,19 +11,19 @@ import {
   Payment,
   Stats,
 } from "@/types/game";
-import { translateGameEvent } from "@/utils/translation";
-import { getContractByName } from "@dojoengine/core";
-import { delay, stringToFelt } from "@/utils/utils";
-import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
+import { optimisticGameEvents, translateGameEvent } from "@/utils/translation";
+import { delay, stringToFelt } from "@/utils/utils";
+import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
+import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
-import { num } from "starknet";
+import { GameEvent } from "@/utils/events";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
-  const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
+  const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog, preCalls, setPreCalls } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -65,12 +65,16 @@ export const useSystemCalls = () => {
    *   - levelUp: Function to level up and purchase items
    */
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
-    try {
-      if (adventurer) {
-        await waitForGlobalState();
-      }
+    if (['buy_items', 'select_stat_upgrades', 'drop'].includes(calls[0].entrypoint) && calls.length === 1) {
+      setPreCalls([...preCalls, calls[0]]);
+      console.log('optimistic events', optimisticGameEvents(adventurer!, bag, calls[0]))
+      return optimisticGameEvents(adventurer!, bag, calls[0]);
+    }
 
-      let tx = await account!.execute(calls);
+    try {
+      await waitForGlobalState(calls, 0);
+
+      let tx = await account!.execute([...preCalls, ...calls]);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
 
       if (receipt.execution_status === "REVERTED") {
@@ -92,7 +96,9 @@ export const useSystemCalls = () => {
         return;
       }
 
-      return translatedEvents.filter(Boolean);
+      setPreCalls([]);
+      console.log('translated events', translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > adventurer!.action_count))
+      return translatedEvents.filter((event: GameEvent) => Boolean(event) && event.action_count > adventurer!.action_count);
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();
@@ -138,7 +144,38 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
+  const waitForGlobalState = async (calls: any, retries: number): Promise<boolean> => {
+    if (!adventurer) return true;
+
+    if (beast && adventurer.beast_health > 0 && adventurer.beast_health < beast.health) {
+      return true;
+    }
+
+    let lastEvent = exploreLog[exploreLog.length - 1];
+    if (lastEvent?.type === "discovery") {
+      if (lastEvent.discovery?.type === "Health") {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Gold" && !calls.find((call: any) => call.entrypoint === 'buy_items')) {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Loot" && !calls.find((call: any) => call.entrypoint === 'equip' || call.entrypoint === 'drop')) {
+        return true;
+      }
+    } else if (lastEvent?.type === "stat_upgrade") {
+      if (lastEvent.stats?.charisma === 0 || !calls.find((call: any) => call.entrypoint === 'buy_items')) {
+        return true;
+      }
+    } else if (lastEvent?.type === "obstacle") {
+      if (!calls.find((call: any) => call.entrypoint === 'buy_items' && call.calldata[1] > 0)) {
+        return true;
+      }
+    } else if (lastEvent?.type === "buy_items") {
+      if (lastEvent.items_purchased?.length === 0 || !calls.find((call: any) => call.entrypoint === 'equip')) {
+        return true;
+      }
+    }
+
     let adventurerState = await getAdventurerState(gameId!);
 
     if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
@@ -146,7 +183,7 @@ export const useSystemCalls = () => {
     }
 
     await delay(500);
-    return waitForGlobalState(retries + 1);
+    return waitForGlobalState(calls, retries + 1);
   };
 
   /**
@@ -353,11 +390,12 @@ export const useSystemCalls = () => {
    * @param statUpgrades Object containing stat upgrades
    * @param items Array of items to purchase
    */
-  const buyItems = (gameId: number, potions: number, items: ItemPurchase[]) => {
+  const buyItems = (gameId: number, potions: number, items: ItemPurchase[], remainingGold: number) => {
     return {
       contractAddress: GAME_ADDRESS,
       entrypoint: "buy_items",
       calldata: [gameId, potions, items],
+      remainingGold,
     };
   };
 

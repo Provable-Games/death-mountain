@@ -3,6 +3,9 @@ import { getBeastName, getBeastTier, getBeastType } from "./beast";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { BEAST_NAMES } from "@/constants/beast";
 import { Dungeon } from "@/dojo/useDungeon";
+import { Adventurer, Item, ItemPurchase, Stats } from "@/types/game";
+import { GameEvent } from "./events";
+import { ItemUtils } from "./loot";
 
 const parseData = (values: string[], type: string): any => {
   const value = values.splice(0, 1)[0];
@@ -309,4 +312,152 @@ export const translateGameEvent = (event: any, manifest: any, gameId: number | n
   }
 
   return result;
+}
+
+export const optimisticGameEvents = (adventurer: Adventurer, bag: Item[], call: any): GameEvent[] => {
+  let events: GameEvent[] = [];
+  let action_count = adventurer.action_count + 1;
+
+  if (call.entrypoint === 'drop') {
+    let items = call.calldata[1];
+    let bagStatBoosts: Stats[] = bag.filter((item: Item) => items.includes(item.id) && item.xp >= 225)
+      .map((item: Item) => ItemUtils.fullItemBoost(item, adventurer.item_specials_seed, { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 }));
+
+    let totalBagStats: Stats = bagStatBoosts.reduce((acc: Stats, stat: Stats) => {
+      return {
+        dexterity: acc.dexterity + stat.dexterity,
+        strength: acc.strength + stat.strength,
+        vitality: acc.vitality + stat.vitality,
+        intelligence: acc.intelligence + stat.intelligence,
+        wisdom: acc.wisdom + stat.wisdom,
+        charisma: acc.charisma + stat.charisma,
+        luck: acc.luck + stat.luck,
+      }
+    }, { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
+
+    let equippedItemIds = items.filter((item_id: Number) => !bag.find((item: Item) => item.id === item_id))
+    let equippedItems = equippedItemIds.map((id: number) => Object.values(adventurer.equipment).find(item => item.id === id))
+    let equippedStatBoost = equippedItems.filter((item: Item) => item.xp >= 225)
+      .map((item: Item) => ItemUtils.fullItemBoost(item, adventurer.item_specials_seed, { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 }));
+    let totalEquippedStats: Stats = equippedStatBoost.reduce((acc: Stats, stat: Stats) => {
+      return {
+        dexterity: acc.dexterity + stat.dexterity,
+        strength: acc.strength + stat.strength,
+        vitality: acc.vitality + stat.vitality,
+        intelligence: acc.intelligence + stat.intelligence,
+        wisdom: acc.wisdom + stat.wisdom,
+        charisma: acc.charisma + stat.charisma,
+        luck: acc.luck + stat.luck,
+      }
+    }, { dexterity: 0, strength: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
+
+    events = [{
+      type: 'drop',
+      action_count,
+      items,
+    }, {
+      type: 'bag',
+      action_count,
+      bag: bag.filter((item: Item) => !items.includes(item.id)),
+    }, {
+      type: 'adventurer',
+      action_count,
+      adventurer: {
+        ...adventurer,
+        action_count,
+        health: adventurer.health - ((totalBagStats.vitality + totalEquippedStats.vitality) * 15),
+        stats: {
+          dexterity: adventurer.stats.dexterity - totalEquippedStats.dexterity,
+          strength: adventurer.stats.strength - totalEquippedStats.strength,
+          intelligence: adventurer.stats.intelligence - totalEquippedStats.intelligence,
+          wisdom: adventurer.stats.wisdom - totalEquippedStats.wisdom,
+          charisma: adventurer.stats.charisma - totalBagStats.charisma - totalEquippedStats.charisma,
+          vitality: adventurer.stats.vitality - totalBagStats.vitality - totalEquippedStats.vitality,
+          luck: adventurer.stats.luck - totalBagStats.luck - totalEquippedStats.luck,
+        },
+        equipment: {
+          weapon: equippedItemIds.includes(adventurer.equipment.weapon.id) ? { id: 0, xp: 0 } : adventurer.equipment.weapon,
+          chest: equippedItemIds.includes(adventurer.equipment.chest.id) ? { id: 0, xp: 0 } : adventurer.equipment.chest,
+          head: equippedItemIds.includes(adventurer.equipment.head.id) ? { id: 0, xp: 0 } : adventurer.equipment.head,
+          waist: equippedItemIds.includes(adventurer.equipment.waist.id) ? { id: 0, xp: 0 } : adventurer.equipment.waist,
+          foot: equippedItemIds.includes(adventurer.equipment.foot.id) ? { id: 0, xp: 0 } : adventurer.equipment.foot,
+          hand: equippedItemIds.includes(adventurer.equipment.hand.id) ? { id: 0, xp: 0 } : adventurer.equipment.hand,
+          neck: equippedItemIds.includes(adventurer.equipment.neck.id) ? { id: 0, xp: 0 } : adventurer.equipment.neck,
+          ring: equippedItemIds.includes(adventurer.equipment.ring.id) ? { id: 0, xp: 0 } : adventurer.equipment.ring,
+        },
+      },
+    }]
+  } else if (call.entrypoint === "select_stat_upgrades") {
+    let stats: Stats = call.calldata[1];
+    events = [{
+      type: 'stat_upgrade',
+      action_count,
+      stats,
+    }, {
+      type: 'adventurer',
+      action_count,
+      adventurer: {
+        ...adventurer,
+        stat_upgrades_available: 0,
+        health: adventurer.health + (stats.vitality * 15),
+        stats: {
+          charisma: adventurer.stats.charisma + stats.charisma,
+          dexterity: adventurer.stats.dexterity + stats.dexterity,
+          intelligence: adventurer.stats.intelligence + stats.intelligence,
+          strength: adventurer.stats.strength + stats.strength,
+          vitality: adventurer.stats.vitality + stats.vitality,
+          wisdom: adventurer.stats.wisdom + stats.wisdom,
+          luck: adventurer.stats.luck + stats.luck,
+        },
+        action_count,
+      },
+    }]
+  } else if (call.entrypoint === "buy_items") {
+    let potions = call.calldata[1];
+    let items_purchased: ItemPurchase[] = call.calldata[2];
+
+    let equippedWeapon = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isWeapon(item.item_id));
+    let equippedChest = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isChest(item.item_id));
+    let equippedHead = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isHead(item.item_id));
+    let equippedWaist = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isWaist(item.item_id));
+    let equippedFoot = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isFoot(item.item_id));
+    let equippedHand = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isHand(item.item_id));
+    let equippedNeck = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isNecklace(item.item_id));
+    let equippedRing = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isRing(item.item_id));
+
+    events = [
+      {
+        type: 'bag',
+        action_count,
+        bag: [...bag, ...items_purchased.filter((item: ItemPurchase) => !item.equip)
+          .map((item: ItemPurchase) => ({ id: item.item_id, xp: 0 }))],
+      },
+      {
+        type: 'buy_items',
+        action_count,
+        potions,
+        items_purchased,
+      }, {
+        type: 'adventurer',
+        action_count,
+        adventurer: {
+          ...adventurer,
+          action_count,
+          gold: call.remainingGold,
+          health: adventurer.health + (potions * 10),
+          equipment: {
+            weapon: equippedWeapon ? { id: equippedWeapon.item_id, xp: 0 } : adventurer.equipment.weapon,
+            chest: equippedChest ? { id: equippedChest.item_id, xp: 0 } : adventurer.equipment.chest,
+            head: equippedHead ? { id: equippedHead.item_id, xp: 0 } : adventurer.equipment.head,
+            waist: equippedWaist ? { id: equippedWaist.item_id, xp: 0 } : adventurer.equipment.waist,
+            foot: equippedFoot ? { id: equippedFoot.item_id, xp: 0 } : adventurer.equipment.foot,
+            hand: equippedHand ? { id: equippedHand.item_id, xp: 0 } : adventurer.equipment.hand,
+            neck: equippedNeck ? { id: equippedNeck.item_id, xp: 0 } : adventurer.equipment.neck,
+            ring: equippedRing ? { id: equippedRing.item_id, xp: 0 } : adventurer.equipment.ring,
+          },
+        },
+      }]
+  }
+
+  return events;
 }
