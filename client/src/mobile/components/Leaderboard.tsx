@@ -15,9 +15,12 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Button, CircularProgress, IconButton, InputBase, Pagination, Skeleton, Tab, Tabs, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useGameTokenRanking, useGameTokens } from "metagame-sdk/sql";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSnackbar } from "notistack";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addAddressPadding } from "starknet";
+
+const MAX_PLAYER_NAME_LENGTH = 31;
 
 interface LeaderboardProps {
   onBack: () => void;
@@ -29,6 +32,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { updatePlayerName } = useSystemCalls();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -119,6 +123,15 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
     goToPage(newValue - 1);
   }, [goToPage]);
 
+  const ownedGameIds = useMemo(() => {
+    if (!address) return new Set<number>();
+    return new Set(
+      displayedGames
+        .filter((g: any) => addAddressPadding(g.owner).toLowerCase() === addAddressPadding(address).toLowerCase())
+        .map((g: any) => g.token_id)
+    );
+  }, [displayedGames, address]);
+
   const watchGame = useCallback((gameId: number) => {
     navigate(`/${dungeon.id}/watch?id=${gameId}`);
   }, [navigate, dungeon.id]);
@@ -147,15 +160,11 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
       cancelEditing();
     } catch (error) {
       console.error("Error updating player name:", error);
+      enqueueSnackbar("Failed to update name. Please try again.", { variant: "error" });
     } finally {
       setIsSaving(false);
     }
-  }, [editingName, cancelEditing, updatePlayerName]);
-
-  const isOwner = useCallback((game: any) => {
-    if (!address || !game.owner) return false;
-    return addAddressPadding(game.owner).toLowerCase() === addAddressPadding(address).toLowerCase();
-  }, [address]);
+  }, [editingName, cancelEditing, updatePlayerName, enqueueSnackbar]);
 
   return (
     <motion.div
@@ -204,9 +213,13 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
       </Box>
 
       <Box sx={styles.listContainer}>
-        {(displayedGames.length === 0) ? (
+        {loading ? (
           <Typography sx={{ textAlign: "center", py: 2 }}>
             Loading...
+          </Typography>
+        ) : displayedGames.length === 0 ? (
+          <Typography sx={{ textAlign: "center", py: 2 }}>
+            {activeTab === 1 ? "You have no games yet." : "No games found."}
           </Typography>
         ) : displayedGames.map((game: any, index: number) => (
           <Box sx={styles.listItem} key={game.token_id}>
@@ -248,18 +261,20 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                       disabled={isSaving}
                       sx={styles.editInput}
                       inputProps={{
-                        maxLength: 31,
+                        maxLength: MAX_PLAYER_NAME_LENGTH,
+                        "aria-label": "Edit player name",
                       }}
                     />
                     <Box sx={styles.editActions}>
                       {isSaving ? (
-                        <CircularProgress size={16} sx={{ color: '#d0c98d' }} />
+                        <CircularProgress size={16} sx={{ color: 'primary.main' }} />
                       ) : (
                         <>
                           <IconButton
                             size="small"
                             onClick={() => saveNewName(game.token_id)}
                             sx={styles.editActionButton}
+                            aria-label="Save name"
                           >
                             <CheckIcon sx={{ fontSize: 14 }} />
                           </IconButton>
@@ -267,6 +282,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                             size="small"
                             onClick={cancelEditing}
                             sx={styles.editActionButton}
+                            aria-label="Cancel editing"
                           >
                             <CloseIcon sx={{ fontSize: 14 }} />
                           </IconButton>
@@ -290,11 +306,12 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                         {localNameOverrides[game.token_id] ?? game.player_name}
                       </Typography>
                     )}
-                    {isOwner(game) && !loading && (
+                    {ownedGameIds.has(game.token_id) && !loading && (
                       <IconButton
                         size="small"
                         onClick={() => startEditing(game)}
                         sx={styles.editIcon}
+                        aria-label="Edit player name"
                       >
                         <EditIcon sx={{ fontSize: 12 }} />
                       </IconButton>

@@ -32,6 +32,7 @@ export const useSystemCalls = () => {
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
+  const DENSHOKAN_ADDRESS = import.meta.env.VITE_PUBLIC_DENSHOKAN_ADDRESS;
   const DUNGEON_ADDRESS = dungeon.address;
   const DUNGEON_TICKET = dungeon.ticketAddress;
   const GAME_ADDRESS = getContractByName(
@@ -473,15 +474,24 @@ export const useSystemCalls = () => {
   /**
    * Updates the player name for a game token.
    * @param tokenId The ID of the game token
-   * @param name The new name for the player
+   * @param name The new name for the player (max 31 characters for felt252)
    * @returns The transaction receipt
    */
   const updatePlayerName = async (tokenId: number, name: string) => {
-    const TOKEN_CONTRACT = "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd";
+    if (!DENSHOKAN_ADDRESS) {
+      throw new Error("Denshokan address not configured");
+    }
+    if (!account) {
+      throw new Error("Account not connected");
+    }
+    if (!name || name.length > 31) {
+      throw new Error("Name must be 1-31 characters");
+    }
+
     try {
-      let tx = await account!.execute([
+      let tx = await account.execute([
         {
-          contractAddress: TOKEN_CONTRACT,
+          contractAddress: DENSHOKAN_ADDRESS,
           entrypoint: "update_player_name",
           calldata: CallData.compile([tokenId, stringToFelt(name)]),
         },
