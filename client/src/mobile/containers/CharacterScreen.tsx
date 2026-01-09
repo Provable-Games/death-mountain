@@ -1,3 +1,4 @@
+import { BOTTOM_NAV_OFFSET } from '@/mobile/constants/layout';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
@@ -336,7 +337,7 @@ const styles = {
     padding: '10px',
     boxSizing: 'border-box',
     width: '100%',
-    mb: '75px'
+    mb: BOTTOM_NAV_OFFSET,
   },
   characterInfo: {
     display: 'flex',

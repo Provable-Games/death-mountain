@@ -1,3 +1,4 @@
+import { BOTTOM_NAV_OFFSET } from '@/mobile/constants/layout';
 import { useSound } from '@/mobile/contexts/Sound';
 import { useController } from '@/contexts/controller';
 import { ellipseAddress } from '@/utils/utils';
@@ -150,6 +151,7 @@ const styles = {
     overflowY: 'auto',
     padding: '10px',
     boxSizing: 'border-box',
+    pb: BOTTOM_NAV_OFFSET,
   },
   title: {
     textAlign: 'center',

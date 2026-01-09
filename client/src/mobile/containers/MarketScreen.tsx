@@ -1,5 +1,6 @@
 import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
+import { BOTTOM_NAV_OFFSET, GAP } from '@/mobile/constants/layout';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
@@ -202,15 +203,17 @@ export default function MarketScreen() {
     <Box sx={styles.container}>
       {/* Top Bar */}
       {marketAvailable && <Box sx={styles.topBar}>
-        <Box sx={styles.healthDisplay}>
-          <Typography sx={styles.healthLabel}>Health</Typography>
-          <Typography sx={styles.healthValue}>
-            {Math.min(adventurer?.health! + (cart.potions * 10), maxHealth)}/{maxHealth}
-          </Typography>
-        </Box>
-        <Box sx={styles.goldDisplay}>
-          <Typography sx={styles.goldLabel}>Gold</Typography>
-          <Typography sx={styles.goldValue}>{remainingGold}</Typography>
+        <Box sx={styles.topBarRow}>
+          <Box sx={styles.healthDisplay}>
+            <Typography sx={styles.healthLabel}>Health</Typography>
+            <Typography sx={styles.healthValue}>
+              {Math.min(adventurer?.health! + (cart.potions * 10), maxHealth)}/{maxHealth}
+            </Typography>
+          </Box>
+          <Box sx={styles.goldDisplay}>
+            <Typography sx={styles.goldLabel}>Gold</Typography>
+            <Typography sx={styles.goldValue}>{remainingGold}</Typography>
+          </Box>
         </Box>
         <Button
           variant="contained"
@@ -434,13 +437,17 @@ const styles = {
   },
   topBar: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 10px',
+    flexDirection: 'column',
+    padding: `${GAP.sm} 10px`,
     background: 'rgba(0, 0, 0, 0.3)',
     borderBottom: '1px solid rgba(128, 255, 0, 0.1)',
-    gap: '8px',
-    flexWrap: 'wrap',
+    gap: GAP.sm,
+  },
+  topBarRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: GAP.sm,
   },
   healthDisplay: {
     display: 'flex',
@@ -487,7 +494,7 @@ const styles = {
     fontWeight: 'bold',
     color: '#111111',
     fontFamily: 'VT323, monospace',
-    width: '110px',
+    width: '100%',
     '&:disabled': {
       background: 'rgba(128, 255, 0, 0.1)',
       color: 'rgba(128, 255, 0, 0.5)',
@@ -500,7 +507,7 @@ const styles = {
     padding: '10px',
     pb: 1,
     overflowY: 'auto',
-    mb: '60px'
+    mb: BOTTOM_NAV_OFFSET,
   },
   potionsSection: {
     flex: 1,

@@ -1,4 +1,5 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
+import { BOTTOM_NAV_OFFSET } from '@/mobile/constants/layout';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Stats } from '@/types/game';
@@ -393,7 +394,7 @@ const styles = {
     color: '#80FF00',
     borderRadius: '6px',
     border: '1px solid rgba(128, 255, 0, 0.2)',
-    marginBottom: '60px',
+    marginBottom: BOTTOM_NAV_OFFSET,
     '&:disabled': {
       background: 'rgba(128, 255, 0, 0.1)',
       color: 'rgba(128, 255, 0, 0.5)',
