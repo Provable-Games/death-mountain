@@ -57,10 +57,19 @@ export default function ExploreOverlay() {
   const handleCheckout = () => {
     setInProgress(true);
 
-    let itemPurchases = cart.items.map(item => ({
-      item_id: item.id,
-      equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
-    }));
+    const slotsToEquip = new Set<string>();
+    let itemPurchases = cart.items.map(item => {
+      const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
+      const slotEmpty = adventurer?.equipment[slot as keyof typeof adventurer.equipment]?.id === 0;
+      const shouldEquip = slotEmpty && !slotsToEquip.has(slot);
+      if (shouldEquip) {
+        slotsToEquip.add(slot);
+      }
+      return {
+        item_id: item.id,
+        equip: shouldEquip,
+      };
+    });
 
     const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
     const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
