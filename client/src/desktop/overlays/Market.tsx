@@ -59,7 +59,7 @@ const renderTierToggleButton = (tier: Tier) => (
   </ToggleButton>
 );
 
-export default function MarketOverlay() {
+export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: boolean }) {
   const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
   const { executeGameAction, actionFailed } = useGameDirector();
   const {
@@ -168,6 +168,8 @@ export default function MarketOverlay() {
   };
 
   const handleCheckout = () => {
+    if (disabledPurchase) return;
+
     setInProgress(true);
 
     let itemPurchases = cart.items.map(item => ({
@@ -243,7 +245,7 @@ export default function MarketOverlay() {
               <Button
                 variant="outlined"
                 onClick={handleCheckout}
-                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0}
+                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0 || disabledPurchase}
                 sx={{ height: '34px', width: '170px', justifyContent: 'center' }}
               >
                 {inProgress

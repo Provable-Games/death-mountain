@@ -170,7 +170,7 @@ export default function ExploreOverlay() {
       <TipsOverlay />
       <SettingsOverlay />
 
-      <MarketOverlay />
+      <MarketOverlay disabledPurchase={isExploring} />
 
       {/* Bottom Buttons */}
       {!spectating && <Box sx={styles.buttonContainer}>
