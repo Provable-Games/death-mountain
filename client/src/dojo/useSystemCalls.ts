@@ -12,23 +12,25 @@ import {
   Stats,
 } from "@/types/game";
 import { useAnalytics } from "@/utils/analytics";
-import { isOptimisticCall, optimisticGameEvents, translateGameEvent } from "@/utils/translation";
+import { GameEvent } from "@/utils/events";
+import { optimisticGameEvents, translateGameEvent } from "@/utils/translation";
 import { delay, stringToFelt } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
 import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
-import { GameEvent } from "@/utils/events";
+import { useEffect, useState } from "react";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
-  const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog, preCalls, setPreCalls } = useGameStore();
+  const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
+  const [preCalls, setPreCalls] = useState<any[]>([]);
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
@@ -64,10 +66,25 @@ export const useSystemCalls = () => {
    *   - drop: Function to drop items
    *   - levelUp: Function to level up and purchase items
    */
+
+
   const executeAction = async (calls: any[], forceResetAction: () => void) => {
-    if (isOptimisticCall(calls)) {
-      setPreCalls([...preCalls, ...calls]);
-      return optimisticGameEvents(adventurer!, bag, calls[calls.length - 1]);
+    // Check if ANY of the calls are optimistic
+    const hasOptimisticCall = calls.some(call =>
+      ['drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)
+    );
+
+    if (hasOptimisticCall) {
+      // Add ALL optimistic calls to preCalls (not just the last one)
+      const optimisticCalls = calls.filter(call =>
+        ['equip', 'drop', 'select_stat_upgrades', 'buy_items'].includes(call.entrypoint)
+      );
+      setPreCalls(prev => [...prev, ...optimisticCalls]);
+
+      // Return optimistic events for all optimistic calls
+      return optimisticCalls.flatMap(call =>
+        optimisticGameEvents(adventurer!, bag, call)
+      );
     }
 
     try {
@@ -158,10 +175,6 @@ export const useSystemCalls = () => {
         return true;
       }
       if (lastEvent.discovery?.type === "Loot" && !calls.find((call: any) => call.entrypoint === 'equip' || call.entrypoint === 'drop')) {
-        return true;
-      }
-    } else if (lastEvent?.type === "stat_upgrade") {
-      if (lastEvent.stats?.charisma === 0 || !calls.find((call: any) => call.entrypoint === 'buy_items')) {
         return true;
       }
     } else if (lastEvent?.type === "obstacle") {

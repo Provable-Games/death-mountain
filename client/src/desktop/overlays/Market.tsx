@@ -924,9 +924,10 @@ const styles = {
     opacity: 0.5,
   },
   itemStatBonus: {
-    color: '#80FF00',
+    color: '#808080',
     fontSize: '0.75rem',
     fontWeight: '500',
     marginTop: '2px',
+    opacity: 0.8,
   },
 };

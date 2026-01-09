@@ -28,7 +28,6 @@ interface GameState {
   claimInProgress: boolean;
   selectedStats: Stats;
   spectating: boolean;
-  preCalls: any[];
 
   setGameId: (gameId: number) => void;
   exitGame: () => void;
@@ -56,7 +55,6 @@ interface GameState {
   setClaimInProgress: (data: boolean) => void;
   setSelectedStats: (data: Stats) => void;
   setSpectating: (data: boolean) => void;
-  setPreCalls: (data: any[]) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -82,8 +80,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   claimInProgress: false,
   selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
   spectating: false,
-  preCalls: [],
-
   setGameId: (gameId: number) => {
     set({ gameId });
   },
@@ -111,7 +107,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       selectedStats: { strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 },
       claimInProgress: false,
       spectating: false,
-      preCalls: [],
     });
   },
 
@@ -217,5 +212,4 @@ export const useGameStore = create<GameState>((set, get) => ({
   setSelectedStats: (data: Stats) => set({ selectedStats: data }),
   setClaimInProgress: (data: boolean) => set({ claimInProgress: data }),
   setSpectating: (data: boolean) => set({ spectating: data }),
-  setPreCalls: (data: any[]) => set({ preCalls: data }),
 }));
