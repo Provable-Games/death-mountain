@@ -8,7 +8,6 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import AdventurerInfo from '../components/AdventurerInfo';
 import ItemTooltip from '../components/ItemTooltip';
-import { useMarketStore } from '@/stores/marketStore';
 
 type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | 'neck' | 'ring';
 
@@ -134,7 +133,6 @@ const ItemSlot = memo(({
 export default function CharacterScreen() {
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, beast, bag, newInventoryItems, setNewInventoryItems, equipItem } = useGameStore();
-  const { inProgress } = useMarketStore();
 
   const [dropInProgress, setDropInProgress] = useState(false);
   const [isDropMode, setIsDropMode] = useState(false);
@@ -167,7 +165,7 @@ export default function CharacterScreen() {
   const equipmentOrder: EquipmentSlot[] = ['head', 'chest', 'hand', 'waist', 'foot', 'weapon', 'ring', 'neck'];
 
   const handleItemClick = (item: Item, bag: boolean = false) => {
-    if (inProgress || dropInProgress) return;
+    if (dropInProgress) return;
 
     if (isDropMode) {
       if (itemsToDrop.includes(item.id)) {

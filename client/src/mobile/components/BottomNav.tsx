@@ -11,16 +11,12 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeNavItem, setActiveNavItem }: BottomNavProps) {
   const { adventurer, marketItemIds, newMarket, setNewMarket, setNewInventoryItems, spectating } = useGameStore();
-  const { cart, inProgress, clearCart, setInProgress } = useMarketStore();
+  const { cart, clearCart } = useMarketStore();
 
   useEffect(() => {
-    if (inProgress) {
-      if (cart.items.length > 0) {
-        setNewInventoryItems(cart.items.map(item => item.id));
-      }
-      setInProgress(false);
+    if (cart.items.length > 0) {
+      setNewInventoryItems(cart.items.map(item => item.id));
     }
-
     clearCart();
   }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
 

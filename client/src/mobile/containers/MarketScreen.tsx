@@ -73,8 +73,6 @@ export default function MarketScreen() {
     addToCart,
     removeFromCart,
     setPotions,
-    inProgress,
-    setInProgress,
     showFilters,
     setShowFilters,
   } = useMarketStore();
@@ -135,10 +133,6 @@ export default function MarketScreen() {
   };
 
   const handleCheckout = () => {
-    if (inProgress) return;
-
-    setInProgress(true);
-
     const slotsToEquip = new Set<string>();
     let itemPurchases = cart.items.map(item => {
       const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
@@ -220,13 +214,7 @@ export default function MarketScreen() {
           disabled={(cart.potions === 0 && cart.items.length === 0)}
           sx={styles.cartButton}
         >
-          {inProgress
-            ? <Box display={'flex'} alignItems={'baseline'}>
-              Processing
-              <div className='dotLoader black' />
-            </Box>
-            : `Purchase (${cart.potions + cart.items.length})`
-          }
+          Purchase (${cart.potions + cart.items.length})
         </Button>
       </Box>}
 

@@ -8,7 +8,7 @@ import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -37,9 +37,8 @@ const STAT_ICONS = {
 
 export default function StatSelectionScreen() {
   const { adventurer, gameSettings, bag } = useGameStore();
-  const { executeGameAction, actionFailed } = useGameDirector();
+  const { executeGameAction } = useGameDirector();
 
-  const [isSelectingStats, setIsSelectingStats] = useState(false);
   const [selectedStats, setSelectedStats] = useState<Stats>({
     strength: 0,
     dexterity: 0,
@@ -49,10 +48,6 @@ export default function StatSelectionScreen() {
     charisma: 0,
     luck: 0
   });
-
-  useEffect(() => {
-    setIsSelectingStats(false);
-  }, [actionFailed]);
 
   const equippedItemStats = useMemo(() => {
     return ItemUtils.getEquippedItemStats(adventurer!, bag);
@@ -77,7 +72,6 @@ export default function StatSelectionScreen() {
   };
 
   const handleSelectStats = async () => {
-    setIsSelectingStats(true);
     executeGameAction({ type: 'select_stat_upgrades', statUpgrades: selectedStats });
   };
 
@@ -220,18 +214,12 @@ export default function StatSelectionScreen() {
         <Button
           variant="contained"
           onClick={handleSelectStats}
-          disabled={pointsRemaining !== 0 || isSelectingStats}
+          disabled={pointsRemaining !== 0}
           sx={styles.selectButton}
         >
-          {isSelectingStats
-            ? <Box display={'flex'} alignItems={'baseline'}>
-              <Typography variant={'h4'} lineHeight={'16px'}>Selecting Stats</Typography>
-              <div className='dotLoader green' />
-            </Box>
-            : <Typography variant={'h4'} lineHeight={'16px'}>
-              Select Stats
-            </Typography>
-          }
+          <Typography variant={'h4'} lineHeight={'16px'}>
+            Select Stats
+          </Typography>
         </Button>
       </Box>
     </motion.div>

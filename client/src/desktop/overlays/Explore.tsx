@@ -13,7 +13,6 @@ import MarketOverlay from './Market';
 import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
 import { useUIStore } from '@/stores/uiStore';
-import { useSnackbar } from 'notistack';
 import { potionPrice } from '@/utils/market';
 import { calculateLevel } from '@/utils/game';
 
@@ -21,17 +20,13 @@ export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
     setCollectable, selectedStats, setSelectedStats, claimInProgress, spectating } = useGameStore();
-  const { cart, inProgress, setInProgress } = useMarketStore();
+  const { cart } = useMarketStore();
   const { skipAllAnimations } = useUIStore();
-  const { enqueueSnackbar } = useSnackbar()
 
   const [isExploring, setIsExploring] = useState(false);
-  const [isSelectingStats, setIsSelectingStats] = useState(false);
 
   useEffect(() => {
     setIsExploring(false);
-    setIsSelectingStats(false);
-    setInProgress(false);
     setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
   }, [adventurer!.action_count, actionFailed]);
 
@@ -47,7 +42,6 @@ export default function ExploreOverlay() {
   };
 
   const handleSelectStats = async () => {
-    setIsSelectingStats(true);
     executeGameAction({
       type: 'select_stat_upgrades',
       statUpgrades: selectedStats
@@ -55,8 +49,6 @@ export default function ExploreOverlay() {
   };
 
   const handleCheckout = () => {
-    setInProgress(true);
-
     const slotsToEquip = new Set<string>();
     let itemPurchases = cart.items.map(item => {
       const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
@@ -177,7 +169,7 @@ export default function ExploreOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay disabledEquip={isExploring || isSelectingStats || inProgress} />
+      <InventoryOverlay disabledEquip={isExploring} />
       <TipsOverlay />
       <SettingsOverlay />
 
@@ -193,29 +185,18 @@ export default function ExploreOverlay() {
               ...styles.exploreButton,
               ...(Object.values(selectedStats).reduce((a, b) => a + b, 0) === adventurer?.stat_upgrades_available && styles.selectStatsButtonHighlighted)
             }}
-            disabled={isSelectingStats || Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
+            disabled={Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
           >
-            {isSelectingStats
-              ? <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Selecting Stats</Typography>
-                <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
-              </Box>
-              : <Typography sx={styles.buttonText}>Select Stats</Typography>
-            }
+            <Typography sx={styles.buttonText}>Select Stats</Typography>
           </Button>
         ) : (
           <Button
             variant="contained"
             onClick={cart.items.length > 0 || cart.potions > 0 ? handleCheckout : handleExplore}
             sx={styles.exploreButton}
-            disabled={inProgress || isExploring}
+            disabled={isExploring}
           >
-            {inProgress ? (
-              <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Processing</Typography>
-                <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
-              </Box>
-            ) : isExploring ? (
+            {isExploring ? (
               <Box display={'flex'} alignItems={'baseline'}>
                 <Typography sx={styles.buttonText}>Exploring</Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />

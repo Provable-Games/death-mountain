@@ -61,7 +61,7 @@ const renderTierToggleButton = (tier: Tier) => (
 
 export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: boolean }) {
   const { adventurer, bag, marketItemIds, setShowInventory, setNewInventoryItems, newMarket, setNewMarket } = useGameStore();
-  const { executeGameAction, actionFailed } = useGameDirector();
+  const { executeGameAction } = useGameDirector();
   const {
     isOpen,
     setIsOpen,
@@ -75,8 +75,6 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
     addToCart,
     removeFromCart,
     setPotions,
-    inProgress,
-    setInProgress,
     showFilters,
     setShowFilters,
     clearCart,
@@ -95,22 +93,14 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
   };
 
   useEffect(() => {
-    if (inProgress) {
-      if (cart.items.length > 0) {
-        setNewInventoryItems(cart.items.map(item => item.id));
-        setShowInventory(true);
-      }
-
-      setIsOpen(false);
-      setInProgress(false);
+    if (cart.items.length > 0) {
+      setNewInventoryItems(cart.items.map(item => item.id));
+      setShowInventory(true);
     }
+    setIsOpen(false);
 
     clearCart();
   }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
-
-  useEffect(() => {
-    setInProgress(false);
-  }, [actionFailed]);
 
   // Function to check if an item is already owned (in equipment or bag)
   const isItemOwned = useCallback((itemId: number) => {
@@ -169,8 +159,6 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
 
   const handleCheckout = () => {
     if (disabledPurchase) return;
-
-    setInProgress(true);
 
     const slotsToEquip = new Set<string>();
     let itemPurchases = cart.items.map(item => {
@@ -256,20 +244,10 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
               <Button
                 variant="outlined"
                 onClick={handleCheckout}
-                disabled={inProgress || cart.potions === 0 && cart.items.length === 0 || remainingGold < 0 || disabledPurchase}
+                disabled={cart.potions === 0 && cart.items.length === 0 || remainingGold < 0 || disabledPurchase}
                 sx={{ height: '34px', width: '170px', justifyContent: 'center' }}
               >
-                {inProgress
-                  ? <Box display={'flex'} alignItems={'baseline'}>
-                    <Typography>
-                      Processing
-                    </Typography>
-                    <div className='dotLoader yellow' />
-                  </Box>
-                  : <Typography>
-                    Purchase ({cart.potions + cart.items.length})
-                  </Typography>
-                }
+                Purchase ({cart.potions + cart.items.length})
               </Button>
             </Box>}
 
