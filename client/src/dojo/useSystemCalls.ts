@@ -13,11 +13,10 @@ import {
 } from "@/types/game";
 import { useAnalytics } from "@/utils/analytics";
 import { GameEvent } from "@/utils/events";
-import { optimisticGameEvents, translateGameEvent } from "@/utils/translation";
+import { translateGameEvent } from "@/utils/translation";
 import { delay, stringToFelt } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
-import { useState } from "react";
 import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
 
@@ -30,7 +29,6 @@ export const useSystemCalls = () => {
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
-  const [preCalls, setPreCalls] = useState<any[]>([]);
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
