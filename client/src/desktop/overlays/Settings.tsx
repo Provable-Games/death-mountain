@@ -158,7 +158,7 @@ export default function SettingsOverlay() {
                         sx={styles.checkbox}
                       />
                     }
-                    label="Skip Battle Attacks"
+                    label="Skip Combat Delay"
                     sx={styles.checkboxLabel}
                   />
                 </Box>

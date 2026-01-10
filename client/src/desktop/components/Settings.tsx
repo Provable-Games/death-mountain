@@ -173,7 +173,7 @@ export default function Settings({ onBack }: SettingsProps) {
                 sx={styles.checkbox}
               />
             }
-            label="Skip Battle Attacks"
+            label="Skip Combat Delay"
             sx={styles.checkboxLabel}
           />
         </Box>
