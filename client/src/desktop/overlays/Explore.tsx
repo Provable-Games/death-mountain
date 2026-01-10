@@ -27,8 +27,13 @@ export default function ExploreOverlay() {
 
   useEffect(() => {
     setIsExploring(false);
-    setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
   }, [adventurer!.action_count, actionFailed]);
+
+  useEffect(() => {
+    if (adventurer!.stat_upgrades_available === 0) {
+      setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
+    }
+  }, [adventurer!.stat_upgrades_available]);
 
   const handleExplore = async () => {
     if (!skipAllAnimations) {
