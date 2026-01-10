@@ -434,15 +434,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           newItemsEquipped.map((item) => item.id)
         )
       );
+    } else if (action.type === "drop") {
+      txs.push(drop(gameId!, action.items!));
     } else if (action.type === "buy_items") {
       setOptimisticTxs((prev) => [...prev, buyItems(gameId!, action.potions!, action.itemPurchases!)]);
     } else if (action.type === "select_stat_upgrades") {
       setOptimisticTxs((prev) => [...prev, selectStatUpgrades(gameId!, action.statUpgrades!)]);
-    } else if (action.type === "drop") {
-      setOptimisticTxs((prev) => [...prev, drop(gameId!, action.items!)]);
     }
 
-    const hasOptimisticTx = ['drop', 'select_stat_upgrades', 'buy_items'].includes(action.type)
+    const hasOptimisticTx = ['select_stat_upgrades', 'buy_items'].includes(action.type)
     let events = [];
     if (hasOptimisticTx) {
       events = optimisticGameEvents(adventurer!, bag, action);
