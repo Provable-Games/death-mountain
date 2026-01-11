@@ -12,6 +12,7 @@ import TipsOverlay from './Tips';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useUIStore } from '@/stores/uiStore';
+import { getBattleSceneUrl } from '@/config/assets';
 
 const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
@@ -126,7 +127,7 @@ export default function CombatOverlay() {
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      {beast?.baseName && <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png')` }]} />}
+      {beast?.baseName && <Box sx={[styles.imageContainer, { backgroundImage: `url('${getBattleSceneUrl(beast!.baseName, !!isJackpot)}')` }]} />}
 
       {/* Adventurer */}
       <Adventurer combatStats={combatStats} />
