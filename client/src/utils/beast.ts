@@ -232,20 +232,20 @@ export const getArmorTypeWeakness = (type: string): string => {
 
 export const beastPowerPercent = (adventurerLevel: number, power: number) => {
   let max_beast_level = adventurerLevel * 3
-  let min_beast_level = 1
+  let base_level = 1
 
   if (adventurerLevel >= 50) {
-    min_beast_level += 80
+    base_level += 80
   } else if (adventurerLevel >= 40) {
-    min_beast_level += 40
+    base_level += 40
   } else if (adventurerLevel >= 30) {
-    min_beast_level += 20
+    base_level += 20
   } else if (adventurerLevel >= 20) {
-    min_beast_level += 10
+    base_level += 10
   }
 
-  let adjusted_max_power = (max_beast_level * 5) - min_beast_level
-  let adjusted_power = Math.max(power - min_beast_level, 1)
+  let adjusted_max_power = ((base_level + max_beast_level) * 5) - base_level
+  let adjusted_power = Math.max(power - base_level, 1)
 
   return (adjusted_power / adjusted_max_power) * 100
 }

@@ -403,7 +403,7 @@ export const optimisticGameEvents = (adventurer: Adventurer, bag: Item[], action
           ...adventurer,
           action_count,
           gold: action.remainingGold!,
-          health: adventurer.health + (potions * 10),
+          health: Math.min(adventurer.health + (potions * 10), STARTING_HEALTH + (adventurer.stats.vitality * 15)),
           equipment: {
             weapon: equippedWeapon ? { id: equippedWeapon.item_id, xp: 0 } : adventurer.equipment.weapon,
             chest: equippedChest ? { id: equippedChest.item_id, xp: 0 } : adventurer.equipment.chest,
