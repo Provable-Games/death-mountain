@@ -9,7 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import XIcon from '@mui/icons-material/X';
-import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
+import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Switch, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import WalletConnect from '../components/WalletConnect';
 import { useDungeon } from '@/dojo/useDungeon';
@@ -18,7 +18,7 @@ export default function SettingsOverlay() {
   const dungeon = useDungeon();
   const { showSettings, setShowSettings } = useGameStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
-  const { skipAllAnimations, setSkipAllAnimations, fastBattle, setFastBattle } = useUIStore();
+  const { skipAllAnimations, setSkipAllAnimations, fastBattle, setFastBattle, advancedMode, setAdvancedMode } = useUIStore();
   const navigate = useNavigate();
   const handleExitGame = () => {
     navigate('/');
@@ -56,7 +56,7 @@ export default function SettingsOverlay() {
               </IconButton>
             </Box>
 
-            <Divider sx={{ mt: '2px', mb: 1.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            <Divider sx={{ mt: '2px', mb: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
             <Box sx={styles.content}>
               {/* Profile Section */}
@@ -65,7 +65,7 @@ export default function SettingsOverlay() {
                 {!dungeon.hideController ? <WalletConnect /> : null}
               </Box>
 
-              <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
               {/* Sound Control */}
               <Box sx={styles.section}>
@@ -130,7 +130,24 @@ export default function SettingsOverlay() {
                 </Box>
               </Box>
 
-              <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+              {/* Advanced Section */}
+              <Box sx={styles.section}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography sx={styles.sectionTitle}>Enable Advanced Mode</Typography>
+                  <Switch
+                    checked={advancedMode}
+                    onChange={(e) => setAdvancedMode(e.target.checked)}
+                    sx={styles.switch}
+                  />
+                </Box>
+                <Typography sx={{ fontSize: '11px', color: 'rgba(208, 201, 141, 0.7)', mt: -1 }}>
+                  Advanced features and simulations
+                </Typography>
+              </Box>
+
+              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
               {/* Animations Section */}
               <Box sx={styles.section}>
@@ -164,7 +181,7 @@ export default function SettingsOverlay() {
                 </Box>
               </Box>
 
-              <Divider sx={{ mb: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
               {/* Game Section */}
               <Box sx={styles.section}>
@@ -243,7 +260,7 @@ const styles = {
   },
   popup: {
     position: 'absolute',
-    bottom: '95px',
+    bottom: '90px',
     right: '5px',
     width: '300px',
     background: 'rgba(24, 40, 24, 1)',
@@ -392,5 +409,16 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 0.75,
+  },
+  switch: {
+    '& .MuiSwitch-switchBase.Mui-checked': {
+      color: '#d0c98d',
+      '&:hover': {
+        backgroundColor: 'rgba(208, 201, 141, 0.08)',
+      },
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+      backgroundColor: '#d0c98d',
+    },
   },
 };

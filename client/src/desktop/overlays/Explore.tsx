@@ -1,29 +1,43 @@
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useExplorationWorker } from '@/hooks/useExplorationWorker';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
+import { useUIStore } from '@/stores/uiStore';
 import { streamIds } from '@/utils/cloudflare';
 import { getEventTitle } from '@/utils/events';
+import { calculateLevel } from '@/utils/game';
 import { ItemUtils, Tier } from '@/utils/loot';
+import { potionPrice } from '@/utils/market';
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';
-import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
-import { useUIStore } from '@/stores/uiStore';
-import { potionPrice } from '@/utils/market';
-import { calculateLevel } from '@/utils/game';
+import TipsOverlay from './Tips';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
-    setCollectable, selectedStats, setSelectedStats, claimInProgress, spectating } = useGameStore();
+    setCollectable, selectedStats, setSelectedStats, claimInProgress, spectating, gameSettings } = useGameStore();
   const { cart } = useMarketStore();
-  const { skipAllAnimations } = useUIStore();
-
+  const { skipAllAnimations, advancedMode } = useUIStore();
   const [isExploring, setIsExploring] = useState(false);
+
+  // Use Web Worker for lethal chance calculations (Monte Carlo, 100k samples)
+  const { ambushLethalChance, trapLethalChance } = useExplorationWorker(
+    adventurer ?? null,
+    gameSettings ?? null,
+  );
+
+  const formatPercent = (value: number | null | undefined) => {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return '-';
+    }
+
+    return `${value.toFixed(1)}%`;
+  };
 
   useEffect(() => {
     setIsExploring(false);
@@ -181,7 +195,22 @@ export default function ExploreOverlay() {
       <MarketOverlay disabledPurchase={isExploring} />
 
       {/* Bottom Buttons */}
-      {!spectating && <Box sx={styles.buttonContainer}>
+      {!spectating && <Box sx={[styles.buttonContainer, advancedMode && styles.advancedButtonContainer]}>
+        {advancedMode && <Box sx={styles.lethalChancesContainer}>
+          <Typography sx={styles.lethalChanceLabel}>
+            Ambush Lethal Chance
+            <Typography component="span" sx={styles.lethalChanceValue}>
+              {formatPercent(ambushLethalChance)}
+            </Typography>
+          </Typography>
+          <Typography sx={styles.lethalChanceLabel}>
+            Trap Lethal Chance
+            <Typography component="span" sx={styles.lethalChanceValue}>
+              {formatPercent(trapLethalChance)}
+            </Typography>
+          </Typography>
+        </Box>}
+
         {adventurer?.stat_upgrades_available! > 0 ? (
           <Button
             variant="contained"
@@ -368,5 +397,33 @@ const styles = {
     color: '#d0c98d',
     letterSpacing: '0.5px',
     margin: 0,
+  },
+  lethalChancesContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    alignItems: 'center',
+  },
+  lethalChanceLabel: {
+    fontSize: '0.9rem',
+    color: '#d0c98d',
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+  },
+  lethalChanceValue: {
+    fontWeight: 600,
+    color: '#ff6b6b',
+  },
+  advancedButtonContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    border: '1px solid rgba(8, 62, 34, 0.8)',
+    background: 'rgba(24, 40, 24, 0.85)',
+    backdropFilter: 'blur(8px)',
   },
 };

@@ -4,7 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
+import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Switch, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 
 interface SettingsProps {
@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle, fastBattle, setFastBattle } = useUIStore();
+  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle, fastBattle, setFastBattle, advancedMode, setAdvancedMode } = useUIStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
   const handleSwitchToMobile = () => {
@@ -112,6 +112,23 @@ export default function Settings({ onBack }: SettingsProps) {
               {Math.round(musicVolume * 100)}%
             </Typography>
           </Box>
+        </Box>
+
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+        {/* Advanced Section */}
+        <Box sx={styles.settingSection}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography sx={[styles.sectionTitle]}>Enable Advanced Mode</Typography>
+            <Switch
+              checked={advancedMode}
+              onChange={(e) => setAdvancedMode(e.target.checked)}
+              sx={styles.switch}
+            />
+          </Box>
+          <Typography sx={{ fontSize: '12px', color: 'rgba(208, 201, 141, 0.7)', mt: -0.5 }}>
+            Advanced features and simulations
+          </Typography>
         </Box>
 
         <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />

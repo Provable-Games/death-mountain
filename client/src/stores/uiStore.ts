@@ -27,6 +27,8 @@ interface UIState {
   skipFirstBattle: boolean
   setFastBattle: (fast: boolean) => void
   fastBattle: boolean
+  setAdvancedMode: (advanced: boolean) => void
+  advancedMode: boolean
 }
 
 export const useUIStore = create<UIState>()(
@@ -53,6 +55,8 @@ export const useUIStore = create<UIState>()(
       skipFirstBattle: false,
       setFastBattle: (fast) => set({ fastBattle: fast }),
       fastBattle: false,
+      setAdvancedMode: (advanced) => set({ advancedMode: advanced }),
+      advancedMode: false,
 
       // Client preferences
       setUseMobileClient: (useMobile) => set({ useMobileClient: useMobile }),
@@ -66,6 +70,7 @@ export const useUIStore = create<UIState>()(
         skipAllAnimations: state.skipAllAnimations,
         skipFirstBattle: state.skipFirstBattle,
         fastBattle: state.fastBattle,
+        advancedMode: state.advancedMode,
       }),
     }
   )

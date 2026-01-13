@@ -10,8 +10,10 @@ import ArmorTooltip from '../components/ArmorTooltip';
 import WeaponTooltip from '../components/WeaponTooltip';
 import { useDungeon } from '@/dojo/useDungeon';
 import { useGameTokens } from '@/dojo/useGameTokens';
+import { useUIStore } from '@/stores/uiStore';
 
 export default function Beast() {
+  const { advancedMode } = useUIStore();
   const dungeon = useDungeon();
   const { getBeastOwner } = useGameTokens();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -97,15 +99,23 @@ export default function Beast() {
       )}
 
       <Box sx={styles.beastStatsContainer}>
-        <Box sx={styles.statContainer}>
+        {advancedMode && <Box sx={[styles.statContainer, { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 1 }]}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: '600', lineHeight: 1 }}>
+            Crit Chance:
+          </Typography>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: '600', lineHeight: 1 }}>
+            {calculateLevel(adventurer!.xp)}%
+          </Typography>
+        </Box>}
+        {!advancedMode && <Box sx={styles.statContainer}>
           <Typography variant="body2" sx={styles.statLabel}>
             Crit Chance
           </Typography>
           <Typography variant="body2" sx={styles.statValue}>
             {calculateLevel(adventurer!.xp)}%
           </Typography>
-        </Box>
-        <Box sx={styles.statContainer}>
+        </Box>}
+        {!advancedMode && <Box sx={styles.statContainer}>
           <Typography variant="body2" sx={styles.statLabel}>
             Gold
           </Typography>
@@ -120,6 +130,7 @@ export default function Beast() {
             />
           </Box>
         </Box>
+        }
       </Box>
 
       {/* Beast Health Bar */}

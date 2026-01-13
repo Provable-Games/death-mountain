@@ -1,6 +1,8 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { ability_based_percentage, calculateCombatStats, calculateLevel } from '@/utils/game';
+import { suggestBestCombatGear } from '@/utils/gearSuggestion';
 import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, FormControl, MenuItem, Select, Tooltip, Typography } from '@mui/material';
@@ -26,8 +28,11 @@ const COMBAT_STAT_DESCRIPTIONS = {
 type ViewMode = 'stats' | 'combat';
 
 export default function AdventurerStats() {
-  const { adventurer, bag, beast, selectedStats, setSelectedStats } = useGameStore();
+  const { advancedMode } = useUIStore();
+  const { adventurer, bag, beast, selectedStats, setSelectedStats, applyGearSuggestion } = useGameStore();
   const [viewMode, setViewMode] = useState<ViewMode>('stats');
+  const [suggestInProgress, setSuggestInProgress] = useState(false);
+  const [suggestMessage, setSuggestMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setViewMode((beast && adventurer?.beast_health! > 0) ? 'combat' : 'stats');
@@ -65,6 +70,35 @@ export default function AdventurerStats() {
         ...selectedStats,
         [stat]: selectedStats[stat] - 1
       });
+    }
+  };
+
+  const handleSuggestGear = async () => {
+    if (!adventurer || !bag || !beast) {
+      return;
+    }
+
+    setSuggestInProgress(true);
+    setSuggestMessage(null);
+
+    try {
+      const suggestion = await suggestBestCombatGear(adventurer, bag, beast);
+
+      if (!suggestion) {
+        setSuggestMessage('Best gear already equipped');
+        setTimeout(() => setSuggestMessage(null), 4000);
+        return;
+      }
+
+      applyGearSuggestion({ adventurer: suggestion.adventurer, bag: suggestion.bag });
+      setSuggestMessage('Gear equipped');
+      setTimeout(() => setSuggestMessage(null), 4000);
+    } catch (error) {
+      console.error('Failed to suggest combat gear', error);
+      setSuggestMessage('Unable to suggest gear');
+      setTimeout(() => setSuggestMessage(null), 4000);
+    } finally {
+      setSuggestInProgress(false);
     }
   };
 
@@ -108,12 +142,13 @@ export default function AdventurerStats() {
     } else if (stat === 'wisdom') {
       return `${ability_based_percentage(adventurer!.xp, currentValue)}% chance`;
     } else if (stat === 'charisma') {
-      return (
-        <Box>
-          <Typography sx={styles.tooltipValue}>Potion cost: {potionPrice(level, currentValue)} Gold</Typography>
-          <Typography sx={styles.tooltipValue}>Item discount: {currentValue} Gold</Typography>
-        </Box>
-      );
+      return advancedMode ? `Potions: ${potionPrice(level, currentValue)} gold`
+        : (
+          <Box>
+            <Typography sx={styles.tooltipValue}>Potion cost: {potionPrice(level, currentValue)} Gold</Typography>
+            <Typography sx={styles.tooltipValue}>Item discount: {currentValue} Gold</Typography>
+          </Box>
+        );
     } else if (stat === 'luck') {
       return `${currentValue}% chance of critical hits`;
     }
@@ -132,6 +167,58 @@ export default function AdventurerStats() {
     }
     return null;
   }
+
+  const renderAdvancedStatsView = () => (
+    <>
+      <Box sx={styles.statGrid}>
+        {['strength', 'dexterity', 'vitality', 'intelligence', 'wisdom', 'charisma'].map((stat) => {
+          const totalStatValue = adventurer?.stats?.[stat as keyof typeof STAT_DESCRIPTIONS]! + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]!;
+          const effectText = STAT_HELPER_TEXT(stat, totalStatValue);
+
+          return (
+            <Box sx={styles.statRow} key={stat}>
+              <Box sx={styles.statInfo}>
+                <Typography sx={styles.statLabel}>{STAT_TITLE(stat)}</Typography>
+                {effectText && (
+                  <Typography sx={styles.statEffect}>{effectText}</Typography>
+                )}
+              </Box>
+              <Box sx={styles.statControls}>
+                {adventurer?.stat_upgrades_available! > 0 && stat !== 'luck' && <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleStatDecrement(stat as keyof typeof STAT_DESCRIPTIONS)}
+                  sx={styles.controlButton}
+                >
+                  -
+                </Button>}
+
+                <Typography sx={styles.statValue}>
+                  {totalStatValue}
+                </Typography>
+
+                {adventurer?.stat_upgrades_available! > 0 && stat !== 'luck' && <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleStatIncrement(stat as keyof typeof STAT_DESCRIPTIONS)}
+                  disabled={(adventurer!.stats[stat as keyof typeof STAT_DESCRIPTIONS] + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]) >= (MAX_STAT_VALUE + equippedItemStats[stat as keyof typeof STAT_DESCRIPTIONS])}
+                  sx={styles.controlButton}
+                >
+                  +
+                </Button>}
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
+        {adventurer?.stat_upgrades_available! > 0 &&
+          <Typography color="secondary" >{pointsRemaining} remaining</Typography>
+        }
+      </Box>
+    </>
+  );
 
   const renderStatsView = () => (
     <>
@@ -288,6 +375,26 @@ export default function AdventurerStats() {
           </Box>
         </Box>
       ))}
+
+      {advancedMode && beast && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, marginTop: 'auto' }}>
+          {suggestMessage && (
+            <Typography sx={styles.suggestMessage}>
+              {suggestMessage}
+            </Typography>
+          )}
+          <Button
+            variant="contained"
+            onClick={handleSuggestGear}
+            sx={styles.suggestButton}
+            disabled={suggestInProgress}
+          >
+            <Typography sx={styles.suggestButtonText}>
+              {suggestInProgress ? 'Suggesting...' : 'Suggest Optimal Gear'}
+            </Typography>
+          </Button>
+        </Box>
+      )}
     </>
   );
 
@@ -322,7 +429,7 @@ export default function AdventurerStats() {
             </FormControl>
           )}
         </Box>
-        {viewMode === 'stats' ? renderStatsView() : renderCombatView()}
+        {viewMode === 'stats' ? advancedMode ? renderAdvancedStatsView() : renderStatsView() : renderCombatView()}
       </Box>
     </>
   );
@@ -514,5 +621,69 @@ const styles = {
       transform: 'none',
     },
   },
-
+  statGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    columnGap: 0,
+    rowGap: 0.75,
+  },
+  statInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  statEffect: {
+    fontSize: '11px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 1.2,
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+  },
+  statValue: {
+    width: '26px',
+    textAlign: 'center',
+    fontSize: '14px',
+    pt: '1px',
+    flexShrink: 0,
+  },
+  advancedStatRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 0.5,
+    border: '2px solid rgba(8, 62, 34, 0.85)',
+    borderRadius: '6px',
+    padding: '8px',
+    background: 'rgba(18, 30, 18, 0.92)',
+    boxShadow: '0 0 6px rgba(0, 0, 0, 0.5)',
+  },
+  suggestButton: {
+    width: '100%',
+    background: 'rgba(24, 40, 24, 0.95)',
+    borderRadius: '6px',
+    border: '2px solid #1a6b3a',
+    padding: '6px 12px',
+    boxShadow: '0 0 6px rgba(0, 0, 0, 0.3)',
+    '&:hover': {
+      background: 'rgba(34, 55, 34, 1)',
+      borderColor: '#2a8b4a',
+    },
+    '&:disabled': {
+      background: 'rgba(24, 40, 24, 0.5)',
+      borderColor: 'rgba(26, 107, 58, 0.4)',
+    },
+  },
+  suggestButtonText: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#d0c98d',
+    textTransform: 'none',
+  },
+  suggestMessage: {
+    fontSize: '11px',
+    color: 'rgba(208, 201, 141, 0.8)',
+    textAlign: 'center',
+  },
 }; 

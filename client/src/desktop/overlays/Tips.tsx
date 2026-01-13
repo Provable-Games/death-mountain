@@ -1,5 +1,6 @@
 import { STARTING_HEALTH } from '@/constants/game';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { CombatStats, Equipment } from '@/types/game';
 import { calculateLevel } from '@/utils/game';
 import { ItemUtils, Tier } from '@/utils/loot';
@@ -8,7 +9,8 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats }) {
-  const { adventurer, beast, gameSettings, newMarket } = useGameStore();
+  const { adventurer, beast, newMarket } = useGameStore();
+  const { advancedMode } = useUIStore();
 
   const [showTips, setShowTips] = useState(() => {
     // Load initial state from localStorage, default to true if not set
@@ -59,6 +61,10 @@ export default function TipsOverlay({ combatStats }: { combatStats?: CombatStats
 
     setCurrentTip(tip);
   }, [adventurer]);
+
+  if (advancedMode) {
+    return null;
+  }
 
   return (
     <>
