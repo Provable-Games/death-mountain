@@ -482,7 +482,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
       setNewItems([...newInventoryItems]);
       setNewInventoryItems([]);
     }
-  }, [newInventoryItems, setNewInventoryItems]);
+  }, [newInventoryItems]);
 
   useEffect(() => {
     if (dropInProgress) {
