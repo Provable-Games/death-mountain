@@ -1,11 +1,12 @@
 import { useSound } from '@/mobile/contexts/Sound';
 import { useController } from '@/contexts/controller';
+import { useUIStore } from '@/stores/uiStore';
 import { ellipseAddress } from '@/utils/utils';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MusicOffIcon from '@mui/icons-material/MusicOff';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Box, Button, Slider, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Slider, Switch, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDungeon } from '@/dojo/useDungeon';
 
@@ -14,6 +15,14 @@ export default function SettingsScreen() {
   const dungeon = useDungeon();
   const { muted, setMuted, volume, setVolume } = useSound();
   const { account, address, playerName, login, openProfile } = useController();
+  const {
+    skipFirstBattle,
+    setSkipFirstBattle,
+    fastBattle,
+    setFastBattle,
+    advancedMode,
+    setAdvancedMode,
+  } = useUIStore();
 
   const handleExitGame = () => {
     navigate(`/${dungeon.id}`);
@@ -103,10 +112,58 @@ export default function SettingsScreen() {
         </Box>
       </Box>
 
-      {/* Support Section */}
+      {/* Advanced Mode Section */}
+      <Box sx={styles.section}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography sx={styles.sectionTitle}>Enable Advanced Mode</Typography>
+            <Typography sx={{ fontSize: '12px', color: 'rgba(128, 255, 0, 0.7)' }}>
+              Advanced features and simulations
+            </Typography>
+          </Box>
+          <Switch
+            checked={advancedMode}
+            onChange={(e) => setAdvancedMode(e.target.checked)}
+            sx={styles.switch}
+          />
+        </Box>
+      </Box>
+
+      {/* Game Settings Section */}
       <Box sx={styles.section}>
         <Box sx={styles.sectionHeader}>
-          <Typography sx={styles.sectionTitle}>Game</Typography>
+          <Typography sx={styles.sectionTitle}>Game Settings</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={skipFirstBattle}
+                onChange={(e) => setSkipFirstBattle(e.target.checked)}
+                sx={styles.checkbox}
+              />
+            }
+            label="Skip first battle"
+            sx={styles.checkboxLabel}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={fastBattle}
+                onChange={(e) => setFastBattle(e.target.checked)}
+                sx={styles.checkbox}
+              />
+            }
+            label="Skip Combat Delay"
+            sx={styles.checkboxLabel}
+          />
+        </Box>
+      </Box>
+
+      {/* Actions Section */}
+      <Box sx={styles.section}>
+        <Box sx={styles.sectionHeader}>
+          <Typography sx={styles.sectionTitle}>Actions</Typography>
         </Box>
 
         <Box sx={styles.settingItem}>
@@ -150,6 +207,7 @@ const styles = {
     overflowY: 'auto',
     padding: '10px',
     boxSizing: 'border-box',
+    paddingBottom: '70px',
   },
   title: {
     textAlign: 'center',
@@ -238,6 +296,32 @@ const styles = {
     border: '1px solid rgba(128, 255, 0, 0.2)',
     '&:hover': {
       backgroundColor: 'rgba(128, 255, 0, 0.25)',
+    },
+  },
+  switch: {
+    '& .MuiSwitch-switchBase.Mui-checked': {
+      color: '#80FF00',
+      '&:hover': {
+        backgroundColor: 'rgba(128, 255, 0, 0.08)',
+      },
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+      backgroundColor: '#80FF00',
+    },
+  },
+  checkbox: {
+    color: '#80FF00',
+    '&.Mui-checked': {
+      color: '#80FF00',
+    },
+    '&:hover': {
+      backgroundColor: 'rgba(128, 255, 0, 0.08)',
+    },
+  },
+  checkboxLabel: {
+    color: '#80FF00',
+    '& .MuiFormControlLabel-label': {
+      fontFamily: 'VT323, monospace',
     },
   },
 }; 

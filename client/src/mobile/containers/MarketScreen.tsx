@@ -214,7 +214,7 @@ export default function MarketScreen() {
           disabled={(cart.potions === 0 && cart.items.length === 0)}
           sx={styles.cartButton}
         >
-          Purchase (${cart.potions + cart.items.length})
+          Purchase ({cart.potions + cart.items.length})
         </Button>
       </Box>}
 
@@ -365,6 +365,15 @@ export default function MarketScreen() {
                         {item.type}
                       </Typography>
                     </Box>
+                    {adventurer?.item_specials_seed !== 0 && (() => {
+                      const specials = ItemUtils.getSpecials(item.id, 15, adventurer!.item_specials_seed);
+                      const statBonus = specials.special1 ? ItemUtils.getStatBonus(specials.special1) : null;
+                      return statBonus ? (
+                        <Typography sx={styles.itemStatBonus}>
+                          {statBonus}
+                        </Typography>
+                      ) : null;
+                    })()}
                   </Box>
 
                   <Box sx={styles.itemFooter}>
@@ -846,5 +855,12 @@ const styles = {
   },
   itemUnaffordable: {
     opacity: 0.5,
+  },
+  itemStatBonus: {
+    color: 'rgba(128, 255, 0, 0.6)',
+    fontSize: '0.75rem',
+    fontFamily: 'VT323, monospace',
+    fontWeight: '500',
+    marginTop: '2px',
   },
 };

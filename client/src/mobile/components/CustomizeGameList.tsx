@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Settings, useGameSettings } from '@/dojo/useGameSettings';
 import { useDungeon } from '@/dojo/useDungeon';
 
-function GameSettingsList() {
+function CustomizeGameList() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
   const { account } = useAccount();
@@ -304,4 +304,4 @@ const styles = {
   }
 };
 
-export default GameSettingsList;
+export default CustomizeGameList;

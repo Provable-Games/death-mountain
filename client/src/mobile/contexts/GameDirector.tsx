@@ -4,6 +4,7 @@ import { useGameEvents } from "@/dojo/useGameEvents";
 import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { useUIStore } from "@/stores/uiStore";
 import { GameAction, Item } from "@/types/game";
 import {
   BattleEvents,
@@ -100,6 +101,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     useStarknetApi();
   const { getGameEvents } = useGameEvents();
   const { gameStartedEvent } = useAnalytics();
+  const { fastBattle, skipFirstBattle } = useUIStore();
 
   const {
     gameId,
@@ -137,6 +139,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
   const [optimisticTxs, setOptimisticTxs] = useState<any[]>([]);
+  const [startingEvent, setStartingEvent] = useState<GameEvent[] | null>(null);
 
   useEffect(() => {
     if (gameId && !metadata) {
@@ -304,9 +307,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       !skipDelay &&
       (delayTimes[event.type] || replayDelayTimes[event.type])
     ) {
-      await delay(
-        spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
-      );
+      if (
+        spectating ||
+        !fastBattle ||
+        (!["attack", "beast_attack"].includes(event.type))
+      ) {
+        await delay(
+          spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
+        );
+      }
     }
   };
 
@@ -325,7 +334,21 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           )
         );
       }
+
       txs.push(startGame(action.gameId!));
+
+      if (action.settings.adventurer.xp === 0) {
+        if (VRFEnabled) {
+          txs.push(requestRandom(generateBattleSalt(gameId!, 0, 1)));
+        }
+        txs.push(attack(gameId!, false));
+      }
+    }
+
+    if (action.type === "attack" && adventurer!.xp === 0 && startingEvent) {
+      setEventQueue((prev) => [...prev, ...startingEvent]);
+      setStartingEvent(null);
+      return;
     }
 
     if (VRFEnabled && action.type === "explore") {
@@ -409,6 +432,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       events.filter((event: any) => event.type === "beast_attack").length >= 2
     ) {
       setShowSkipCombat(true);
+    }
+
+    if (action.type === "start_game" && action.settings.adventurer.xp === 0) {
+      if (!skipFirstBattle) {
+        setStartingEvent(events.filter((event: any) => event.action_count === 2));
+        events = events.filter((event: any) => event.action_count === 1);
+      } else {
+        events = events.filter((event: any) => event.action_count === 2);
+      }
     }
 
     setEventQueue((prev) => [...prev, ...events]);

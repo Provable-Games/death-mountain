@@ -2,8 +2,9 @@ import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
+import { useGameDirector } from "@/mobile/contexts/GameDirector";
 import { useGameStore } from "@/stores/gameStore";
-import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
+import { ChainId } from "@/utils/networkConfig";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { useEffect, useState } from "react";
@@ -24,7 +25,8 @@ import StatSelectionScreen from "../containers/StatSelectionScreen";
 export default function GamePage() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
-  const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
+  const { actionFailed } = useGameDirector();
   const { mintGame } = useSystemCalls();
   const {
     account,
@@ -50,6 +52,8 @@ export default function GamePage() {
   >("GAME");
 
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isExploring, setIsExploring] = useState(false);
+  const [isBattling, setIsBattling] = useState(false);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get("id"));
@@ -122,6 +126,11 @@ export default function GamePage() {
   }, [adventurer?.stat_upgrades_available, adventurer?.beast_health]);
 
   useEffect(() => {
+    setIsExploring(false);
+    setIsBattling(false);
+  }, [adventurer?.action_count, actionFailed]);
+
+  useEffect(() => {
     return () => {
       exitGame();
     };
@@ -144,10 +153,17 @@ export default function GamePage() {
         <BeastSlainScreen />
       ) : (
         <>
-          {adventurer.beast_health > 0 && beast && <BeastScreen />}
+          {adventurer.beast_health > 0 && beast && (
+            <BeastScreen setIsBattling={setIsBattling} />
+          )}
           {adventurer.stat_upgrades_available > 0 && <StatSelectionScreen />}
           {adventurer.beast_health === 0 &&
-            adventurer.stat_upgrades_available === 0 && <ExploreScreen />}
+            adventurer.stat_upgrades_available === 0 && (
+              <ExploreScreen
+                isExploring={isExploring}
+                setIsExploring={setIsExploring}
+              />
+            )}
         </>
       )}
 
@@ -159,6 +175,8 @@ export default function GamePage() {
         <BottomNav
           activeNavItem={activeNavItem}
           setActiveNavItem={setActiveNavItem}
+          isExploring={isExploring}
+          isBattling={isBattling}
         />
       )}
     </Box>

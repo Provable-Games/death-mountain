@@ -3,11 +3,14 @@ import { STARTING_HEALTH } from '@/constants/game';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { Item } from '@/types/game';
 import { screenVariants } from '@/utils/animations';
 import { getBeastImageById, getCollectableTraits, collectableImage } from '@/utils/beast';
+import { defaultSimulationResult, simulateCombatOutcomes } from '@/utils/combatSimulation';
 import { ability_based_percentage, calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateGoldReward, calculateLevel, getNewItemsEquipped } from '@/utils/game';
 import { ItemUtils, slotIcons } from '@/utils/loot';
+import { suggestBestCombatGear } from '@/utils/gearSuggestion';
 import { Box, Button, Checkbox, LinearProgress, Typography, keyframes } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useLottie } from 'lottie-react';
@@ -22,17 +25,26 @@ const attackMessage = "Attacking";
 const fleeMessage = "Attempting to flee";
 const equipMessage = "Equipping items";
 
-export default function BeastScreen() {
+interface BeastScreenProps {
+  setIsBattling: (value: boolean) => void;
+}
+
+export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
   const dungeon = useDungeon();
   const { getBeastOwner } = useGameTokens();
   const { currentNetworkConfig } = useDynamicConnector();
+  const { advancedMode, fastBattle } = useUIStore();
   const { executeGameAction, actionFailed, setSkipCombat, skipCombat, showSkipCombat } = useGameDirector();
   const { gameId, adventurer, adventurerState, beast, battleEvent, bag,
-    equipItem, undoEquipment, setShowBeastRewards } = useGameStore();
+    equipItem, undoEquipment, setShowBeastRewards, applyGearSuggestion } = useGameStore();
   const [untilDeath, setUntilDeath] = useState(false);
+  const [untilLastHit, setUntilLastHit] = useState(false);
+  const [autoLastHitActive, setAutoLastHitActive] = useState(false);
+  const [lastHitActionCount, setLastHitActionCount] = useState<number | null>(null);
   const [attackInProgress, setAttackInProgress] = useState(false);
   const [fleeInProgress, setFleeInProgress] = useState(false);
   const [equipInProgress, setEquipInProgress] = useState(false);
+  const [suggestInProgress, setSuggestInProgress] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -40,13 +52,47 @@ export default function BeastScreen() {
   const [combatLog, setCombatLog] = useState("");
   const [health, setHealth] = useState(adventurer!.health);
   const [beastHealth, setBeastHealth] = useState(adventurer!.beast_health);
+  const [simulationResult, setSimulationResult] = useState(defaultSimulationResult);
+  const [simulationActionCount, setSimulationActionCount] = useState<number | null>(null);
   const [ownerName, setOwnerName] = useState<string | null>(null);
 
+  const hasNewItemsEquipped = useMemo(() => {
+    if (!adventurer?.equipment || !adventurerState?.equipment) return false;
+    return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
+  }, [adventurer?.equipment, adventurerState?.equipment]);
+
+  const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
+  const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
+  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
+  const collectable = beast ? beast!.isCollectable : false;
+  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
+  const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
+  const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
+  const combatControlsDisabled = attackInProgress || fleeInProgress || equipInProgress || suggestInProgress;
+  const isFinalRound = advancedMode && simulationResult.hasOutcome && simulationResult.maxRounds <= 1;
+
+  const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
+  const formatNumber = (value: number) => value.toLocaleString();
+  const formatPercent = (value: number) => `${value.toFixed(1)}%`;
+
+  // Notify parent when battle actions are in progress
   useEffect(() => {
+    setIsBattling(attackInProgress || fleeInProgress || equipInProgress);
+  }, [attackInProgress, fleeInProgress, equipInProgress]);
+
+  // Reset battle state when component unmounts
+  useEffect(() => {
+    return () => {
+      setIsBattling(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    setOwnerName(null);
     if (beast && beast.specialPrefix && dungeon.id === "survivor" && !collectable) {
       getBeastOwner(beast).then((name: string | null) => setOwnerName(name));
     }
-  }, [beast]);
+  }, [beast, dungeon.id, collectable]);
 
   const strike = useLottie({
     animationData: strikeAnim,
@@ -77,10 +123,12 @@ export default function BeastScreen() {
   }, []);
 
   useEffect(() => {
-    if (battleEvent) {
+    if (battleEvent && !skipCombat) {
       if (battleEvent.type === "attack") {
         strike.play();
-        setCombatLog(`You attacked ${beast!.baseName} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
+        if (!fastBattle) {
+          setCombatLog(`You attacked ${beast!.baseName} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
+        }
       }
 
       else if (battleEvent.type === "beast_attack") {
@@ -106,6 +154,8 @@ export default function BeastScreen() {
     setAttackInProgress(false);
     setFleeInProgress(false);
     setEquipInProgress(false);
+    setAutoLastHitActive(false);
+    setLastHitActionCount(null);
 
     if ([fleeMessage, attackMessage, equipMessage].includes(combatLog)) {
       setCombatLog("");
@@ -115,13 +165,161 @@ export default function BeastScreen() {
   useEffect(() => {
     setEquipInProgress(false);
 
-    if (!untilDeath) {
+    if (!untilDeath && !autoLastHitActive) {
       setAttackInProgress(false);
       setFleeInProgress(false);
     }
-  }, [adventurer!.action_count]);
+  }, [adventurer!.action_count, untilDeath, autoLastHitActive]);
+
+  // Until last hit auto-attack effect (advancedMode only)
+  useEffect(() => {
+    if (!advancedMode || !autoLastHitActive || !untilLastHit) {
+      return;
+    }
+
+    if (!adventurer || !beast) {
+      setAutoLastHitActive(false);
+      setLastHitActionCount(null);
+      setAttackInProgress(false);
+      return;
+    }
+
+    if (!simulationResult.hasOutcome) {
+      return;
+    }
+
+    if (isFinalRound) {
+      setAutoLastHitActive(false);
+      setLastHitActionCount(null);
+      setAttackInProgress(false);
+      return;
+    }
+
+    if (lastHitActionCount !== null && adventurer.action_count <= lastHitActionCount) {
+      return;
+    }
+
+    if (simulationActionCount === null || simulationActionCount !== adventurer.action_count) {
+      return;
+    }
+
+    setLastHitActionCount(adventurer.action_count);
+
+    const continueAttacking = async () => {
+      try {
+        setAttackInProgress(true);
+        setCombatLog(attackMessage);
+        await executeGameAction({ type: 'attack', untilDeath: false });
+      } catch (error) {
+        console.error('Failed to continue last-hit attack', error);
+        setAutoLastHitActive(false);
+        setLastHitActionCount(null);
+        setAttackInProgress(false);
+      }
+    };
+
+    void continueAttacking();
+  }, [
+    advancedMode,
+    autoLastHitActive,
+    untilLastHit,
+    simulationResult.hasOutcome,
+    simulationResult.maxRounds,
+    isFinalRound,
+    executeGameAction,
+    adventurer?.action_count,
+    beast?.id,
+  ]);
+
+  // Reset untilLastHit state when toggled off
+  useEffect(() => {
+    if (!untilLastHit && autoLastHitActive) {
+      setAutoLastHitActive(false);
+      setLastHitActionCount(null);
+      setAttackInProgress(false);
+    }
+  }, [untilLastHit, autoLastHitActive]);
+
+  // Reset untilLastHit when final round is reached
+  useEffect(() => {
+    if (isFinalRound && untilLastHit) {
+      setUntilLastHit(false);
+      setAutoLastHitActive(false);
+      setLastHitActionCount(null);
+    }
+  }, [isFinalRound, untilLastHit]);
+
+  // Combat simulation effect (advancedMode only)
+  useEffect(() => {
+    if (!advancedMode) {
+      setSimulationResult(defaultSimulationResult);
+      setSimulationActionCount(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    if (!adventurer || !beast) {
+      setSimulationResult(defaultSimulationResult);
+      setSimulationActionCount(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const runSimulation = async () => {
+      const result = await simulateCombatOutcomes(adventurer, beast, {
+        initialBeastStrike: hasNewItemsEquipped,
+      });
+
+      if (!cancelled) {
+        setSimulationResult(result);
+        setSimulationActionCount(adventurer.action_count);
+      }
+    };
+
+    void runSimulation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    advancedMode,
+    adventurer?.health,
+    adventurer?.xp,
+    adventurer?.item_specials_seed,
+    adventurer?.stats.strength,
+    adventurer?.stats.luck,
+    adventurer?.equipment.weapon.id,
+    adventurer?.equipment.weapon.xp,
+    adventurer?.equipment.chest.id,
+    adventurer?.equipment.chest.xp,
+    adventurer?.equipment.head.id,
+    adventurer?.equipment.head.xp,
+    adventurer?.equipment.waist.id,
+    adventurer?.equipment.waist.xp,
+    adventurer?.equipment.hand.id,
+    adventurer?.equipment.hand.xp,
+    adventurer?.equipment.foot.id,
+    adventurer?.equipment.foot.xp,
+    adventurer?.equipment.neck.id,
+    adventurer?.equipment.neck.xp,
+    adventurer?.equipment.ring.id,
+    adventurer?.equipment.ring.xp,
+    adventurer?.beast_health,
+    beast?.health,
+    beast?.level,
+    beast?.tier,
+    beast?.specialPrefix,
+    beast?.specialSuffix,
+    hasNewItemsEquipped,
+  ]);
 
   const handleAttack = () => {
+    if (!adventurer) {
+      return;
+    }
+
     if (beast?.isCollectable) {
       localStorage.setItem('collectable_beast', JSON.stringify({
         gameId,
@@ -136,15 +334,67 @@ export default function BeastScreen() {
     setShowBeastRewards(true);
     setAttackInProgress(true);
     setCombatLog(attackMessage);
-    executeGameAction({ type: 'attack', untilDeath });
+
+    // Advanced mode: handle untilLastHit
+    if (advancedMode && untilLastHit && !isFinalRound) {
+      setAutoLastHitActive(true);
+      setLastHitActionCount(adventurer.action_count);
+    } else {
+      setAutoLastHitActive(false);
+      setLastHitActionCount(null);
+    }
+
+    const fightToDeath = untilDeath && !untilLastHit;
+    executeGameAction({ type: 'attack', untilDeath: fightToDeath });
   };
 
   const handleFlee = () => {
     localStorage.removeItem('collectable_beast');
+    setAutoLastHitActive(false);
+    setLastHitActionCount(null);
     setShowBeastRewards(false);
     setFleeInProgress(true);
     setCombatLog(fleeMessage);
     executeGameAction({ type: 'flee', untilDeath });
+  };
+
+  const toggleUntilDeath = (checked: boolean) => {
+    if (checked) {
+      setUntilLastHit(false);
+    }
+    setUntilDeath(checked);
+  };
+
+  const toggleUntilLastHit = (checked: boolean) => {
+    if (checked) {
+      setUntilDeath(false);
+    }
+    setUntilLastHit(checked);
+  };
+
+  const handleSuggestGear = async () => {
+    if (!adventurer || !bag || !beast) {
+      return;
+    }
+
+    setSuggestInProgress(true);
+
+    try {
+      const suggestion = await suggestBestCombatGear(adventurer, bag, beast);
+
+      if (!suggestion) {
+        setCombatLog('Best gear already equipped.');
+        return;
+      }
+
+      applyGearSuggestion({ adventurer: suggestion.adventurer, bag: suggestion.bag });
+      setCombatLog('Suggested combat gear equipped.');
+    } catch (error) {
+      console.error('Failed to suggest combat gear', error);
+      setCombatLog('Unable to suggest gear right now.');
+    } finally {
+      setSuggestInProgress(false);
+    }
   };
 
   const handleEquipItems = () => {
@@ -175,21 +425,6 @@ export default function BeastScreen() {
 
     return offset;
   }
-
-  const fleePercentage = ability_based_percentage(adventurer!.xp, adventurer!.stats.dexterity);
-  const beastPower = Number(beast!.level) * (6 - Number(beast!.tier));
-  const maxHealth = STARTING_HEALTH + (adventurer!.stats.vitality * 15);
-  const collectable = beast ? beast!.isCollectable : false;
-  const collectableTraits = collectable ? getCollectableTraits(beast!.seed) : null;
-  const isJackpot = currentNetworkConfig.beasts && JACKPOT_BEASTS.includes(beast?.name!);
-
-  const hasNewItemsEquipped = useMemo(() => {
-    if (!adventurer?.equipment || !adventurerState?.equipment) return false;
-    return getNewItemsEquipped(adventurer.equipment, adventurerState.equipment).length > 0;
-  }, [adventurer?.equipment]);
-
-  const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
-  const bestItemIds = combatStats?.bestItems.map((item: Item) => item.id) || [];
 
   return (
     <motion.div
@@ -310,17 +545,17 @@ export default function BeastScreen() {
 
         {/* Bottom Section - Adventurer */}
         <Box sx={styles.bottomSection}>
-          <Box sx={styles.adventurerImageContainer}>
-            <img
-              src={'/images/mobile/adventurer.png'}
-              alt="Adventurer"
-              style={styles.adventurerImage}
-            />
-            {beastStrike.View}
-          </Box>
+          <Box sx={styles.adventurerStatusRow}>
+            <Box sx={styles.adventurerImageContainerSmall}>
+              <img
+                src={'/images/mobile/adventurer.png'}
+                alt="Adventurer"
+                style={styles.adventurerImageSmall}
+              />
+              {beastStrike.View}
+            </Box>
 
-          <Box sx={styles.adventurerInfo}>
-            <Box sx={styles.adventurerHeader}>
+            <Box sx={styles.adventurerVitals}>
               <Box sx={styles.healthContainer}>
                 <Box sx={styles.healthRow}>
                   <Typography sx={styles.healthLabel}>Health</Typography>
@@ -342,100 +577,144 @@ export default function BeastScreen() {
                 </Box>
               </Box>
             </Box>
+          </Box>
 
-            {hasNewItemsEquipped && (
-              <Box sx={styles.actionsContainer}>
-                <Box sx={styles.actionButtonContainer}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleEquipItems}
-                    sx={[styles.attackButton, { mb: '20px' }]}
-                    disabled={equipInProgress}
-                  >
-                    EQUIP
-                  </Button>
-                </Box>
-
-                <Box sx={styles.actionButtonContainer}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={undoEquipment}
-                    sx={[styles.fleeButton, { mb: '20px' }]}
-                    disabled={equipInProgress}
-                  >
-                    UNDO
-                  </Button>
-                </Box>
+          {hasNewItemsEquipped && (
+            <Box sx={styles.actionsContainer}>
+              <Box sx={styles.actionButtonContainer}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleEquipItems}
+                  sx={[styles.attackButton, { mb: '12px' }]}
+                  disabled={equipInProgress}
+                >
+                  EQUIP
+                </Button>
               </Box>
-            )}
 
-            {!hasNewItemsEquipped && (
-              <Box sx={styles.actionsContainer}>
+              <Box sx={styles.actionButtonContainer}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={undoEquipment}
+                  sx={[styles.fleeButton, { mb: '12px' }]}
+                  disabled={equipInProgress}
+                >
+                  UNDO
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {!hasNewItemsEquipped && (
+            <Box sx={styles.actionsContainer}>
+              <Box sx={styles.actionButtonContainer}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleAttack}
+                  sx={styles.attackButton}
+                  disabled={combatControlsDisabled}
+                >
+                  ATTACK
+                </Button>
+                <Typography sx={styles.probabilityText}>
+                  {`${calculateAttackDamage(adventurer!.equipment.weapon!, adventurer!, beast!).baseDamage} damage`}
+                </Typography>
+              </Box>
+
+              {advancedMode && !showSkipCombat && (
                 <Box sx={styles.actionButtonContainer}>
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={handleAttack}
-                    sx={styles.attackButton}
-                    disabled={attackInProgress || fleeInProgress}
+                    onClick={handleSuggestGear}
+                    sx={styles.suggestButton}
+                    disabled={combatControlsDisabled}
                   >
-                    ATTACK
+                    SUGGEST
                   </Button>
                   <Typography sx={styles.probabilityText}>
-                    {`${calculateAttackDamage(adventurer!.equipment.weapon!, adventurer!, beast!).baseDamage} damage`}
+                    best gear
                   </Typography>
                 </Box>
+              )}
 
-                {!showSkipCombat && <Box sx={styles.actionButtonContainer}>
+              <Box sx={styles.actionButtonContainer}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleFlee}
+                  sx={styles.fleeButton}
+                  disabled={adventurer!.stats.dexterity === 0 || combatControlsDisabled}
+                >
+                  FLEE
+                </Button>
+                <Typography sx={styles.probabilityText}>
+                  {adventurer!.stats.dexterity === 0 ? 'No Dex' : `${fleePercentage}% chance`}
+                </Typography>
+              </Box>
+
+              {showSkipCombat && (untilDeath || autoLastHitActive) && (
+                <Box sx={styles.actionButtonContainer}>
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={handleFlee}
+                    onClick={handleSkipCombat}
                     sx={styles.fleeButton}
-                    disabled={adventurer!.stats.dexterity === 0 || fleeInProgress || attackInProgress}
+                    disabled={skipCombat}
                   >
-                    FLEE
+                    SKIP
                   </Button>
-                  <Typography sx={styles.probabilityText}>
-                    {adventurer!.stats.dexterity === 0 ? 'No Dexterity' : `${fleePercentage}% chance`}
-                  </Typography>
-                </Box>}
+                </Box>
+              )}
 
-                {showSkipCombat && <Box sx={styles.actionButtonContainer}>
-                  <Box sx={styles.actionButtonContainer}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleSkipCombat}
-                      sx={[styles.fleeButton, { mb: '20px' }]}
-                      disabled={skipCombat}
-                    >
-                      SKIP ▶▶
-                    </Button>
-                  </Box>
-                </Box>}
-
-                <Box sx={styles.deathCheckboxContainer} onClick={() => {
-                  if (!attackInProgress && !fleeInProgress && !equipInProgress) {
-                    setUntilDeath(!untilDeath);
-                  }
-                }}>
-                  <Typography sx={styles.deathCheckboxLabel}>
-                    until<br />death
-                  </Typography>
+              <Box sx={styles.deathCheckboxRow}>
+                <Box
+                  sx={styles.deathCheckboxContainer}
+                  onClick={() => {
+                    if (!combatControlsDisabled) {
+                      toggleUntilDeath(!untilDeath);
+                    }
+                  }}
+                >
                   <Checkbox
                     checked={untilDeath}
-                    disabled={attackInProgress || fleeInProgress || equipInProgress}
-                    onChange={(e) => setUntilDeath(e.target.checked)}
+                    disabled={combatControlsDisabled}
+                    onChange={(e) => toggleUntilDeath(e.target.checked)}
                     size="small"
                     sx={styles.deathCheckbox}
                   />
+                  <Typography sx={styles.deathCheckboxLabel}>
+                    until<br />death
+                  </Typography>
                 </Box>
+
+                {advancedMode && (
+                  <Box
+                    sx={styles.deathCheckboxContainer}
+                    onClick={() => {
+                      if (!combatControlsDisabled && !isFinalRound) {
+                        toggleUntilLastHit(!untilLastHit);
+                      }
+                    }}
+                  >
+                    <Checkbox
+                      checked={untilLastHit}
+                      disabled={combatControlsDisabled || isFinalRound}
+                      onChange={(e) => toggleUntilLastHit(e.target.checked)}
+                      size="small"
+                      sx={styles.deathCheckbox}
+                    />
+                    <Typography sx={styles.deathCheckboxLabel}>
+                      until<br />last hit
+                    </Typography>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
+            </Box>
+          )}
         </Box>
 
         {/* Equipped Items Section */}
@@ -452,20 +731,28 @@ export default function BeastScreen() {
 
               let damageTaken = 0;
               let damage = 0;
+              let critDamageTaken = 0;
+              let critDamage = 0;
 
               if (beast) {
                 if (isArmorSlot && beast.health > 4) {
                   // For armor slots, show damage taken (always negative)
                   if (equippedItem && equippedItem.id !== 0) {
-                    damageTaken = calculateBeastDamage(beast, adventurer!, equippedItem).baseDamage;
+                    const damageSummary = calculateBeastDamage(beast, adventurer!, equippedItem);
+                    damageTaken = damageSummary.baseDamage;
+                    critDamageTaken = damageSummary.criticalDamage;
                   } else {
                     // For empty armor slots, show beast power * 1.5
-                    damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
+                    const elementalDamage = Math.floor(beastPower * 1.5);
+                    damageTaken = Math.max(BEAST_MIN_DAMAGE, elementalDamage);
+                    critDamageTaken = Math.max(BEAST_MIN_DAMAGE, damageTaken + elementalDamage);
                   }
                 } else if (isWeaponSlot) {
                   // For weapon slots, show damage dealt (always positive)
                   if (equippedItem && equippedItem.id !== 0) {
-                    damage = calculateAttackDamage(equippedItem, adventurer!, beast).baseDamage;
+                    const attackSummary = calculateAttackDamage(equippedItem, adventurer!, beast);
+                    damage = attackSummary.baseDamage;
+                    critDamage = attackSummary.criticalDamage;
                   }
                 }
               }
@@ -511,18 +798,51 @@ export default function BeastScreen() {
                           }}
                         />
                         {/* Damage Indicator Overlay */}
-                        {(damage > 0 || damageTaken > 0) && (
-                          <Box sx={[
-                            styles.damageIndicator,
-                            isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
-                          ]}>
-                            <Typography sx={[
-                              styles.damageIndicatorText,
-                              isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        {(damage > 0 || damageTaken > 0 || critDamage > 0 || critDamageTaken > 0) && (
+                          advancedMode ? (
+                            <>
+                              {(isArmorSlot ? damageTaken > 0 : damage > 0) && (
+                                <Box sx={[
+                                  styles.damageIndicator,
+                                  styles.damageIndicatorTop,
+                                  isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                                ]}>
+                                  <Typography sx={[
+                                    styles.damageIndicatorText,
+                                    isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                  ]}>
+                                    {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                                  </Typography>
+                                </Box>
+                              )}
+                              {(isArmorSlot ? critDamageTaken > 0 : critDamage > 0) && (
+                                <Box sx={[
+                                  styles.damageIndicator,
+                                  styles.damageIndicatorBottom,
+                                  isArmorSlot ? styles.damageIndicatorCritRed : styles.damageIndicatorCritGreen
+                                ]}>
+                                  <Typography sx={[
+                                    styles.damageIndicatorText,
+                                    isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                  ]}>
+                                    {isArmorSlot ? `-${critDamageTaken}` : `+${critDamage}`}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </>
+                          ) : (
+                            <Box sx={[
+                              styles.damageIndicator,
+                              isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
                             ]}>
-                              {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
-                            </Typography>
-                          </Box>
+                              <Typography sx={[
+                                styles.damageIndicatorText,
+                                isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                              ]}>
+                                {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                              </Typography>
+                            </Box>
+                          )
                         )}
                       </Box>
                     ) : (
@@ -539,18 +859,51 @@ export default function BeastScreen() {
                           }}
                         />
                         {/* Damage Indicator Overlay for Empty Slots */}
-                        {(damage > 0 || damageTaken > 0) && (
-                          <Box sx={[
-                            styles.damageIndicator,
-                            isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
-                          ]}>
-                            <Typography sx={[
-                              styles.damageIndicatorText,
-                              isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        {(damage > 0 || damageTaken > 0 || critDamage > 0 || critDamageTaken > 0) && (
+                          advancedMode ? (
+                            <>
+                              {(isArmorSlot ? damageTaken > 0 : damage > 0) && (
+                                <Box sx={[
+                                  styles.damageIndicator,
+                                  styles.damageIndicatorTop,
+                                  isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                                ]}>
+                                  <Typography sx={[
+                                    styles.damageIndicatorText,
+                                    isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                  ]}>
+                                    {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                                  </Typography>
+                                </Box>
+                              )}
+                              {(isArmorSlot ? critDamageTaken > 0 : critDamage > 0) && (
+                                <Box sx={[
+                                  styles.damageIndicator,
+                                  styles.damageIndicatorBottom,
+                                  isArmorSlot ? styles.damageIndicatorCritRed : styles.damageIndicatorCritGreen
+                                ]}>
+                                  <Typography sx={[
+                                    styles.damageIndicatorText,
+                                    isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                  ]}>
+                                    {isArmorSlot ? `-${critDamageTaken}` : `+${critDamage}`}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </>
+                          ) : (
+                            <Box sx={[
+                              styles.damageIndicator,
+                              isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
                             ]}>
-                              {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
-                            </Typography>
-                          </Box>
+                              <Typography sx={[
+                                styles.damageIndicatorText,
+                                isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                              ]}>
+                                {isArmorSlot ? `-${damageTaken}` : `+${damage}`}
+                              </Typography>
+                            </Box>
+                          )
                         )}
                       </Box>
                     )}
@@ -703,16 +1056,64 @@ export default function BeastScreen() {
                             {(() => {
                               let swapDamage = 0;
                               let swapDamageTaken = 0;
+                              let swapCritDamage = 0;
+                              let swapCritDamageTaken = 0;
 
                               if (beast) {
                                 if (isArmorSlot) {
-                                  swapDamageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
+                                  const damageSummary = calculateBeastDamage(beast, adventurer!, item);
+                                  swapDamageTaken = damageSummary.baseDamage;
+                                  swapCritDamageTaken = damageSummary.criticalDamage;
                                 } else if (isWeaponSlot) {
-                                  swapDamage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+                                  const attackSummary = calculateAttackDamage(item, adventurer!, beast);
+                                  swapDamage = attackSummary.baseDamage;
+                                  swapCritDamage = attackSummary.criticalDamage;
                                 }
                               }
 
-                              return (swapDamage > 0 || swapDamageTaken > 0) && (
+                              const showBase = isArmorSlot ? swapDamageTaken > 0 : swapDamage > 0;
+                              const showCrit = isArmorSlot ? swapCritDamageTaken > 0 : swapCritDamage > 0;
+
+                              if (!showBase && !showCrit) {
+                                return null;
+                              }
+
+                              if (advancedMode) {
+                                return (
+                                  <>
+                                    {showBase && (
+                                      <Box sx={[
+                                        styles.damageIndicator,
+                                        styles.damageIndicatorTop,
+                                        isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
+                                      ]}>
+                                        <Typography sx={[
+                                          styles.damageIndicatorText,
+                                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                        ]}>
+                                          {isArmorSlot ? `-${swapDamageTaken}` : `+${swapDamage}`}
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                    {showCrit && (
+                                      <Box sx={[
+                                        styles.damageIndicator,
+                                        styles.damageIndicatorBottom,
+                                        isArmorSlot ? styles.damageIndicatorCritRed : styles.damageIndicatorCritGreen
+                                      ]}>
+                                        <Typography sx={[
+                                          styles.damageIndicatorText,
+                                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                                        ]}>
+                                          {isArmorSlot ? `-${swapCritDamageTaken}` : `+${swapCritDamage}`}
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </>
+                                );
+                              }
+
+                              return (
                                 <Box sx={[
                                   styles.damageIndicator,
                                   isArmorSlot ? styles.damageIndicatorRed : styles.damageIndicatorGreen
@@ -733,6 +1134,79 @@ export default function BeastScreen() {
                 </Box>
               </Box>
             </Box>
+          </Box>
+        )}
+
+        {/* Fight Distribution Section (advancedMode only) */}
+        {advancedMode && (
+          <Box sx={styles.fightDistributionSection}>
+            {simulationResult.hasOutcome ? (
+              <>
+                <Box sx={styles.distributionRow}>
+                  <Box
+                    sx={[
+                      styles.distributionCard,
+                      styles.tipCard,
+                      simulationResult.winRate >= 100
+                        ? styles.tipCardFight
+                        : simulationResult.winRate < 10
+                          ? styles.tipCardFlee
+                          : styles.tipCardGamble,
+                    ]}
+                  >
+                    <Typography sx={styles.distributionLabel}>Tip</Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {simulationResult.winRate >= 100
+                        ? "Fight"
+                        : simulationResult.winRate < 10
+                          ? "Flee"
+                          : "Gamble"}
+                    </Typography>
+                  </Box>
+                  <Box sx={[styles.distributionCard, styles.positiveCard]}>
+                    <Typography sx={styles.distributionLabel}>Win %</Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {formatPercent(simulationResult.winRate)}
+                    </Typography>
+                  </Box>
+                  <Box sx={[styles.distributionCard, styles.warningCard]}>
+                    <Typography sx={styles.distributionLabel}>
+                      OTK Chance
+                    </Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {formatPercent(simulationResult.otkRate)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={styles.distributionRow}>
+                  <Box sx={styles.distributionCard}>
+                    <Typography sx={styles.distributionLabel}>Avg Rounds</Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {formatNumber(simulationResult.modeRounds)}
+                    </Typography>
+                  </Box>
+                  <Box sx={[styles.distributionCard, styles.positiveCard]}>
+                    <Typography sx={styles.distributionLabel}>
+                      Avg DMG Dealt
+                    </Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {formatNumber(simulationResult.modeDamageDealt)}
+                    </Typography>
+                  </Box>
+                  <Box sx={[styles.distributionCard, styles.warningCard]}>
+                    <Typography sx={styles.distributionLabel}>
+                      Avg DMG Taken
+                    </Typography>
+                    <Typography sx={styles.distributionValue}>
+                      {formatNumber(Math.round(simulationResult.modeDamageTaken))}
+                    </Typography>
+                  </Box>
+                </Box>
+              </>
+            ) : (
+              <Box />
+            )}
           </Box>
         )}
       </Box>
@@ -791,12 +1265,13 @@ const elegantPulse = keyframes`
 const styles = {
   container: {
     width: '100%',
-    height: '100dvh',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column' as const,
   },
   battleContainer: {
-    height: '100%',
+    height: 'calc(100% - 65px)',
+    overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '0 !important',
@@ -1047,6 +1522,20 @@ const styles = {
     borderRadius: '12px',
     color: '#111111',
   },
+  suggestButton: {
+    width: '100%',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    background: 'linear-gradient(45deg, #3380ff 30%, #66a3ff 90%)',
+    borderRadius: '12px',
+    color: '#111111',
+  },
+  deathCheckboxRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '8px',
+  },
   deathCheckboxContainer: {
     display: 'flex',
     flexDirection: 'column',
@@ -1071,13 +1560,36 @@ const styles = {
   },
   bottomSection: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    flexDirection: 'column',
+    gap: '8px',
     padding: '8px 12px',
     background: 'rgba(128, 255, 0, 0.05)',
     borderRadius: '10px',
     border: '1px solid rgba(128, 255, 0, 0.1)',
-    gap: 2
+  },
+  adventurerStatusRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  adventurerVitals: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  adventurerImageContainerSmall: {
+    width: '50px',
+    height: '50px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  adventurerImageSmall: {
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain' as const,
+    filter: 'drop-shadow(0 0 10px rgba(128, 255, 0, 0.3))',
   },
   adventurerInfo: {
     flex: 1,
@@ -1367,8 +1879,6 @@ const styles = {
     background: 'rgba(128, 255, 0, 0.05)',
     borderRadius: '8px',
     border: '1px solid rgba(128, 255, 0, 0.1)',
-    maxHeight: 'calc(100vh - 500px)', // Account for other content and bottom nav
-    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -1500,10 +2010,9 @@ const styles = {
   },
   damageIndicator: {
     position: 'absolute',
-    top: '1px',
-    right: '1px',
+    right: '2px',
     minWidth: '18px',
-    height: '12px',
+    padding: '1px 4px',
     borderRadius: '4px',
     display: 'flex',
     alignItems: 'center',
@@ -1511,6 +2020,12 @@ const styles = {
     zIndex: 15,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2)',
     backdropFilter: 'blur(2px)',
+  },
+  damageIndicatorTop: {
+    top: '2px',
+  },
+  damageIndicatorBottom: {
+    bottom: '2px',
   },
   damageIndicatorRed: {
     background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%)',
@@ -1521,6 +2036,16 @@ const styles = {
     background: 'linear-gradient(135deg, rgba(68, 255, 68, 0.95) 0%, rgba(38, 220, 38, 0.95) 100%)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(68, 255, 68, 0.3)',
+  },
+  damageIndicatorCritRed: {
+    background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(128, 0, 0, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(220, 38, 38, 0.35)',
+  },
+  damageIndicatorCritGreen: {
+    background: 'linear-gradient(135deg, rgba(38, 220, 38, 0.95) 0%, rgba(12, 128, 12, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(38, 220, 38, 0.35)',
   },
   damageIndicatorText: {
     fontSize: '0.65rem',
@@ -1581,5 +2106,72 @@ const styles = {
     position: 'absolute',
     top: -5,
     zIndex: 1000,
+  },
+  fightDistributionSection: {
+    mt: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    padding: '10px 12px 14px',
+    borderRadius: '10px',
+    background: 'rgba(128, 255, 0, 0.05)',
+    border: '1px solid rgba(128, 255, 0, 0.1)',
+  },
+  distributionRow: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap' as const,
+  },
+  distributionCard: {
+    flex: 1,
+    minWidth: '0',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    background: 'rgba(0, 0, 0, 0.35)',
+    border: '1px solid rgba(128, 255, 0, 0.18)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  distributionLabel: {
+    color: 'rgba(128, 255, 0, 0.7)',
+    fontSize: '0.68rem',
+    letterSpacing: '0.75px',
+    textTransform: 'uppercase' as const,
+    fontFamily: 'VT323, monospace',
+  },
+  distributionValue: {
+    color: '#F4F6F8',
+    fontFamily: 'VT323, monospace',
+    fontSize: '1.35rem',
+    letterSpacing: '0.5px',
+    lineHeight: 1,
+  },
+  tipCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    border: '1px solid rgba(128, 255, 0, 0.25)',
+    background: 'linear-gradient(135deg, rgba(32, 48, 32, 0.85), rgba(12, 20, 12, 0.85))',
+  },
+  tipCardFight: {
+    boxShadow: '0 0 18px rgba(128, 255, 0, 0.35)',
+  },
+  tipCardFlee: {
+    borderColor: 'rgba(248, 27, 27, 0.45)',
+    background: 'linear-gradient(135deg, rgba(60, 16, 16, 0.85), rgba(20, 4, 4, 0.85))',
+    boxShadow: '0 0 18px rgba(248, 27, 27, 0.35)',
+  },
+  tipCardGamble: {
+    borderColor: 'rgba(237, 207, 51, 0.45)',
+    background: 'linear-gradient(135deg, rgba(48, 36, 8, 0.9), rgba(16, 12, 3, 0.85))',
+    boxShadow: '0 0 18px rgba(237, 207, 51, 0.3)',
+  },
+  positiveCard: {
+    borderColor: 'rgba(128, 255, 0, 0.35)',
+    background: 'rgba(20, 36, 20, 0.9)',
+  },
+  warningCard: {
+    borderColor: 'rgba(248, 27, 27, 0.4)',
+    background: 'rgba(46, 12, 12, 0.85)',
   },
 };

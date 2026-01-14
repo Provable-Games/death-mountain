@@ -61,7 +61,7 @@ const DEFAULT_SETTINGS: GameSettingsData = {
   bag: []
 };
 
-export default function GameSettings() {
+export default function CustomizeGame() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
   const { createSettings } = useSystemCalls()
