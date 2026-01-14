@@ -207,7 +207,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         acceptTermsOfService,
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
-        openBuyTicket: () => (connector as any)?.controller?.openStarterPack("ls2-dungeon-ticket-mainnet"),
+        openBuyTicket: () => (connector as any)?.controller?.openStarterPack(3),
         login: () =>
           connect({
             connector: connectors.find((conn) => conn.id === "controller"),

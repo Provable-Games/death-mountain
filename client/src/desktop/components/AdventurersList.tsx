@@ -8,8 +8,9 @@ import { getContractByName } from "@dojoengine/core";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import TheatersIcon from "@mui/icons-material/Theaters";
 import WatchIcon from "@mui/icons-material/Watch";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useGameTokens as useMetagameTokens } from "metagame-sdk/sql";
 import { useEffect, useState } from "react";
@@ -42,14 +43,13 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
   });
   const [gameTokens, setGameTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   useEffect(() => {
     async function fetchAdventurers() {
       if (!gamesData) return;
 
       let games = await fetchAdventurerData(gamesData);
-
-      games = games.filter((game: any) => !game.dead && !game.expired);
 
       setGameTokens(
         games.sort((a: any, b: any) => b.adventurer_id - a.adventurer_id)
@@ -59,8 +59,22 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
     fetchAdventurers();
   }, [gamesData]);
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+  // Filter games based on active tab
+  const filteredGames = gameTokens.filter((game: any) => {
+    const isCompleted = game.dead || game.expired;
+    return activeTab === 0 ? !isCompleted : isCompleted;
+  });
+
   const handleResumeGame = (gameId: number) => {
     navigate(`/${dungeon.id}/play?id=${gameId}`);
+  };
+
+  const handleWatchGame = (gameId: number) => {
+    navigate(`/${dungeon.id}/watch?id=${gameId}`);
   };
 
   const renderTimeRemaining = (timestamp: number) => {
@@ -118,13 +132,29 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
         </Button>
       </Box>
 
+      <Box sx={styles.tabsContainer}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          sx={styles.tabs}
+        >
+          <Tab label="Active" sx={styles.tab} />
+          <Tab label="Completed" sx={styles.tab} />
+        </Tabs>
+      </Box>
+
       <Box sx={styles.listContainer}>
         {loading || gamesLoading ? (
           <Typography sx={{ textAlign: "center", py: 2 }}>
             Loading...
           </Typography>
+        ) : filteredGames.length === 0 ? (
+          <Typography sx={{ textAlign: "center", py: 2, opacity: 0.7 }}>
+            No {activeTab === 0 ? "active" : "completed"} games
+          </Typography>
         ) : (
-          gameTokens.map((game: any, index: number) => (
+          filteredGames.map((game: any, index: number) => (
             <motion.div
               key={game.adventurer_id}
               initial={{ opacity: 0, x: -50 }}
@@ -238,16 +268,28 @@ export default function AdventurersList({ onBack }: AdventurersListProps) {
                   )}
                 </Box>
 
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                  sx={{ width: "40px", height: "40px" }}
-                  onClick={() => handleResumeGame(game.adventurer_id)}
-                  disabled={game.available_at > Date.now()}
-                >
-                  <ArrowForwardIcon fontSize="small" />
-                </Button>
+                {activeTab === 0 ? (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    sx={{ width: "40px", height: "40px" }}
+                    onClick={() => handleResumeGame(game.adventurer_id)}
+                    disabled={game.available_at > Date.now()}
+                  >
+                    <ArrowForwardIcon fontSize="small" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    sx={{ width: "40px", height: "40px" }}
+                    onClick={() => handleWatchGame(game.adventurer_id)}
+                  >
+                    <TheatersIcon fontSize="small" />
+                  </Button>
+                )}
               </Box>
             </motion.div>
           ))
@@ -262,11 +304,35 @@ const styles = {
     display: "flex",
     alignItems: "center",
     width: "100%",
-    mb: 1,
+    mb: 0.5,
   },
   backButton: {
     minWidth: "auto",
     px: 1,
+  },
+  tabsContainer: {
+    width: "100%",
+    mb: 1,
+  },
+  tabs: {
+    minHeight: "20px",
+    "& .MuiTabs-indicator": {
+      backgroundColor: "primary.main",
+    },
+  },
+  tab: {
+    padding: "5px 0px",
+    minHeight: "20px",
+    color: "text.primary",
+    fontSize: "12px",
+    opacity: 0.7,
+    "&.Mui-selected": {
+      color: "primary.main",
+      opacity: 1,
+    },
+    "&:hover": {
+      opacity: 0.9,
+    },
   },
   listContainer: {
     width: "100%",
