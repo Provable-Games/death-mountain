@@ -7,6 +7,7 @@ import { gql, request } from "graphql-request";
 import { GameTokenData } from "metagame-sdk";
 import { Beast } from "@/types/game";
 import { lookupAddressName } from "@/utils/addressNameCache";
+import { hexToAscii } from "@dojoengine/utils";
 
 export const useGameTokens = () => {
   const { currentNetworkConfig } = useDynamicConnector();
@@ -211,11 +212,89 @@ export const useGameTokens = () => {
     }
   }
 
+  const getActivePlayersCount = async () => {
+    try {
+      let url = `${SQL_ENDPOINT}/sql?query=
+        WITH recent AS (
+          SELECT executed_at, keys, data
+          FROM event_messages_historical INDEXED BY idx_event_messages_historical_executed_at
+          WHERE executed_at >= strftime('%Y-%m-%dT%H:%M:%S+00:00', 'now', '-10 minutes')
+          ORDER BY executed_at DESC
+          LIMIT 5000
+        ),
+        ranked AS (
+          SELECT
+            executed_at, keys, data,
+            ROW_NUMBER() OVER (PARTITION BY keys ORDER BY executed_at DESC) AS rn
+          FROM recent
+        )
+        SELECT executed_at, keys, data
+        FROM ranked
+        WHERE rn = 1
+        ORDER BY executed_at DESC;
+      `
+
+      const sql = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      let rows = await sql.json()
+      // Parse the JSON string in the data field for each row
+      return rows.map((row: any) => {
+        try {
+          return typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+        } catch {
+          return row.data;
+        }
+      });
+    } catch (error) {
+      console.error("Error getting active players:", error);
+      return null;
+    }
+  }
+
+  const getPlayerNames = async (adventurerIds: number[]): Promise<Record<string, string>> => {
+    if (adventurerIds.length === 0) return {};
+
+    let url = `${SQL_ENDPOINT}/sql?query=
+      SELECT id, player_name
+      FROM "relayer_0_0_1-TokenPlayerNameUpdate"
+      WHERE id IN (${adventurerIds.map((id) => `"0x${id.toString(16).padStart(16, '0')}"`).join(',')});
+    `
+
+    try {
+      let sql = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      let data = await sql.json()
+      // Return a map of id (hex string) -> player_name (converted from hex to ASCII)
+      const namesMap: Record<string, string> = {};
+      data.forEach((row: any) => {
+        if (row.id && row.player_name) {
+          namesMap[row.id] = hexToAscii(row.player_name);
+        }
+      });
+      return namesMap;
+    } catch (error) {
+      console.error("Error getting player names:", error);
+      return {};
+    }
+  }
+
   return {
     fetchAdventurerData,
     getGameTokens,
     countBeasts,
     getBeastTokenId,
-    getBeastOwner
+    getBeastOwner,
+    getActivePlayersCount,
+    getPlayerNames
   };
 };

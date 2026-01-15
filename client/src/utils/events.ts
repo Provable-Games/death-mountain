@@ -36,6 +36,15 @@ export interface GameEvent {
 
 }
 
+export const processRawGameEvent = (rawEvent: any, dungeon: Dungeon): GameEvent => {
+  let event = {
+    action_count: rawEvent.action_count,
+    details: rawEvent.details.variant
+  }
+
+  return processGameEvent(event, dungeon);
+}
+
 export const processGameEvent = (event: any, dungeon: Dungeon): GameEvent => {
   const { action_count, details } = event;
 

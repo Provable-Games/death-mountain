@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import PriceIndicator from "../../components/PriceIndicator";
 import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
+import ActivePlayers from "./ActivePlayers";
 
 export default function MainMenu() {
   const navigate = useNavigate();
@@ -327,6 +328,8 @@ export default function MainMenu() {
       {DungeonRewards ? <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
         <DungeonRewards />
       </Box> : null}
+
+      <ActivePlayers />
     </>
   );
 }
