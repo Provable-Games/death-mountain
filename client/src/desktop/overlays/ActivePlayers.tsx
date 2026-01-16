@@ -75,6 +75,8 @@ export default function ActivePlayers() {
       return calculateLevel(xpB) - calculateLevel(xpA);
     });
 
+  const uniquePlayerCount = new Set(Object.values(playerNames)).size;
+
   return (
     <Box
       sx={{
@@ -232,7 +234,7 @@ export default function ActivePlayers() {
               letterSpacing: 0.3,
             }}
           >
-            {playersOnline.length} {playersOnline.length === 1 ? "survivor" : "survivors"} online
+            {uniquePlayerCount} {uniquePlayerCount === 1 ? "survivor" : "survivors"} playing
           </Typography>
         </Box>
         {showActivePlayers ? (

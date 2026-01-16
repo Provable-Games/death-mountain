@@ -64,6 +64,8 @@ export default function ActivePlayers() {
       return calculateLevel(xpB) - calculateLevel(xpA);
     });
 
+  const uniquePlayerCount = new Set(Object.values(playerNames)).size;
+
   return (
     <Box sx={{ position: "relative" }}>
       {/* Clickable Indicator */}
@@ -111,7 +113,7 @@ export default function ActivePlayers() {
             letterSpacing: 0.2,
           }}
         >
-          {playersOnline.length} online
+          {uniquePlayerCount} {uniquePlayerCount === 1 ? "survivor" : "survivors"} playing
         </Typography>
         {showActivePlayers ? (
           <ExpandLessIcon sx={{ fontSize: 14, color: "rgba(255, 255, 255, 0.6)" }} />
