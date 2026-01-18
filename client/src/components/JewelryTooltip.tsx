@@ -30,7 +30,7 @@ export default function JewelryTooltip({ itemId, placement = 'right', mobile = f
         <Typography sx={styles.tooltipText}>
           {ItemUtils.getJewelryEffect(itemId)}
         </Typography>
-        <Typography color="rgba(215, 197, 41, 0.7)" fontSize="0.75rem">
+        <Typography sx={styles.tooltipHint}>
           All equipped and bagged jewelry increases your crit chance
         </Typography>
       </Box>
@@ -128,7 +128,7 @@ const styles = {
     borderRadius: '8px',
     padding: '10px',
     zIndex: 1000,
-    minWidth: '220px',
+    maxWidth: '150px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
   tooltipTitle: {
@@ -152,6 +152,11 @@ const styles = {
   tooltipText: {
     color: '#d0c98d',
     fontSize: '0.8rem',
+    lineHeight: '1.4',
+  },
+  tooltipHint: {
+    color: 'rgba(215, 197, 41, 0.7)',
+    fontSize: '0.75rem',
     lineHeight: '1.4',
   },
   helpIcon: {

@@ -195,7 +195,7 @@ const styles = {
     color: '#d0c98d',
     fontSize: '0.85rem',
     fontWeight: 'bold',
-    fontFamily: 'Cinzel, Georgia, serif',
+    marginBottom: '4px',
   },
   sectionDivider: {
     height: '1px',
@@ -226,15 +226,18 @@ const styles = {
   },
   tooltipStrong: {
     color: '#60ba78',
-    fontSize: '0.78rem',
+    fontSize: '0.8rem',
+    lineHeight: '1.4',
   },
   tooltipFair: {
     color: '#d0c98d',
-    fontSize: '0.78rem',
+    fontSize: '0.8rem',
+    lineHeight: '1.4',
   },
   tooltipWeak: {
     color: '#d46660',
-    fontSize: '0.78rem',
+    fontSize: '0.8rem',
+    lineHeight: '1.4',
   },
   helpIcon: {
     padding: '2px',
