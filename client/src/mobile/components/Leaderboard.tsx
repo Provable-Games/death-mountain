@@ -1,4 +1,5 @@
 import FollowButton from "@/components/FollowButton";
+import PlayerSearch from "@/components/PlayerSearch";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
@@ -227,6 +228,8 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
           <Tab label="Following" sx={styles.tab} />
         </Tabs>
       </Box>
+
+      {activeTab === 2 && <PlayerSearch />}
 
       <Box sx={styles.listContainer}>
         {loading ? (
