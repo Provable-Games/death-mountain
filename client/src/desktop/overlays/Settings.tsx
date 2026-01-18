@@ -340,6 +340,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 1.5,
+    maxHeight: 'calc(100vh - 200px)',
+    overflowY: 'auto',
   },
   section: {
     display: 'flex',
