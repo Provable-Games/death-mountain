@@ -166,30 +166,12 @@ export default function CombatTooltip({ itemType, placement = 'left', mobile = f
   }
 
   // Desktop: hover tooltip
-  const offset: [number, number] = placement === 'left' ? [15, 30] : [10, -10];
-
   return (
     <Tooltip
       placement={placement}
       slotProps={{
-        popper: {
-          modifiers: [
-            {
-              name: 'preventOverflow',
-              enabled: true,
-              options: { rootBoundary: 'viewport' },
-            },
-            {
-              name: 'offset',
-              options: { offset },
-            },
-          ],
-        },
         tooltip: {
-          sx: {
-            bgcolor: 'transparent',
-            border: 'none',
-          },
+          sx: { bgcolor: 'transparent', border: 'none', p: 0 },
         },
       }}
       title={tooltipContent}
@@ -207,7 +189,6 @@ const styles = {
     border: '2px solid #083e22',
     borderRadius: '8px',
     padding: '10px',
-    minWidth: '200px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
   tooltipTitle: {

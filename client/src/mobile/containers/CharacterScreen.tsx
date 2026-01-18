@@ -441,7 +441,6 @@ const styles = {
     padding: '10px',
     boxSizing: 'border-box',
     width: '100%',
-    mb: '75px'
   },
   characterInfo: {
     display: 'flex',
