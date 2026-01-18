@@ -1,11 +1,12 @@
 import { Typography, keyframes } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 interface AnimatedTextProps {
   text: string;
+  children?: ReactNode;
 }
 
-export default function AnimatedText({ text }: AnimatedTextProps) {
+export default function AnimatedText({ text, children }: AnimatedTextProps) {
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function AnimatedText({ text }: AnimatedTextProps) {
         animation: `${combatTextAnimation} 0.15s ease-out forwards`,
       }}
     >
-      {text}
+      {children ?? text}
     </Typography>
   );
 }

@@ -6,7 +6,7 @@ import { ability_based_percentage, calculateAttackDamage, calculateCombatStats, 
 import { potionPrice } from '@/utils/market';
 import { Box, Button, Checkbox, Tooltip, Typography } from '@mui/material';
 import { keyframes } from '@emotion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import Adventurer from './Adventurer';
 import Beast from './Beast';
 import InventoryOverlay from './Inventory';
@@ -71,25 +71,44 @@ export default function CombatOverlay() {
   const [attackInProgress, setAttackInProgress] = useState(false);
   const [fleeInProgress, setFleeInProgress] = useState(false);
   const [equipInProgress, setEquipInProgress] = useState(false);
-  const [combatLog, setCombatLog] = useState("");
+  const [combatLog, setCombatLog] = useState<ReactNode>("");
+  const [combatLogKey, setCombatLogKey] = useState("");
 
   useEffect(() => {
     if (adventurer?.xp === 0) {
-      setCombatLog(beast!.baseName + " ambushed you for 10 damage!");
+      const key = "initial_ambush";
+      setCombatLogKey(key);
+      setCombatLog(
+        <>
+          {beast!.baseName} ambushed you for <span style={{ color: '#FF6B6B' }}>10 damage</span>!
+        </>
+      );
     }
   }, []);
 
   useEffect(() => {
     if (battleEvent && !skipCombat) {
       if (battleEvent.type === "attack" && !fastBattle) {
+        const key = `attack_${battleEvent.attack?.damage}`;
+        setCombatLogKey(key);
         setCombatLog(`You attacked ${beast!.baseName} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
       }
 
       else if (battleEvent.type === "beast_attack") {
-        setCombatLog(`${beast!.baseName} attacked your ${battleEvent.attack?.location} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
+        const key = `beast_attack_${battleEvent.attack?.damage}_${battleEvent.attack?.location}`;
+        setCombatLogKey(key);
+        setCombatLog(
+          <>
+            {beast!.baseName} attacked your {battleEvent.attack?.location} for{' '}
+            <span style={{ color: '#FF6B6B' }}>{battleEvent.attack?.damage} damage</span>
+            {battleEvent.attack?.critical_hit ? ' CRITICAL HIT!' : ''}
+          </>
+        );
       }
 
       else if (battleEvent.type === "flee") {
+        const key = `flee_${battleEvent.success}`;
+        setCombatLogKey(key);
         if (battleEvent.success) {
           setCombatLog(`You successfully fled`);
         } else {
@@ -98,7 +117,15 @@ export default function CombatOverlay() {
       }
 
       else if (battleEvent.type === "ambush") {
-        setCombatLog(`${beast!.baseName} ambushed your ${battleEvent.attack?.location} for ${battleEvent.attack?.damage} damage ${battleEvent.attack?.critical_hit ? 'CRITICAL HIT!' : ''}`);
+        const key = `ambush_${battleEvent.attack?.damage}_${battleEvent.attack?.location}`;
+        setCombatLogKey(key);
+        setCombatLog(
+          <>
+            {beast!.baseName} ambushed your {battleEvent.attack?.location} for{' '}
+            <span style={{ color: '#FF6B6B' }}>{battleEvent.attack?.damage} damage</span>
+            {battleEvent.attack?.critical_hit ? ' CRITICAL HIT!' : ''}
+          </>
+        );
       }
     }
   }, [battleEvent]);
@@ -110,8 +137,9 @@ export default function CombatOverlay() {
     setAutoLastHitActive(false);
     setLastHitActionCount(null);
 
-    if ([fleeMessage, attackMessage, equipMessage].includes(combatLog)) {
+    if ([fleeMessage, attackMessage, equipMessage].includes(combatLogKey)) {
       setCombatLog("");
+      setCombatLogKey("");
     }
   }, [actionFailed]);
 
@@ -142,6 +170,7 @@ export default function CombatOverlay() {
 
     setAttackInProgress(true);
     setCombatLog(attackMessage);
+    setCombatLogKey(attackMessage);
 
     if (advancedMode && untilLastHit && !isFinalRound) {
       setAutoLastHitActive(true);
@@ -161,6 +190,7 @@ export default function CombatOverlay() {
     setLastHitActionCount(null);
     setFleeInProgress(true);
     setCombatLog(fleeMessage);
+    setCombatLogKey(fleeMessage);
     executeGameAction({ type: 'flee', untilDeath });
   };
 
@@ -181,6 +211,7 @@ export default function CombatOverlay() {
   const handleEquipItems = () => {
     setEquipInProgress(true);
     setCombatLog(equipMessage);
+    setCombatLogKey(equipMessage);
     executeGameAction({ type: 'equip' });
   };
 
@@ -255,6 +286,7 @@ export default function CombatOverlay() {
       try {
         setAttackInProgress(true);
         setCombatLog(attackMessage);
+        setCombatLogKey(attackMessage);
         await executeGameAction({ type: 'attack', untilDeath: false });
       } catch (error) {
         console.error('Failed to continue last-hit attack', error);
@@ -612,8 +644,8 @@ export default function CombatOverlay() {
       {/* Combat Log */}
       <Box sx={styles.middleSection}>
         <Box sx={styles.combatLogContainer}>
-          <AnimatedText text={combatLog} />
-          {(combatLog === fleeMessage || combatLog === attackMessage || combatLog === equipMessage)
+          <AnimatedText text={combatLogKey}>{combatLog}</AnimatedText>
+          {[fleeMessage, attackMessage, equipMessage].includes(combatLogKey)
             && <div className='dotLoader yellow' style={{ marginTop: '6px' }} />}
         </Box>
       </Box>

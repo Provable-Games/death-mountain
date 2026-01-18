@@ -120,8 +120,10 @@ export default function ExploreOverlay() {
               )}
 
               {event.type === 'obstacle' && (
-                <Typography color='secondary'>
-                  {event.obstacle?.dodged ? '' : `-${event.obstacle?.damage} Health ${event.obstacle?.critical_hit ? 'critical hit!' : ''}`}
+                <Typography sx={event.obstacle?.dodged ? styles.encounterXP : styles.encounterDamage}>
+                  {event.obstacle?.dodged
+                    ? `Dodged ${(event.obstacle?.damage ?? 0).toLocaleString()} dmg`
+                    : `-${(event.obstacle?.damage ?? 0).toLocaleString()} Health ${event.obstacle?.critical_hit ? 'critical hit!' : ''}`}
                 </Typography>
               )}
 
@@ -139,7 +141,7 @@ export default function ExploreOverlay() {
                     </Typography>
                   )}
                   {event.discovery.type === 'Health' && (
-                    <Typography color='secondary'>
+                    <Typography sx={styles.encounterHeal}>
                       +{event.discovery.amount} Health
                     </Typography>
                   )}
@@ -377,6 +379,15 @@ const styles = {
   encounterDetails: {
     flex: 1,
     textAlign: 'center',
+  },
+  encounterXP: {
+    color: '#EDCF33',
+  },
+  encounterDamage: {
+    color: '#FF6B6B',
+  },
+  encounterHeal: {
+    color: '#80ff00',
   },
   selectStatsButtonHighlighted: {
     animation: 'buttonPulse 2s ease-in-out infinite',

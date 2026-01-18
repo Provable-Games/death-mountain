@@ -1,3 +1,4 @@
+import CombatTooltip from '@/components/CombatTooltip';
 import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
@@ -950,56 +951,11 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
-                            {/* Combat effectiveness badge - left side */}
+                            {/* Combat tooltip - top left */}
                             {getStrongAgainst(item.type) && (
-                              <Tooltip
-                                placement="left"
-                                slotProps={{
-                                  tooltip: {
-                                    sx: { bgcolor: 'transparent', border: 'none', p: 0 },
-                                  },
-                                }}
-                                title={
-                                  <Box sx={styles.combatTooltipContainer}>
-                                    <Typography sx={styles.combatTooltipTitle}>
-                                      {item.type}
-                                    </Typography>
-                                    <Box sx={styles.combatTooltipDivider} />
-                                    <Box sx={styles.combatTooltipSection}>
-                                      <Box sx={styles.combatTooltipRow}>
-                                        <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                                        <Typography sx={styles.combatTooltipStrong}>
-                                          Strong vs {getStrongAgainst(item.type)} ({isWeaponType(item.type) ? '150% dmg dealt' : '50% dmg received'})
-                                        </Typography>
-                                      </Box>
-                                      <Box sx={styles.combatTooltipRow}>
-                                        <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                                        <Typography sx={styles.combatTooltipFair}>
-                                          Neutral vs {getFairAgainst(item.type)} ({isWeaponType(item.type) ? '100% dmg dealt' : '100% dmg received'})
-                                        </Typography>
-                                      </Box>
-                                      <Box sx={styles.combatTooltipRow}>
-                                        <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                                        <Typography sx={styles.combatTooltipWeak}>
-                                          Weak vs {getWeakAgainst(item.type)} ({isWeaponType(item.type) ? '50% dmg dealt' : '150% dmg received'})
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  </Box>
-                                }
-                              >
-                                <Box sx={styles.itemCombatBadge}>
-                                  <Box sx={styles.itemStrongIndicator}>
-                                    <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} alt="strong" sx={styles.itemCombatIcon} />
-                                  </Box>
-                                  <Box sx={styles.itemFairIndicator}>
-                                    <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} alt="fair" sx={styles.itemCombatIcon} />
-                                  </Box>
-                                  <Box sx={styles.itemWeakIndicator}>
-                                    <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} alt="weak" sx={styles.itemCombatIcon} />
-                                  </Box>
-                                </Box>
-                              </Tooltip>
+                              <Box sx={styles.itemCombatBadge}>
+                                <CombatTooltip itemType={item.type} />
+                              </Box>
                             )}
                             {/* Jewelry tooltip - top left */}
                             {(item.type === 'Ring' || item.type === 'Necklace') && (
@@ -1492,104 +1448,18 @@ const styles = {
     fontSize: '0.8rem',
     fontWeight: 'bold',
   },
-  // Combat effectiveness badge styles
+  // Combat tooltip badge style
   itemCombatBadge: {
     position: 'absolute',
     top: '4px',
     left: '4px',
-    bottom: '4px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    gap: '2px',
     zIndex: 3,
-  },
-  itemStrongIndicator: {
-    padding: '3px',
-    borderRadius: '4px',
-    background: 'rgba(34, 90, 34, 0.85)',
-    border: '1px solid rgba(80, 180, 80, 0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemFairIndicator: {
-    padding: '3px',
-    borderRadius: '4px',
-    background: 'rgba(90, 80, 34, 0.85)',
-    border: '1px solid rgba(180, 160, 80, 0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemWeakIndicator: {
-    padding: '3px',
-    borderRadius: '4px',
-    background: 'rgba(90, 34, 34, 0.85)',
-    border: '1px solid rgba(180, 80, 80, 0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemCombatIcon: {
-    width: 16,
-    height: 16,
-    filter: 'brightness(0) invert(1)',
-    opacity: 0.95,
   },
   itemJewelryBadge: {
     position: 'absolute',
     top: '4px',
     left: '4px',
     zIndex: 3,
-  },
-  // Combat tooltip styles
-  combatTooltipContainer: {
-    backgroundColor: 'rgba(17, 17, 17, 1)',
-    border: '2px solid #083e22',
-    borderRadius: '8px',
-    padding: '10px',
-    minWidth: '200px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-  },
-  combatTooltipTitle: {
-    color: '#d0c98d',
-    fontSize: '0.85rem',
-    fontWeight: 'bold',
-    textTransform: 'capitalize',
-  },
-  combatTooltipDivider: {
-    height: '1px',
-    backgroundColor: '#d7c529',
-    opacity: 0.2,
-    margin: '8px 0',
-  },
-  combatTooltipSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  },
-  combatTooltipRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  combatTooltipIcon: {
-    width: 20,
-    height: 20,
-    filter: 'brightness(0) invert(0.85)',
-  },
-  combatTooltipStrong: {
-    color: 'rgba(80, 180, 80, 0.9)',
-    fontSize: '0.75rem',
-  },
-  combatTooltipFair: {
-    color: 'rgba(180, 160, 80, 0.9)',
-    fontSize: '0.75rem',
-  },
-  combatTooltipWeak: {
-    color: 'rgba(180, 80, 80, 0.9)',
-    fontSize: '0.75rem',
   },
   // Tier tooltip styles
   tierTooltipContainer: {
