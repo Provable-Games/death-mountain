@@ -8,9 +8,50 @@ import { ItemUtils, ItemType, slotIcons, typeIcons, Tier } from '@/utils/loot';
 import { MarketItem, generateMarketItems, getCartItemPlacements, getTierOneArmorSetStats, potionPrice, STAT_FILTER_OPTIONS, type ArmorSetStatSummary, type StatDisplayName } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import { Box, Button, IconButton, Modal, Paper, Slider, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Button, IconButton, Modal, Paper, Slider, Tab, Tabs, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import JewelryTooltip from '@/components/JewelryTooltip';
+
+// Combat advantages based on contract: combat.cairo
+const getStrongAgainst = (type: string): string | null => {
+  switch (type) {
+    case 'Blade': return 'Cloth';
+    case 'Magic': return 'Metal';
+    case 'Bludgeon': return 'Hide';
+    case 'Cloth': return 'Bludgeon';
+    case 'Hide': return 'Magic';
+    case 'Metal': return 'Blade';
+    default: return null;
+  }
+};
+
+const getWeakAgainst = (type: string): string | null => {
+  switch (type) {
+    case 'Blade': return 'Metal';
+    case 'Magic': return 'Hide';
+    case 'Bludgeon': return 'Cloth';
+    case 'Cloth': return 'Blade';
+    case 'Hide': return 'Bludgeon';
+    case 'Metal': return 'Magic';
+    default: return null;
+  }
+};
+
+const getFairAgainst = (type: string): string | null => {
+  switch (type) {
+    case 'Blade': return 'Hide';
+    case 'Magic': return 'Cloth';
+    case 'Bludgeon': return 'Metal';
+    case 'Cloth': return 'Magic';
+    case 'Hide': return 'Blade';
+    case 'Metal': return 'Bludgeon';
+    default: return null;
+  }
+};
+
+const isWeaponType = (type: string): boolean => {
+  return type === 'Blade' || type === 'Magic' || type === 'Bludgeon';
+};
 
 const renderSlotToggleButton = (slot: keyof typeof slotIcons) => (
   <ToggleButton key={slot} value={slot} aria-label={slot}>
@@ -536,11 +577,13 @@ export default function MarketScreen() {
 
         {/* Items Grid */}
         <Box sx={styles.itemsGrid}>
-          {filteredItems.map((item) => {
+          {filteredItems.map((item, index) => {
             const canAfford = remainingGold >= item.price;
             const inCart = cart.items.some(cartItem => cartItem.id === item.id);
             const isOwned = isItemOwned(item.id);
             const shouldGrayOut = (!canAfford && !isOwned && !inCart) || isOwned;
+            const isLeftColumn = index % 2 === 0;
+            const tooltipPlacement = isLeftColumn ? 'right' : 'left';
             return (
               <Paper
                 key={item.id}
@@ -565,8 +608,84 @@ export default function MarketScreen() {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
+                  {/* Combat effectiveness badge - left side */}
+                  {getStrongAgainst(item.type) && (
+                    <Tooltip
+                      placement={tooltipPlacement}
+                      slotProps={{
+                        popper: {
+                          modifiers: [
+                            {
+                              name: 'preventOverflow',
+                              enabled: true,
+                              options: { rootBoundary: 'viewport' },
+                            },
+                          ],
+                        },
+                        tooltip: {
+                          sx: { bgcolor: 'transparent', border: 'none', p: 0 },
+                        },
+                      }}
+                      title={
+                        <Box sx={styles.combatTooltipContainer}>
+                          <Typography sx={styles.combatTooltipTitle}>
+                            {item.type}
+                          </Typography>
+                          <Box sx={styles.combatTooltipDivider} />
+                          <Box sx={styles.combatTooltipSection}>
+                            <Box sx={styles.combatTooltipRow}>
+                              <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                              <Typography sx={styles.combatTooltipStrong}>
+                                Strong vs {getStrongAgainst(item.type)} ({isWeaponType(item.type) ? '150% dmg dealt' : '50% dmg received'})
+                              </Typography>
+                            </Box>
+                            <Box sx={styles.combatTooltipRow}>
+                              <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                              <Typography sx={styles.combatTooltipFair}>
+                                Neutral vs {getFairAgainst(item.type)} ({isWeaponType(item.type) ? '100% dmg dealt' : '100% dmg received'})
+                              </Typography>
+                            </Box>
+                            <Box sx={styles.combatTooltipRow}>
+                              <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                              <Typography sx={styles.combatTooltipWeak}>
+                                Weak vs {getWeakAgainst(item.type)} ({isWeaponType(item.type) ? '50% dmg dealt' : '150% dmg received'})
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      }
+                    >
+                      <Box sx={styles.itemCombatBadge}>
+                        <Box sx={styles.itemStrongIndicator}>
+                          <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} alt="strong" sx={styles.itemCombatIcon} />
+                        </Box>
+                        <Box sx={styles.itemFairIndicator}>
+                          <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} alt="fair" sx={styles.itemCombatIcon} />
+                        </Box>
+                        <Box sx={styles.itemWeakIndicator}>
+                          <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} alt="weak" sx={styles.itemCombatIcon} />
+                        </Box>
+                      </Box>
+                    </Tooltip>
+                  )}
+                  {/* Jewelry tooltip - top left */}
+                  {(item.type === 'Ring' || item.type === 'Necklace') && (
+                    <Box sx={styles.itemJewelryBadge}>
+                      <JewelryTooltip itemId={item.id} placement={tooltipPlacement} />
+                    </Box>
+                  )}
+                  {/* Tier badge - top right */}
                   <Box sx={styles.itemTierBadge} style={{ backgroundColor: ItemUtils.getTierColor(item.tier) }}>
                     <Typography sx={styles.itemTierText}>T{item.tier}</Typography>
+                  </Box>
+                  {/* Slot badge - bottom right */}
+                  <Box sx={styles.itemSlotBadge}>
+                    <Box
+                      component="img"
+                      src={slotIcons[item.slot as keyof typeof slotIcons]}
+                      alt={item.slot}
+                      sx={styles.itemSlotIcon}
+                    />
                   </Box>
                 </Box>
 
@@ -574,7 +693,9 @@ export default function MarketScreen() {
                   <Box sx={styles.itemHeader}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Typography sx={styles.itemName}>{item.name}</Typography>
-                      <JewelryTooltip itemId={item.id} />
+                      {item.type !== 'Ring' && item.type !== 'Necklace' && (
+                        <JewelryTooltip itemId={item.id} placement={tooltipPlacement} />
+                      )}
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {item.type in typeIcons && (
@@ -1327,5 +1448,122 @@ const styles = {
     border: '1px solid rgba(215, 197, 41, 0.3)',
     borderRadius: '4px',
     padding: '2px 6px',
+  },
+  // Combat badge styles
+  itemCombatBadge: {
+    position: 'absolute',
+    top: '4px',
+    left: '4px',
+    bottom: '4px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    gap: '2px',
+    zIndex: 3,
+  },
+  itemStrongIndicator: {
+    padding: '2px',
+    borderRadius: '3px',
+    background: 'rgba(34, 90, 34, 0.85)',
+    border: '1px solid rgba(80, 180, 80, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemFairIndicator: {
+    padding: '2px',
+    borderRadius: '3px',
+    background: 'rgba(90, 80, 34, 0.85)',
+    border: '1px solid rgba(180, 160, 80, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemWeakIndicator: {
+    padding: '2px',
+    borderRadius: '3px',
+    background: 'rgba(90, 34, 34, 0.85)',
+    border: '1px solid rgba(180, 80, 80, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemCombatIcon: {
+    width: 14,
+    height: 14,
+    filter: 'brightness(0) invert(1)',
+    opacity: 0.95,
+  },
+  itemJewelryBadge: {
+    position: 'absolute',
+    top: '4px',
+    left: '4px',
+    zIndex: 3,
+  },
+  itemSlotBadge: {
+    position: 'absolute',
+    bottom: '4px',
+    right: '4px',
+    padding: '3px',
+    borderRadius: '3px',
+    background: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3,
+  },
+  itemSlotIcon: {
+    width: 14,
+    height: 14,
+    filter: 'invert(0.9) sepia(0.3) saturate(0.5)',
+    opacity: 0.9,
+  },
+  // Combat tooltip styles
+  combatTooltipContainer: {
+    backgroundColor: 'rgba(17, 17, 17, 1)',
+    border: '2px solid #083e22',
+    borderRadius: '8px',
+    padding: '10px',
+    minWidth: '180px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+  },
+  combatTooltipTitle: {
+    color: '#d0c98d',
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
+  combatTooltipDivider: {
+    height: '1px',
+    backgroundColor: '#d7c529',
+    opacity: 0.2,
+    margin: '8px 0',
+  },
+  combatTooltipSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  combatTooltipRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  combatTooltipIcon: {
+    width: 18,
+    height: 18,
+    filter: 'brightness(0) invert(0.85)',
+  },
+  combatTooltipStrong: {
+    color: 'rgba(80, 180, 80, 0.9)',
+    fontSize: '0.7rem',
+  },
+  combatTooltipFair: {
+    color: 'rgba(180, 160, 80, 0.9)',
+    fontSize: '0.7rem',
+  },
+  combatTooltipWeak: {
+    color: 'rgba(180, 80, 80, 0.9)',
+    fontSize: '0.7rem',
   },
 };

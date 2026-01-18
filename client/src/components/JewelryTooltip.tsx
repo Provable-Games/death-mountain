@@ -4,18 +4,24 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 interface JewelryTooltipProps {
   itemId: number;
+  placement?: 'left' | 'right';
 }
 
-export default function JewelryTooltip({ itemId }: JewelryTooltipProps) {
+export default function JewelryTooltip({ itemId, placement = 'right' }: JewelryTooltipProps) {
   const isJewelry = ItemUtils.isNecklace(itemId) || ItemUtils.isRing(itemId);
 
   if (!isJewelry) return null;
 
   const itemName = ItemUtils.getItemName(itemId);
 
+  // Offset: [skid (along edge), distance (away from anchor)]
+  // For 'left' placement: positive skid moves down, positive distance moves more left
+  // For 'right' placement: positive skid moves down, negative distance moves left
+  const offset: [number, number] = placement === 'left' ? [15, 30] : [10, -10];
+
   return (
     <Tooltip
-      placement="bottom"
+      placement={placement}
       slotProps={{
         popper: {
           modifiers: [
@@ -26,9 +32,7 @@ export default function JewelryTooltip({ itemId }: JewelryTooltipProps) {
             },
             {
               name: 'offset',
-              options: {
-                offset: [-200, 0], // [x, y] offset in pixels
-              },
+              options: { offset },
             },
           ],
         },
