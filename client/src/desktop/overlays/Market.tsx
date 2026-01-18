@@ -298,7 +298,7 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
   const marketItems = useMemo(() => {
     if (!marketItemIds) return [];
 
-    const items = generateMarketItems(marketItemIds, adventurer?.stats?.charisma || 0);
+    const items = generateMarketItems(marketItemIds, adventurer?.stats?.charisma || 0, adventurer?.item_specials_seed || 0);
 
     // Sort items by price and ownership status
     return items.sort((a, b) => {
@@ -325,7 +325,7 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
         return b.price - a.price; // Both unaffordable, sort by price
       }
     });
-  }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma]);
+  }, [marketItemIds, adventurer?.gold, adventurer?.stats?.charisma, adventurer?.item_specials_seed]);
 
   const renderDistributionList = useCallback((distribution: DamageBucket[], highlightValue: number | null = null) => {
     if (!distribution.length) {
@@ -1573,7 +1573,7 @@ const styles = {
     color: '#d7c529',
     fontSize: '0.8rem',
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   // Tab bar styles
   tabBar: {
