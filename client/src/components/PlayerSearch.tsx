@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Box,
   IconButton,
@@ -13,10 +13,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 import { useSnackbar } from 'notistack';
 import { addAddressPadding } from 'starknet';
-import { useDynamicConnector } from '@/contexts/starknet';
 import { useFollowStore } from '@/stores/followStore';
 import { useController } from '@/contexts/controller';
-import { hexToAscii } from '@dojoengine/utils';
+import { useGameTokens } from 'metagame-sdk/sql';
+import { useDynamicConnector } from '@/contexts/starknet';
+import { useDungeon } from '@/dojo/useDungeon';
+import { ChainId } from '@/utils/networkConfig';
+import { getContractByName } from '@dojoengine/core';
 
 interface PlayerSearchResult {
   owner: string;
@@ -25,101 +28,90 @@ interface PlayerSearchResult {
 }
 
 export default function PlayerSearch() {
-  const { currentNetworkConfig } = useDynamicConnector();
   const { address: currentUserAddress } = useController();
   const { followPlayer, isFollowing } = useFollowStore();
   const { enqueueSnackbar } = useSnackbar();
+  const { currentNetworkConfig } = useDynamicConnector();
+  const dungeon = useDungeon();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+  const GAME_TOKEN_ADDRESS = getContractByName(
+    currentNetworkConfig.manifest,
+    currentNetworkConfig.namespace,
+    "game_token_systems"
+  )?.address;
 
-    setIsSearching(true);
-    setHasSearched(true);
+  const mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
+    ? GAME_TOKEN_ADDRESS
+    : addAddressPadding(dungeon.address);
 
-    try {
-      // Search for players by name using Torii SQL
-      // Join TokenPlayerNameUpdate with OwnersUpdate to get owner addresses
-      // The namespace is 'relayer_0_0_1' based on the game's configuration
-      const url = `${currentNetworkConfig.toriiUrl}/sql?query=
-        SELECT DISTINCT
-          o.owner,
-          pn.player_name,
-          o.token_id
-        FROM "relayer_0_0_1-TokenPlayerNameUpdate" pn
-        LEFT JOIN "relayer_0_0_1-OwnersUpdate" o ON o.token_id = pn.id
-        WHERE pn.player_name IS NOT NULL
-        ORDER BY pn.player_name ASC
-        LIMIT 100`;
+  // Fetch games using the same hook as the leaderboard
+  const { loading, games } = useGameTokens({
+    limit: 500,
+    sortBy: "player_name",
+    sortOrder: "asc",
+    mintedByAddress,
+    gameAddresses: [currentNetworkConfig.gameAddress],
+  });
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  // Filter games based on search query
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim() || !games) return [];
 
-      if (!response.ok) {
-        throw new Error('Search failed');
+    const searchLower = searchQuery.trim().toLowerCase();
+
+    // Filter games by player name
+    const matches = games.filter((game: any) => {
+      const playerName = game.player_name || '';
+      return playerName.toLowerCase().includes(searchLower);
+    });
+
+    // Deduplicate by owner address and exclude current user
+    const uniqueResults: PlayerSearchResult[] = [];
+    const seenOwners = new Set<string>();
+
+    for (const game of matches) {
+      if (!game.owner) continue;
+
+      const normalizedOwner = addAddressPadding(game.owner).toLowerCase();
+
+      // Skip current user
+      if (currentUserAddress && normalizedOwner === addAddressPadding(currentUserAddress).toLowerCase()) {
+        continue;
       }
 
-      const data: PlayerSearchResult[] = await response.json();
+      // Skip duplicates
+      if (seenOwners.has(normalizedOwner)) continue;
+      seenOwners.add(normalizedOwner);
 
-      // Decode player names from hex and filter by search query
-      const searchLower = searchQuery.trim().toLowerCase();
-      const decodedResults = data
-        .map((item) => {
-          // Decode the hex player_name to ASCII
-          let decodedName = '';
-          try {
-            decodedName = hexToAscii(item.player_name).replace(/^\0+/, '');
-          } catch {
-            decodedName = item.player_name;
-          }
-          return {
-            ...item,
-            player_name: decodedName,
-          };
-        })
-        .filter((item) => {
-          // Filter by search query (case-insensitive)
-          return item.player_name.toLowerCase().includes(searchLower);
-        });
+      uniqueResults.push({
+        owner: game.owner,
+        player_name: game.player_name || `Player #${game.token_id}`,
+        token_id: game.token_id,
+      });
 
-      // Filter out duplicates by owner address and current user
-      const uniqueResults = decodedResults.reduce((acc: PlayerSearchResult[], curr) => {
-        if (!curr.owner) return acc;
-
-        const normalizedOwner = addAddressPadding(curr.owner).toLowerCase();
-        const normalizedCurrentUser = currentUserAddress
-          ? addAddressPadding(currentUserAddress).toLowerCase()
-          : null;
-
-        // Skip if it's the current user
-        if (normalizedOwner === normalizedCurrentUser) return acc;
-
-        // Skip if we already have this owner
-        if (acc.some(r => addAddressPadding(r.owner).toLowerCase() === normalizedOwner)) {
-          return acc;
-        }
-
-        return [...acc, curr];
-      }, []);
-
-      setSearchResults(uniqueResults.slice(0, 10));
-    } catch (error) {
-      console.error('Error searching for players:', error);
-      enqueueSnackbar('Failed to search for players', { variant: 'error' });
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
+      if (uniqueResults.length >= 10) break;
     }
-  }, [searchQuery, currentNetworkConfig.toriiUrl, currentUserAddress, enqueueSnackbar]);
+
+    return uniqueResults;
+  }, [searchQuery, games, currentUserAddress]);
+
+  // Update search results when filtered results change
+  useEffect(() => {
+    if (hasSearched) {
+      setSearchResults(filteredResults);
+    }
+  }, [filteredResults, hasSearched]);
+
+  const handleSearch = useCallback(() => {
+    if (!searchQuery.trim()) return;
+    setHasSearched(true);
+    setSearchResults(filteredResults);
+  }, [searchQuery, filteredResults]);
 
   const handleFollow = useCallback((result: PlayerSearchResult) => {
     const normalizedAddress = addAddressPadding(result.owner).toLowerCase();
@@ -193,7 +185,7 @@ export default function PlayerSearch() {
               }}
             />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {isSearching ? (
+              {loading ? (
                 <CircularProgress size={16} sx={{ color: 'primary.main' }} />
               ) : (
                 <IconButton
