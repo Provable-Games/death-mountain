@@ -1,19 +1,84 @@
 import { ItemUtils } from '@/utils/loot';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, Popper, Tooltip, Typography } from '@mui/material';
+import { useState } from 'react';
 
 interface JewelryTooltipProps {
   itemId: number;
   placement?: 'left' | 'right';
+  mobile?: boolean;
 }
 
-export default function JewelryTooltip({ itemId, placement = 'right' }: JewelryTooltipProps) {
+export default function JewelryTooltip({ itemId, placement = 'right', mobile = false }: JewelryTooltipProps) {
   const isJewelry = ItemUtils.isNecklace(itemId) || ItemUtils.isRing(itemId);
+  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   if (!isJewelry) return null;
 
   const itemName = ItemUtils.getItemName(itemId);
 
+  const tooltipContent = (
+    <Box sx={styles.tooltipContainer}>
+      <Typography sx={styles.tooltipTitle}>
+        {itemName}
+      </Typography>
+
+      <Box sx={styles.sectionDivider} />
+
+      <Box sx={styles.tooltipSection}>
+        <Typography sx={styles.tooltipText}>
+          {ItemUtils.getJewelryEffect(itemId)}
+        </Typography>
+        <Typography color="rgba(215, 197, 41, 0.7)" fontSize="0.75rem">
+          All equipped and bagged jewelry increases your crit chance
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  // Mobile: tap to show, tap anywhere to dismiss
+  if (mobile) {
+    return (
+      <ClickAwayListener onClickAway={() => setOpen(false)}>
+        <Box>
+          <IconButton
+            size="small"
+            sx={styles.helpIcon}
+            disableRipple
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(!open);
+              setAnchorEl(e.currentTarget);
+            }}
+          >
+            <HelpOutlineIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          <Popper
+            open={open}
+            anchorEl={anchorEl}
+            placement={placement}
+            modifiers={[
+              {
+                name: 'preventOverflow',
+                enabled: true,
+                options: { rootBoundary: 'viewport', padding: 8 },
+              },
+              {
+                name: 'offset',
+                options: { offset: [0, 8] },
+              },
+            ]}
+            sx={{ zIndex: 1300 }}
+          >
+            {tooltipContent}
+          </Popper>
+        </Box>
+      </ClickAwayListener>
+    );
+  }
+
+  // Desktop: hover tooltip
   // Offset: [skid (along edge), distance (away from anchor)]
   // For 'left' placement: positive skid moves down, positive distance moves more left
   // For 'right' placement: positive skid moves down, negative distance moves left
@@ -43,24 +108,7 @@ export default function JewelryTooltip({ itemId, placement = 'right' }: JewelryT
           },
         },
       }}
-      title={
-        <Box sx={styles.tooltipContainer}>
-          <Typography sx={styles.tooltipTitle}>
-            {itemName}
-          </Typography>
-
-          <Box sx={styles.sectionDivider} />
-
-          <Box sx={styles.tooltipSection}>
-            <Typography sx={styles.tooltipText}>
-              {ItemUtils.getJewelryEffect(itemId)}
-            </Typography>
-            <Typography color="rgba(215, 197, 41, 0.7)" fontSize="0.75rem">
-              All equipped and bagged jewelry increases your crit chance
-            </Typography>
-          </Box>
-        </Box>
-      }
+      title={tooltipContent}
     >
       <IconButton
         size="small"
@@ -75,7 +123,6 @@ export default function JewelryTooltip({ itemId, placement = 'right' }: JewelryT
 
 const styles = {
   tooltipContainer: {
-    position: 'absolute',
     backgroundColor: 'rgba(17, 17, 17, 1)',
     border: '2px solid #083e22',
     borderRadius: '8px',

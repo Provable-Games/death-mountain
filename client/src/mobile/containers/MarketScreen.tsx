@@ -8,7 +8,7 @@ import { ItemUtils, ItemType, slotIcons, typeIcons, Tier } from '@/utils/loot';
 import { MarketItem, generateMarketItems, getCartItemPlacements, getTierOneArmorSetStats, potionPrice, STAT_FILTER_OPTIONS, type ArmorSetStatSummary, type StatDisplayName } from '@/utils/market';
 import FilterListAltIcon from '@mui/icons-material/FilterListAlt';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import { Box, Button, IconButton, Modal, Paper, Slider, Tab, Tabs, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, Modal, Paper, Popper, Slider, Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import JewelryTooltip from '@/components/JewelryTooltip';
 
@@ -143,6 +143,8 @@ export default function MarketScreen() {
 
   const [showSetStats, setShowSetStats] = useState(false);
   const [activeSetStatsTab, setActiveSetStatsTab] = useState<SetStatsTab>(ItemType.Cloth);
+  const [openCombatTooltip, setOpenCombatTooltip] = useState<number | null>(null);
+  const [combatAnchorEl, setCombatAnchorEl] = useState<HTMLElement | null>(null);
 
   const specialsUnlocked = Boolean(adventurer?.item_specials_seed);
 
@@ -610,68 +612,82 @@ export default function MarketScreen() {
                   />
                   {/* Combat effectiveness badge - left side */}
                   {getStrongAgainst(item.type) && (
-                    <Tooltip
-                      placement={tooltipPlacement}
-                      slotProps={{
-                        popper: {
-                          modifiers: [
+                    <ClickAwayListener onClickAway={() => { if (openCombatTooltip === item.id) setOpenCombatTooltip(null); }}>
+                      <Box>
+                        <Box
+                          sx={styles.itemCombatBadge}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (openCombatTooltip === item.id) {
+                              setOpenCombatTooltip(null);
+                              setCombatAnchorEl(null);
+                            } else {
+                              setOpenCombatTooltip(item.id);
+                              setCombatAnchorEl(e.currentTarget);
+                            }
+                          }}
+                        >
+                          <Box sx={styles.itemStrongIndicator}>
+                            <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} alt="strong" sx={styles.itemCombatIcon} />
+                          </Box>
+                          <Box sx={styles.itemFairIndicator}>
+                            <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} alt="fair" sx={styles.itemCombatIcon} />
+                          </Box>
+                          <Box sx={styles.itemWeakIndicator}>
+                            <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} alt="weak" sx={styles.itemCombatIcon} />
+                          </Box>
+                        </Box>
+                        <Popper
+                          open={openCombatTooltip === item.id}
+                          anchorEl={combatAnchorEl}
+                          placement={tooltipPlacement}
+                          modifiers={[
                             {
                               name: 'preventOverflow',
                               enabled: true,
-                              options: { rootBoundary: 'viewport' },
+                              options: { rootBoundary: 'viewport', padding: 8 },
                             },
-                          ],
-                        },
-                        tooltip: {
-                          sx: { bgcolor: 'transparent', border: 'none', p: 0 },
-                        },
-                      }}
-                      title={
-                        <Box sx={styles.combatTooltipContainer}>
-                          <Typography sx={styles.combatTooltipTitle}>
-                            {item.type}
-                          </Typography>
-                          <Box sx={styles.combatTooltipDivider} />
-                          <Box sx={styles.combatTooltipSection}>
-                            <Box sx={styles.combatTooltipRow}>
-                              <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                              <Typography sx={styles.combatTooltipStrong}>
-                                Strong vs {getStrongAgainst(item.type)} ({isWeaponType(item.type) ? '150% dmg dealt' : '50% dmg received'})
-                              </Typography>
-                            </Box>
-                            <Box sx={styles.combatTooltipRow}>
-                              <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                              <Typography sx={styles.combatTooltipFair}>
-                                Neutral vs {getFairAgainst(item.type)} ({isWeaponType(item.type) ? '100% dmg dealt' : '100% dmg received'})
-                              </Typography>
-                            </Box>
-                            <Box sx={styles.combatTooltipRow}>
-                              <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
-                              <Typography sx={styles.combatTooltipWeak}>
-                                Weak vs {getWeakAgainst(item.type)} ({isWeaponType(item.type) ? '50% dmg dealt' : '150% dmg received'})
-                              </Typography>
+                            {
+                              name: 'offset',
+                              options: { offset: [0, 8] },
+                            },
+                          ]}
+                          sx={{ zIndex: 1300 }}
+                        >
+                          <Box sx={styles.combatTooltipContainer}>
+                            <Typography sx={styles.combatTooltipTitle}>
+                              {item.type}
+                            </Typography>
+                            <Box sx={styles.combatTooltipDivider} />
+                            <Box sx={styles.combatTooltipSection}>
+                              <Box sx={styles.combatTooltipRow}>
+                                <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                                <Typography sx={styles.combatTooltipStrong}>
+                                  Strong vs {getStrongAgainst(item.type)} ({isWeaponType(item.type) ? '150% dmg dealt' : '50% dmg received'})
+                                </Typography>
+                              </Box>
+                              <Box sx={styles.combatTooltipRow}>
+                                <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                                <Typography sx={styles.combatTooltipFair}>
+                                  Neutral vs {getFairAgainst(item.type)} ({isWeaponType(item.type) ? '100% dmg dealt' : '100% dmg received'})
+                                </Typography>
+                              </Box>
+                              <Box sx={styles.combatTooltipRow}>
+                                <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} sx={styles.combatTooltipIcon} />
+                                <Typography sx={styles.combatTooltipWeak}>
+                                  Weak vs {getWeakAgainst(item.type)} ({isWeaponType(item.type) ? '50% dmg dealt' : '150% dmg received'})
+                                </Typography>
+                              </Box>
                             </Box>
                           </Box>
-                        </Box>
-                      }
-                    >
-                      <Box sx={styles.itemCombatBadge}>
-                        <Box sx={styles.itemStrongIndicator}>
-                          <Box component="img" src={typeIcons[getStrongAgainst(item.type) as keyof typeof typeIcons]} alt="strong" sx={styles.itemCombatIcon} />
-                        </Box>
-                        <Box sx={styles.itemFairIndicator}>
-                          <Box component="img" src={typeIcons[getFairAgainst(item.type) as keyof typeof typeIcons]} alt="fair" sx={styles.itemCombatIcon} />
-                        </Box>
-                        <Box sx={styles.itemWeakIndicator}>
-                          <Box component="img" src={typeIcons[getWeakAgainst(item.type) as keyof typeof typeIcons]} alt="weak" sx={styles.itemCombatIcon} />
-                        </Box>
+                        </Popper>
                       </Box>
-                    </Tooltip>
+                    </ClickAwayListener>
                   )}
                   {/* Jewelry tooltip - top left */}
                   {(item.type === 'Ring' || item.type === 'Necklace') && (
                     <Box sx={styles.itemJewelryBadge}>
-                      <JewelryTooltip itemId={item.id} placement={tooltipPlacement} />
+                      <JewelryTooltip itemId={item.id} placement={tooltipPlacement} mobile />
                     </Box>
                   )}
                   {/* Tier badge - top right */}
@@ -694,7 +710,7 @@ export default function MarketScreen() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Typography sx={styles.itemName}>{item.name}</Typography>
                       {item.type !== 'Ring' && item.type !== 'Necklace' && (
-                        <JewelryTooltip itemId={item.id} placement={tooltipPlacement} />
+                        <JewelryTooltip itemId={item.id} placement={tooltipPlacement} mobile />
                       )}
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
