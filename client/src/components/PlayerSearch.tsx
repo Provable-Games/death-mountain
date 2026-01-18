@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Box,
   IconButton,
@@ -15,103 +15,31 @@ import { useSnackbar } from 'notistack';
 import { addAddressPadding } from 'starknet';
 import { useFollowStore } from '@/stores/followStore';
 import { useController } from '@/contexts/controller';
-import { useGameTokens } from 'metagame-sdk/sql';
-import { useDynamicConnector } from '@/contexts/starknet';
-import { useDungeon } from '@/dojo/useDungeon';
-import { ChainId } from '@/utils/networkConfig';
-import { getContractByName } from '@dojoengine/core';
-
-interface PlayerSearchResult {
-  owner: string;
-  player_name: string;
-  token_id: number;
-}
+import { usePlayerSearch, PlayerSearchResult } from '@/hooks/usePlayerSearch';
 
 export default function PlayerSearch() {
   const { address: currentUserAddress } = useController();
   const { followPlayer, isFollowing } = useFollowStore();
   const { enqueueSnackbar } = useSnackbar();
-  const { currentNetworkConfig } = useDynamicConnector();
-  const dungeon = useDungeon();
+  const { loading, results, error, searchPlayers, clearResults } = usePlayerSearch();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const GAME_TOKEN_ADDRESS = getContractByName(
-    currentNetworkConfig.manifest,
-    currentNetworkConfig.namespace,
-    "game_token_systems"
-  )?.address;
-
-  const mintedByAddress = currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
-    ? GAME_TOKEN_ADDRESS
-    : addAddressPadding(dungeon.address);
-
-  // Fetch games using the same hook as the leaderboard
-  const { loading, games } = useGameTokens({
-    limit: 500,
-    sortBy: "player_name",
-    sortOrder: "asc",
-    mintedByAddress,
-    gameAddresses: [currentNetworkConfig.gameAddress],
+  // Filter out current user from results
+  const filteredResults = results.filter((result) => {
+    if (!currentUserAddress) return true;
+    const normalizedOwner = addAddressPadding(result.owner).toLowerCase();
+    const normalizedCurrentUser = addAddressPadding(currentUserAddress).toLowerCase();
+    return normalizedOwner !== normalizedCurrentUser;
   });
 
-  // Filter games based on search query
-  const filteredResults = useMemo(() => {
-    if (!searchQuery.trim() || !games) return [];
-
-    const searchLower = searchQuery.trim().toLowerCase();
-
-    // Filter games by player name
-    const matches = games.filter((game: any) => {
-      const playerName = game.player_name || '';
-      return playerName.toLowerCase().includes(searchLower);
-    });
-
-    // Deduplicate by owner address and exclude current user
-    const uniqueResults: PlayerSearchResult[] = [];
-    const seenOwners = new Set<string>();
-
-    for (const game of matches) {
-      if (!game.owner) continue;
-
-      const normalizedOwner = addAddressPadding(game.owner).toLowerCase();
-
-      // Skip current user
-      if (currentUserAddress && normalizedOwner === addAddressPadding(currentUserAddress).toLowerCase()) {
-        continue;
-      }
-
-      // Skip duplicates
-      if (seenOwners.has(normalizedOwner)) continue;
-      seenOwners.add(normalizedOwner);
-
-      uniqueResults.push({
-        owner: game.owner,
-        player_name: game.player_name || `Player #${game.token_id}`,
-        token_id: game.token_id,
-      });
-
-      if (uniqueResults.length >= 10) break;
-    }
-
-    return uniqueResults;
-  }, [searchQuery, games, currentUserAddress]);
-
-  // Update search results when filtered results change
-  useEffect(() => {
-    if (hasSearched) {
-      setSearchResults(filteredResults);
-    }
-  }, [filteredResults, hasSearched]);
-
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
     setHasSearched(true);
-    setSearchResults(filteredResults);
-  }, [searchQuery, filteredResults]);
+    await searchPlayers(searchQuery);
+  }, [searchQuery, searchPlayers]);
 
   const handleFollow = useCallback((result: PlayerSearchResult) => {
     const normalizedAddress = addAddressPadding(result.owner).toLowerCase();
@@ -125,17 +53,17 @@ export default function PlayerSearch() {
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       setSearchQuery('');
-      setSearchResults([]);
+      clearResults();
       setHasSearched(false);
     }
-  }, [handleSearch]);
+  }, [handleSearch, clearResults]);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setSearchQuery('');
-    setSearchResults([]);
+    clearResults();
     setHasSearched(false);
-  }, []);
+  }, [clearResults]);
 
   const truncateAddress = (address: string) => {
     const padded = addAddressPadding(address);
@@ -211,12 +139,16 @@ export default function PlayerSearch() {
 
           {hasSearched && (
             <Box sx={styles.resultsContainer}>
-              {searchResults.length === 0 ? (
+              {error ? (
+                <Typography color="error" sx={{ fontSize: '12px', textAlign: 'center', py: 1 }}>
+                  {error}
+                </Typography>
+              ) : filteredResults.length === 0 ? (
                 <Typography color="secondary" sx={{ fontSize: '12px', textAlign: 'center', py: 1 }}>
                   No players found matching "{searchQuery}"
                 </Typography>
               ) : (
-                searchResults.map((result) => {
+                filteredResults.map((result) => {
                   const normalizedOwner = addAddressPadding(result.owner).toLowerCase();
                   const alreadyFollowing = isFollowing(normalizedOwner);
 
