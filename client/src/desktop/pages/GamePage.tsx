@@ -11,7 +11,7 @@ import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
 import { useUIStore } from "@/stores/uiStore";
 import { streamIds } from "@/utils/cloudflare";
-import { ChainId, getNetworkConfig, NetworkConfig } from "@/utils/networkConfig";
+import { ChainId } from "@/utils/networkConfig";
 import { getMenuLeftOffset } from "@/utils/utils";
 import { Box } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
@@ -38,7 +38,7 @@ const AnimatedOverlay = ({ children, overlayKey }: AnimatedOverlayProps) => (
 
 export default function GamePage() {
   const navigate = useNavigate();
-  const { setCurrentNetworkConfig, currentNetworkConfig } = useDynamicConnector();
+  const { currentNetworkConfig } = useDynamicConnector();
   const { mintGame } = useSystemCalls();
 
   const {

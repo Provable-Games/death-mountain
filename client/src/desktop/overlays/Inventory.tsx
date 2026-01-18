@@ -2,10 +2,13 @@ import { BEAST_MIN_DAMAGE } from '@/constants/beast';
 import AdventurerStats from '@/desktop/components/AdventurerStats';
 import ItemTooltip from '@/desktop/components/ItemTooltip';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useGearPresets } from '@/hooks/useGearPresets';
 import { useGameStore } from '@/stores/gameStore';
+import { useUIStore } from '@/stores/uiStore';
 import { Item } from '@/types/game';
 import { calculateAttackDamage, calculateBeastDamage, calculateCombatStats, calculateLevel } from '@/utils/game';
-import { ItemUtils, Tier } from '@/utils/loot';
+import { GearPreset } from '@/utils/gearPresets';
+import { ItemUtils } from '@/utils/loot';
 import { keyframes } from '@emotion/react';
 import { DeleteOutline, Star } from '@mui/icons-material';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
@@ -15,30 +18,42 @@ type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | '
 
 const equipmentSlots = [
   { key: 'head' as EquipmentSlot, label: 'Head', style: { top: '8px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/head.svg' },
-  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '60px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/chest.svg' },
-  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '112px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/waist.svg' },
-  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '164px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/foot.svg' },
-  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '86px', left: '8px' }, icon: '/images/types/hand.svg' },
-  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '86px', right: '8px' }, icon: '/images/types/ring.svg' },
-  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '140px', left: '8px' }, icon: '/images/types/weapon.svg' },
-  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '30px', right: '8px' }, icon: '/images/types/neck.svg' },
+  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '68px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/chest.svg' },
+  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '128px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/waist.svg' },
+  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '188px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/foot.svg' },
+  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '98px', left: '8px' }, icon: '/images/types/hand.svg' },
+  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '98px', right: '8px' }, icon: '/images/types/ring.svg' },
+  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '158px', left: '8px' }, icon: '/images/types/weapon.svg' },
+  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '38px', right: '8px' }, icon: '/images/types/neck.svg' },
 ];
 
 interface InventoryOverlayProps {
   disabledEquip?: boolean;
 }
 
-function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, onItemHover }: {
+function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, onItemHover, disabledEquip }: {
   isDropMode: boolean,
   itemsToDrop: number[],
   onItemClick: (item: any) => void,
   newItems: number[],
-  onItemHover: (itemId: number) => void
+  onItemHover: (itemId: number) => void,
+  disabledEquip?: boolean;
 }) {
-  const { adventurer, beast } = useGameStore();
+  const { adventurer, beast, bag, equipGearPreset } = useGameStore();
+  const { advancedMode } = useUIStore();
+  const { presets } = useGearPresets(adventurer ?? null, bag, advancedMode);
+  const isPresetDisabled = isDropMode || !!disabledEquip;
+
+  const handlePresetClick = (preset: GearPreset) => {
+    if (isPresetDisabled || !presets[preset].hasChanges) {
+      return;
+    }
+
+    equipGearPreset(preset);
+  };
 
   return (
-    <Box sx={styles.equipmentPanel}>
+    <Box sx={[styles.equipmentPanel, { height: advancedMode ? '315px' : '250px' }]}>
       <Box sx={styles.characterPortraitWrapper}>
         <img src={'/images/adventurer.png'} alt="adventurer" style={{ ...styles.characterPortrait, objectFit: 'contain', position: 'absolute', left: '50%', top: '30%', transform: 'translate(-50%, -30%)', zIndex: 1, filter: 'drop-shadow(0 0 8px #000a)' }} />
         {equipmentSlots.map(slot => {
@@ -61,20 +76,27 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           // Calculate damage values
           let damage = 0;
           let damageTaken = 0;
+          let critDamage = 0;
+          let critDamageTaken = 0;
           if (beast) {
             const beastPower = beast.level * (6 - beast.tier);
             if (isArmorSlot && beast.health > 4) {
               // For armor slots, show damage taken (always negative)
               if (item && item.id !== 0) {
-                damageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
+                const damageResult = calculateBeastDamage(beast, adventurer!, item);
+                damageTaken = damageResult.baseDamage;
+                critDamageTaken = damageResult.criticalDamage;
               } else {
                 // For empty armor slots, show beast power * 1.5
                 damageTaken = Math.max(BEAST_MIN_DAMAGE, Math.floor(beastPower * 1.5));
+                critDamageTaken = Math.floor(damageTaken * 2);
               }
             } else if (isWeaponSlot) {
               // For weapon slots, show damage dealt (always positive)
               if (item && item.id !== 0) {
-                damage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+                const damageResult = calculateAttackDamage(item, adventurer!, beast);
+                damage = damageResult.baseDamage;
+                critDamage = damageResult.criticalDamage;
               }
             }
           }
@@ -185,6 +207,24 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
                         </Typography>
                       </Box>
                     )}
+                    {/* Level Label */}
+                    <Box sx={styles.levelLabel}>
+                      {level}
+                    </Box>
+                    {/* Crit Damage Indicator (Advanced Mode) */}
+                    {advancedMode && (critDamage > 0 || critDamageTaken > 0) && (
+                      <Box sx={[
+                        styles.critDamageIndicator,
+                        isArmorSlot ? styles.critDamageIndicatorRed : styles.critDamageIndicatorGreen
+                      ]}>
+                        <Typography sx={[
+                          styles.damageIndicatorText,
+                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        ]}>
+                          {isArmorSlot ? `-${critDamageTaken}` : `+${critDamage}`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 ) : (
                   <Box sx={styles.emptySlot} title={slot.label}>
@@ -203,6 +243,20 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
                         </Typography>
                       </Box>
                     )}
+                    {/* Crit Damage Indicator for Empty Slots (Advanced Mode) */}
+                    {advancedMode && (critDamage > 0 || critDamageTaken > 0) && (
+                      <Box sx={[
+                        styles.critDamageIndicator,
+                        isArmorSlot ? styles.critDamageIndicatorRed : styles.critDamageIndicatorGreen
+                      ]}>
+                        <Typography sx={[
+                          styles.damageIndicatorText,
+                          isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                        ]}>
+                          {isArmorSlot ? `-${critDamageTaken}` : `+${critDamage}`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 )}
               </Box>
@@ -210,6 +264,30 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
           );
         })}
       </Box>
+      {advancedMode && (
+        <>
+          <Box sx={styles.presetHeader}>
+            <Typography>Equip preset</Typography>
+          </Box>
+          <Box sx={styles.presetContainer}>
+            {([
+              { label: 'CLOTH', key: 'cloth' },
+              { label: 'HIDE', key: 'hide' },
+              { label: 'METAL', key: 'metal' },
+            ] as Array<{ label: string; key: GearPreset }>).map((preset) => (
+              <Button
+                key={preset.key}
+                variant="outlined"
+                sx={styles.presetButton}
+                onClick={() => handlePresetClick(preset.key)}
+                disabled={isPresetDisabled || !presets[preset.key].hasChanges}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </Box>
+        </>
+      )}
     </Box>
   );
 }
@@ -223,6 +301,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
   onItemHover: (itemId: number) => void
 }) {
   const { bag, adventurer, beast } = useGameStore();
+  const { advancedMode } = useUIStore();
 
   // Calculate combat stats to get bestItems for defense highlighting
   const combatStats = beast ? calculateCombatStats(adventurer!, bag, beast) : null;
@@ -256,16 +335,18 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
           // Calculate damage values for bag items
           let damage = 0;
           let damageTaken = 0;
+          let critDamage = 0;
+          let critDamageTaken = 0;
           if (beast) {
             if (isArmorSlot) {
-              damageTaken = calculateBeastDamage(beast, adventurer!, item).baseDamage;
+              const damageResult = calculateBeastDamage(beast, adventurer!, item);
+              damageTaken = damageResult.baseDamage;
+              critDamageTaken = damageResult.criticalDamage;
             } else if (isWeaponSlot) {
-              damage = calculateAttackDamage(item, adventurer!, beast).baseDamage;
+              const damageResult = calculateAttackDamage(item, adventurer!, beast);
+              damage = damageResult.baseDamage;
+              critDamage = damageResult.criticalDamage;
             }
-          }
-
-          if (isNew && isWeaponSlot && [Tier.T1, Tier.T2, Tier.T3].includes(tier) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5) {
-            onItemClick(item);
           }
 
           return (
@@ -343,6 +424,24 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
                       </Typography>
                     </Box>
                   )}
+                  {/* Level Label */}
+                  <Box sx={styles.levelLabel}>
+                    {level}
+                  </Box>
+                  {/* Crit Damage Indicator (Advanced Mode) */}
+                  {advancedMode && (critDamage > 0 || critDamageTaken > 0) && (
+                    <Box sx={[
+                      styles.critDamageIndicator,
+                      isArmorSlot ? styles.critDamageIndicatorRed : styles.critDamageIndicatorGreen
+                    ]}>
+                      <Typography sx={[
+                        styles.damageIndicatorText,
+                        isArmorSlot ? styles.damageIndicatorTextRed : styles.damageIndicatorTextGreen
+                      ]}>
+                        {isArmorSlot ? `-${critDamageTaken}` : `+${critDamage}`}
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               </Box>
             </Tooltip>
@@ -368,6 +467,7 @@ function InventoryBag({ isDropMode, itemsToDrop, onItemClick, onDropModeToggle, 
 }
 
 export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProps) {
+  const { advancedMode } = useUIStore();
   const { executeGameAction, actionFailed } = useGameDirector();
   const { adventurer, bag, showInventory, setShowInventory } = useGameStore();
   const { equipItem, newInventoryItems, setNewInventoryItems } = useGameStore();
@@ -382,7 +482,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
       setNewItems([...newInventoryItems]);
       setNewInventoryItems([]);
     }
-  }, [newInventoryItems, setNewInventoryItems]);
+  }, [newInventoryItems]);
 
   useEffect(() => {
     if (dropInProgress) {
@@ -432,15 +532,15 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: 24, left: 24, zIndex: 100 }}>
-        <Box sx={styles.buttonWrapper} onClick={() => setShowInventory(!showInventory)}>
+        <Box sx={[styles.buttonWrapper, advancedMode && styles.advancedButtonWrapper]} onClick={() => setShowInventory(!showInventory)}>
           <img src={'/images/inventory.png'} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />
         </Box>
-        <Typography sx={styles.inventoryLabel}>Inventory</Typography>
+        {!advancedMode && <Typography sx={styles.inventoryLabel}>Inventory</Typography>}
       </Box>
       {showInventory && (
         <>
           {/* Inventory popup */}
-          <Box sx={styles.popup}>
+          <Box sx={[styles.popup, advancedMode && styles.advancedPopup]}>
             <Box sx={styles.inventoryRoot}>
               {/* Left: Equipment */}
               <CharacterEquipment
@@ -449,6 +549,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
                 onItemClick={handleItemClick}
                 newItems={newItems}
                 onItemHover={handleItemHover}
+                disabledEquip={disabledEquip}
               />
               {/* Right: Stats */}
               <AdventurerStats />
@@ -551,6 +652,10 @@ const styles = {
       background: 'rgba(34, 50, 34, 0.85)',
     },
   },
+  advancedButtonWrapper: {
+    width: 56,
+    height: 56,
+  },
   inventoryLabel: {
     color: '#e6d28a',
     textShadow: '0 2px 4px #000, 0 0 8px #3a5a2a',
@@ -563,7 +668,7 @@ const styles = {
     position: 'absolute',
     top: '120px',
     left: '24px',
-    width: '388px',
+    width: '440px',
     maxHeight: '90vh',
     background: 'rgba(24, 40, 24, 0.55)',
     border: '2px solid #083e22',
@@ -577,15 +682,18 @@ const styles = {
     padding: 1.5,
     overflow: 'hidden',
   },
+  advancedPopup: {
+    boxShadow: '0 2px 12px 2px #000b',
+  },
   inventoryRoot: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     justifyContent: 'space-between',
-    mb: 1
+    mb: 1,
+    gap: 1
   },
   equipmentPanel: {
-    height: '220px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -599,8 +707,8 @@ const styles = {
   },
   characterPortraitWrapper: {
     position: 'relative',
-    width: 175,
-    height: 220,
+    width: 200,
+    height: 250,
     margin: '0 auto',
     background: 'rgba(20, 20, 20, 0.7)',
     borderRadius: '8px',
@@ -610,8 +718,8 @@ const styles = {
     height: 140,
   },
   equipmentSlot: {
-    width: 42,
-    height: 42,
+    width: 50,
+    height: 50,
     background: 'rgba(24, 40, 24, 0.95)',
     border: '2px solid #083e22',
     borderRadius: 0,
@@ -644,13 +752,13 @@ const styles = {
     zIndex: 1,
   },
   equipmentIcon: {
-    width: 36,
-    height: 36,
+    width: 42,
+    height: 42,
     zIndex: 2,
   },
   emptySlot: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     border: '1.5px dashed #666',
     borderRadius: 0,
     background: 'rgba(80,80,80,0.2)',
@@ -673,8 +781,8 @@ const styles = {
     gap: 0.5,
   },
   bagSlot: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     background: 'rgba(24, 40, 24, 0.95)',
     border: '2px solid #083e22',
     borderRadius: 0,
@@ -686,13 +794,13 @@ const styles = {
     overflow: 'hidden'
   },
   bagIcon: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     zIndex: 2,
   },
   dropButtonSlot: {
-    width: 42,
-    height: 42,
+    width: 48,
+    height: 48,
     background: 'rgba(255, 0, 0, 0.1)',
     border: '2px solid rgba(255, 0, 0, 0.2)',
     boxShadow: '0 0 4px #000a',
@@ -921,5 +1029,66 @@ const styles = {
   damageIndicatorTextGreen: {
     color: '#FFFFFF',
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3)',
+  },
+  levelLabel: {
+    position: 'absolute',
+    bottom: '1px',
+    left: '1px',
+    backgroundColor: '#000000',
+    color: '#FFFFFF',
+    fontSize: '0.65rem',
+    fontWeight: 'bold',
+    fontFamily: 'VT323, monospace',
+    padding: '1px 3px',
+    borderRadius: '2px',
+    lineHeight: 1,
+    zIndex: 20,
+    minWidth: '14px',
+    textAlign: 'center',
+  },
+  critDamageIndicator: {
+    position: 'absolute',
+    bottom: '1px',
+    right: '1px',
+    minWidth: '18px',
+    height: '12px',
+    borderRadius: '3px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 15,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(2px)',
+  },
+  critDamageIndicatorRed: {
+    background: 'linear-gradient(135deg, rgba(180, 40, 40, 0.95) 0%, rgba(140, 20, 20, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(180, 40, 40, 0.3)',
+  },
+  critDamageIndicatorGreen: {
+    background: 'linear-gradient(135deg, rgba(40, 180, 40, 0.95) 0%, rgba(20, 140, 20, 0.95) 100%)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(40, 180, 40, 0.3)',
+  },
+  presetHeader: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  presetContainer: {
+    display: 'flex',
+    width: '200px',
+    gap: 0.5,
+    marginTop: 0.5,
+  },
+  presetButton: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    height: '34px',
+    fontSize: '12px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
   },
 };

@@ -3,8 +3,11 @@ import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useDungeon } from '@/dojo/useDungeon';
 import { useGameEvents } from '@/dojo/useGameEvents';
 import { useGameStore } from '@/stores/gameStore';
-import { ExplorerReplayEvents } from '@/utils/events';
+import { useEntityModel } from '@/types/game';
+import { ExplorerReplayEvents, processRawGameEvent } from '@/utils/events';
 import { calculateLevel } from '@/utils/game';
+import { useQueries } from '@/utils/queries';
+import { useDojoSDK } from '@dojoengine/sdk/react';
 import CloseIcon from '@mui/icons-material/Close';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
@@ -18,11 +21,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import GamePage from './GamePage';
 
 export default function WatchPage() {
+  const { sdk } = useDojoSDK();
   const dungeon = useDungeon();
   const navigate = useNavigate();
   const { getGameEvents } = useGameEvents();
   const { enqueueSnackbar } = useSnackbar()
-  const { processEvent } = useGameDirector();
+  const { processEvent, setEventQueue } = useGameDirector();
   const { gameId, adventurer, popExploreLog, spectating, setSpectating } = useGameStore();
   const { getGameState } = useStarknetApi();
 
@@ -30,6 +34,10 @@ export default function WatchPage() {
   const [replayIndex, setReplayIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
+
+  const { gameEventsQuery } = useQueries();
+  const { getEntityModel } = useEntityModel();
+  const [subscription, setSubscription] = useState<any>(null);
 
   const [searchParams] = useSearchParams();
   const game_id = Number(searchParams.get('id'));
@@ -73,6 +81,17 @@ export default function WatchPage() {
     setSliderValue(replayIndex);
   }, [replayIndex]);
 
+  // Cleanup subscription on unmount
+  useEffect(() => {
+    return () => {
+      if (subscription) {
+        try {
+          subscription.cancel();
+        } catch (error) { }
+      }
+    };
+  }, [subscription]);
+
   // Build efficient mapping of event index to adventurer level
   const eventLevelMap = useMemo(() => {
     if (replayEvents.length === 0) return new Map<number, number>();
@@ -112,15 +131,48 @@ export default function WatchPage() {
   }, [replayIndex, isPlaying]); // Add dependencies
 
   const subscribeEvents = async (gameId: number) => {
-    const events = await getGameEvents(gameId!);
     const gameState = await getGameState(gameId!);
 
-    if (!gameState || events.length === 0) {
+    if (!gameState) {
       enqueueSnackbar('Failed to load game', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } })
       return navigate(`/${dungeon.id}`);
     }
 
-    setReplayEvents(events);
+    const events = await getGameEvents(gameId!);
+
+    if (gameState.adventurer.health > 0) {
+      if (subscription) {
+        try {
+          subscription.cancel();
+        } catch (error) { }
+      }
+
+      const [_, sub] = await sdk.subscribeEventQuery({
+        query: gameEventsQuery(gameId!),
+        callback: ({ data, error }: { data?: any[]; error?: Error }) => {
+          if (data && data.length > 0) {
+            let events = data
+              .filter((entity: any) =>
+                Boolean(getEntityModel(entity, "GameEvent"))
+              )
+              .filter((entity: any) =>
+                getEntityModel(entity, "GameEvent")?.adventurer_id === gameId
+              )
+              .map((entity: any) => processRawGameEvent(getEntityModel(entity, "GameEvent"), dungeon));
+
+            setEventQueue((prev: any) => [...prev, ...events]);
+          }
+        },
+      });
+
+      events.forEach((event: any) => {
+        processEvent(event, true);
+      });
+
+      setSubscription(sub);
+    } else {
+      setReplayEvents(events);
+    }
   };
 
   const handleEndWatching = () => {

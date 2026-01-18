@@ -744,17 +744,17 @@ export default function PaymentOptionsModal({
                       ></Link>
                     ))}
 
-                  {/* TODO: Temporarily disabled - waiting for additional support from Cartridge
-                  {currentView === "token" && (
+                  {/* TODO: Temporarily disabled - waiting for additional support from Cartridge */}
+                  {/* {currentView === "token" && (
                     <Link
                       component="button"
-                      onClick={() => setCurrentView("credit")}
+                      onClick={() => openBuyTicket()}
                       sx={styles.footerLink}
                     >
-                      Pay with credit card or other wallet
+                      Pay with other wallets
                     </Link>
-                  )}
-                  */}
+                  )} */}
+
 
                   {currentView === "credit" &&
                     (userTokens.length > 0 ? (

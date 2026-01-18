@@ -34,7 +34,6 @@ const cartridgeController =
       preset: controllerConfig.preset,
       chains: controllerConfig.chains,
       defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
-      tokens: controllerConfig.tokens,
     })
     : null;
 

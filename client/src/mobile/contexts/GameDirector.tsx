@@ -4,6 +4,7 @@ import { useGameEvents } from "@/dojo/useGameEvents";
 import { Settings } from "@/dojo/useGameSettings";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
 import { useGameStore } from "@/stores/gameStore";
+import { useUIStore } from "@/stores/uiStore";
 import { GameAction, Item } from "@/types/game";
 import {
   BattleEvents,
@@ -24,6 +25,7 @@ import {
 import { useAnalytics } from "@/utils/analytics";
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { useDungeon } from "@/dojo/useDungeon";
+import { optimisticGameEvents } from "@/utils/translation";
 
 export interface GameDirectorContext {
   executeGameAction: (action: GameAction) => void;
@@ -99,10 +101,12 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
     useStarknetApi();
   const { getGameEvents } = useGameEvents();
   const { gameStartedEvent } = useAnalytics();
+  const { fastBattle, skipFirstBattle } = useUIStore();
 
   const {
     gameId,
     beast,
+    bag,
     adventurer,
     adventurerState,
     collectable,
@@ -134,6 +138,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
   const [skipCombat, setSkipCombat] = useState(false);
   const [showSkipCombat, setShowSkipCombat] = useState(false);
   const [beastDefeated, setBeastDefeated] = useState(false);
+  const [optimisticTxs, setOptimisticTxs] = useState<any[]>([]);
+  const [startingEvent, setStartingEvent] = useState<GameEvent[] | null>(null);
 
   useEffect(() => {
     if (gameId && !metadata) {
@@ -301,16 +307,21 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       !skipDelay &&
       (delayTimes[event.type] || replayDelayTimes[event.type])
     ) {
-      await delay(
-        spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
-      );
+      if (
+        spectating ||
+        !fastBattle ||
+        (!["attack", "beast_attack"].includes(event.type))
+      ) {
+        await delay(
+          spectating ? replayDelayTimes[event.type] : delayTimes[event.type]
+        );
+      }
     }
   };
 
   const executeGameAction = async (action: GameAction) => {
     if (spectating) return;
-
-    let txs: any[] = [];
+    let txs: any[] = [...optimisticTxs];
 
     if (action.type === "start_game") {
       if (
@@ -323,8 +334,21 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
           )
         );
       }
-      delay(2000); // Small delay to ensure UI updates before transaction
+
       txs.push(startGame(action.gameId!));
+
+      if (action.settings.adventurer.xp === 0) {
+        if (VRFEnabled) {
+          txs.push(requestRandom(generateBattleSalt(gameId!, 0, 1)));
+        }
+        txs.push(attack(gameId!, false));
+      }
+    }
+
+    if (action.type === "attack" && adventurer!.xp === 0 && startingEvent) {
+      setEventQueue((prev) => [...prev, ...startingEvent]);
+      setStartingEvent(null);
+      return;
     }
 
     if (VRFEnabled && action.type === "explore") {
@@ -356,6 +380,7 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       adventurerState?.equipment!
     );
     if (action.type !== "equip" && newItemsEquipped.length > 0) {
+      setOptimisticTxs((prev) => [...prev, equip(gameId!, newItemsEquipped.map((item) => item.id))]);
       txs.push(
         equip(
           gameId!,
@@ -370,11 +395,8 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       txs.push(attack(gameId!, action.untilDeath!));
     } else if (action.type === "flee") {
       txs.push(flee(gameId!, action.untilDeath!));
-    } else if (action.type === "buy_items") {
-      txs.push(buyItems(gameId!, action.potions!, action.itemPurchases!));
-    } else if (action.type === "select_stat_upgrades") {
-      txs.push(selectStatUpgrades(gameId!, action.statUpgrades!));
     } else if (action.type === "equip") {
+      setOptimisticTxs((prev) => [...prev, equip(gameId!, newItemsEquipped.map((item) => item.id))]);
       txs.push(
         equip(
           gameId!,
@@ -383,9 +405,20 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       );
     } else if (action.type === "drop") {
       txs.push(drop(gameId!, action.items!));
+    } else if (action.type === "buy_items") {
+      setOptimisticTxs((prev) => [...prev, buyItems(gameId!, action.potions!, action.itemPurchases!)]);
+    } else if (action.type === "select_stat_upgrades") {
+      setOptimisticTxs((prev) => [...prev, selectStatUpgrades(gameId!, action.statUpgrades!)]);
     }
 
-    const events = await executeAction(txs, setActionFailed);
+    const hasOptimisticTx = ['select_stat_upgrades', 'buy_items'].includes(action.type)
+    let events = [];
+    if (hasOptimisticTx) {
+      events = optimisticGameEvents(adventurer!, bag, action);
+    } else {
+      events = await executeAction(txs, setActionFailed, () => setOptimisticTxs([]));
+    }
+    if (!events) return;
 
     if (dungeon.id === "survivor" && events.some((event: any) => event.type === "defeated_beast")) {
       setBeastDefeated(true);
@@ -400,6 +433,15 @@ export const GameDirector = ({ children }: PropsWithChildren) => {
       events.filter((event: any) => event.type === "beast_attack").length >= 2
     ) {
       setShowSkipCombat(true);
+    }
+
+    if (action.type === "start_game" && action.settings.adventurer.xp === 0) {
+      if (!skipFirstBattle) {
+        setStartingEvent(events.filter((event: any) => event.action_count === 2));
+        events = events.filter((event: any) => event.action_count === 1);
+      } else {
+        events = events.filter((event: any) => event.action_count === 2);
+      }
     }
 
     setEventQueue((prev) => [...prev, ...events]);

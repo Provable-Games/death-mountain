@@ -4,7 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Typography } from '@mui/material';
+import { Box, Button, Checkbox, Divider, FormControlLabel, IconButton, Slider, Switch, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 
 interface SettingsProps {
@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro } = useUIStore();
+  const { setUseMobileClient, skipAllAnimations, setSkipAllAnimations, skipIntroOutro, setSkipIntroOutro, skipFirstBattle, setSkipFirstBattle, fastBattle, setFastBattle, advancedMode, setAdvancedMode } = useUIStore();
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
   const handleSwitchToMobile = () => {
@@ -52,7 +52,7 @@ export default function Settings({ onBack }: SettingsProps) {
         <Box sx={styles.settingSection}>
           <Typography sx={styles.sectionTitle}>Sound</Typography>
 
-          <Box sx={styles.soundControl}>
+          <Box sx={styles.soundControl} mt={1}>
             <Typography width="45px">Sfx</Typography>
 
             <IconButton
@@ -116,6 +116,23 @@ export default function Settings({ onBack }: SettingsProps) {
 
         <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
+        {/* Advanced Section */}
+        <Box sx={styles.settingSection}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography sx={[styles.sectionTitle]}>Enable Advanced Mode</Typography>
+            <Switch
+              checked={advancedMode}
+              onChange={(e) => setAdvancedMode(e.target.checked)}
+              sx={styles.switch}
+            />
+          </Box>
+          <Typography sx={{ fontSize: '12px', color: 'rgba(208, 201, 141, 0.7)', mt: -0.5 }}>
+            Advanced features and simulations
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
         {/* Animations Section */}
         <Box sx={styles.settingSection}>
           <Typography sx={[styles.sectionTitle]}>Animations</Typography>
@@ -148,9 +165,41 @@ export default function Settings({ onBack }: SettingsProps) {
 
         <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
+        {/* Animations Section */}
+        <Box sx={styles.settingSection}>
+          <Typography sx={[styles.sectionTitle]}>Game</Typography>
+          <Box sx={styles.animationsControl}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={skipFirstBattle}
+                  onChange={(e) => setSkipFirstBattle(e.target.checked)}
+                  sx={styles.checkbox}
+                />
+              }
+              label="Skip first battle"
+              sx={styles.checkboxLabel}
+            />
+          </Box>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={fastBattle}
+                onChange={(e) => setFastBattle(e.target.checked)}
+                sx={styles.checkbox}
+              />
+            }
+            label="Skip Combat Delay"
+            sx={styles.checkboxLabel}
+          />
+        </Box>
+
+        <Divider sx={{ my: 0.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
         {/* Client Settings */}
         <Box sx={styles.settingSection}>
-          <Typography sx={styles.sectionTitle} color="primary">
+          <Typography sx={styles.sectionTitle} color="primary" mb={1}>
             Client
           </Typography>
 
@@ -190,7 +239,6 @@ const styles = {
   settingSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 1,
   },
   sectionTitle: {
     fontSize: '16px',

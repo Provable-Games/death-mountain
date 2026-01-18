@@ -11,19 +11,19 @@ import {
   Payment,
   Stats,
 } from "@/types/game";
-import { translateGameEvent } from "@/utils/translation";
-import { getContractByName } from "@dojoengine/core";
-import { delay, stringToFelt } from "@/utils/utils";
-import { CairoOption, CairoOptionVariant, CallData, byteArray } from "starknet";
 import { useAnalytics } from "@/utils/analytics";
+import { GameEvent } from "@/utils/events";
+import { translateGameEvent } from "@/utils/translation";
+import { delay, stringToFelt } from "@/utils/utils";
+import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
+import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
-import { num } from "starknet";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
-  const { setCollectableTokenURI, gameId, adventurer } = useGameStore();
+  const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
   const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
@@ -65,11 +65,10 @@ export const useSystemCalls = () => {
    *   - drop: Function to drop items
    *   - levelUp: Function to level up and purchase items
    */
-  const executeAction = async (calls: any[], forceResetAction: () => void) => {
+
+  const executeAction = async (calls: any[], forceResetAction: () => void, successCallback: () => void) => {
     try {
-      if (adventurer) {
-        await waitForGlobalState();
-      }
+      await waitForGlobalState(calls, 0);
 
       let tx = await account!.execute(calls);
       let receipt: any = await waitForPreConfirmedTransaction(tx.transaction_hash, 0);
@@ -81,6 +80,8 @@ export const useSystemCalls = () => {
         });
         enqueueSnackbar('Action failed', { variant: 'warning', anchorOrigin: { vertical: 'top', horizontal: 'center' } });
         return;
+      } else {
+        successCallback();
       }
 
       const translatedEvents = receipt.events.map((event: any) =>
@@ -93,7 +94,11 @@ export const useSystemCalls = () => {
         return;
       }
 
-      return translatedEvents.filter(Boolean);
+      const validEvents = translatedEvents.filter((event: GameEvent) => Boolean(event));
+      if (validEvents.length === 0) return false;
+
+      const maxActionCount = Math.max(...validEvents.map((e: GameEvent) => e.action_count));
+      return validEvents.filter((event: GameEvent) => event.action_count === 1 || event.action_count === maxActionCount);
     } catch (error) {
       console.error("Error executing action:", error);
       forceResetAction();
@@ -139,7 +144,34 @@ export const useSystemCalls = () => {
     }
   }
 
-  const waitForGlobalState = async (retries: number = 0): Promise<boolean> => {
+  const waitForGlobalState = async (calls: any, retries: number): Promise<boolean> => {
+    if (!adventurer) return true;
+
+    if (beast && adventurer.beast_health > 0 && adventurer.beast_health < beast.health) {
+      return true;
+    }
+
+    let lastEvent = exploreLog[exploreLog.length - 1];
+    if (lastEvent?.type === "discovery") {
+      if (lastEvent.discovery?.type === "Health") {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Gold" && !calls.find((call: any) => call.entrypoint === 'buy_items')) {
+        return true;
+      }
+      if (lastEvent.discovery?.type === "Loot" && !calls.find((call: any) => call.entrypoint === 'equip' || call.entrypoint === 'drop')) {
+        return true;
+      }
+    } else if (lastEvent?.type === "obstacle") {
+      if (!calls.find((call: any) => call.entrypoint === 'buy_items' && call.calldata[1] > 0)) {
+        return true;
+      }
+    } else if (lastEvent?.type === "buy_items") {
+      if (lastEvent.items_purchased?.length === 0 || !calls.find((call: any) => call.entrypoint === 'equip')) {
+        return true;
+      }
+    }
+
     let adventurerState = await getAdventurerState(gameId!);
 
     if (adventurerState?.action_count === adventurer!.action_count || retries > 9) {
@@ -147,7 +179,7 @@ export const useSystemCalls = () => {
     }
 
     await delay(500);
-    return waitForGlobalState(retries + 1);
+    return waitForGlobalState(calls, retries + 1);
   };
 
   /**
@@ -448,7 +480,7 @@ export const useSystemCalls = () => {
       contractAddress: DUNGEON_ADDRESS,
       entrypoint: "claim_reward_token",
       calldata: [gameId],
-    }], () => { });
+    }], () => { }, () => { });
   };
 
   const claimJackpot = async (tokenId: number) => {
@@ -456,7 +488,7 @@ export const useSystemCalls = () => {
       contractAddress: DUNGEON_ADDRESS,
       entrypoint: "claim_jackpot",
       calldata: [tokenId],
-    }], () => { });
+    }], () => { }, () => { });
   };
 
   const refreshDungeonStats = async (beast: Beast, waitTime: number) => {
@@ -468,7 +500,7 @@ export const useSystemCalls = () => {
       contractAddress: currentNetworkConfig.beasts,
       entrypoint: "refresh_dungeon_stats",
       calldata: [num.toHex(tokenId), "0x0"],
-    }], () => { });
+    }], () => { }, () => { });
   };
 
   /**
@@ -576,6 +608,7 @@ export const useSystemCalls = () => {
           ],
         },
       ],
+      () => { },
       () => { }
     );
   };

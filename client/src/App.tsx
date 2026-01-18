@@ -11,8 +11,8 @@ import { GameDirector as MobileGameDirector } from '@/mobile/contexts/GameDirect
 import { useFollowedPlayerNotifications } from '@/hooks/useFollowedPlayerNotifications';
 import { useUIStore } from '@/stores/uiStore';
 import { isBrowser, isMobile } from 'react-device-detect';
-import GameSettings from './mobile/components/GameSettings';
-import GameSettingsList from './mobile/components/GameSettingsList';
+import CustomizeGame from './mobile/components/CustomizeGame';
+import CustomizeGameList from './mobile/components/CustomizeGameList';
 import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
@@ -69,8 +69,8 @@ function AppContent() {
                     })}
                   </Routes>
 
-                  <GameSettingsList />
-                  <GameSettings />
+                  <CustomizeGameList />
+                  <CustomizeGame />
                 </Box>
               </MobileGameDirector>
             </Box>

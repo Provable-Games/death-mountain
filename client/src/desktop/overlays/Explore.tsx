@@ -1,37 +1,53 @@
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
+import { useExplorationWorker } from '@/hooks/useExplorationWorker';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
+import { useUIStore } from '@/stores/uiStore';
 import { streamIds } from '@/utils/cloudflare';
 import { getEventTitle } from '@/utils/events';
-import { ItemUtils } from '@/utils/loot';
+import { calculateLevel } from '@/utils/game';
+import { ItemUtils, Tier } from '@/utils/loot';
+import { potionPrice } from '@/utils/market';
 import { Box, Button, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import BeastCollectedPopup from '../../components/BeastCollectedPopup';
 import Adventurer from './Adventurer';
 import InventoryOverlay from './Inventory';
 import MarketOverlay from './Market';
-import TipsOverlay from './Tips';
 import SettingsOverlay from './Settings';
-import { useUIStore } from '@/stores/uiStore';
-import { useSnackbar } from 'notistack';
+import TipsOverlay from './Tips';
 
 export default function ExploreOverlay() {
   const { executeGameAction, actionFailed, setVideoQueue } = useGameDirector();
   const { exploreLog, adventurer, setShowOverlay, collectable, collectableTokenURI,
-    setCollectable, selectedStats, setSelectedStats, claimInProgress, spectating } = useGameStore();
-  const { cart, inProgress, setInProgress } = useMarketStore();
-  const { skipAllAnimations } = useUIStore();
-  const { enqueueSnackbar } = useSnackbar()
-
+    setCollectable, selectedStats, setSelectedStats, claimInProgress, spectating, gameSettings } = useGameStore();
+  const { cart } = useMarketStore();
+  const { skipAllAnimations, advancedMode } = useUIStore();
   const [isExploring, setIsExploring] = useState(false);
-  const [isSelectingStats, setIsSelectingStats] = useState(false);
+
+  // Use Web Worker for lethal chance calculations (Monte Carlo, 100k samples)
+  const { ambushLethalChance, trapLethalChance } = useExplorationWorker(
+    adventurer ?? null,
+    gameSettings ?? null,
+  );
+
+  const formatPercent = (value: number | null | undefined) => {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return '-';
+    }
+
+    return `${value.toFixed(1)}%`;
+  };
 
   useEffect(() => {
     setIsExploring(false);
-    setIsSelectingStats(false);
-    setInProgress(false);
-    setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
   }, [adventurer!.action_count, actionFailed]);
+
+  useEffect(() => {
+    if (adventurer!.stat_upgrades_available === 0) {
+      setSelectedStats({ strength: 0, dexterity: 0, vitality: 0, intelligence: 0, wisdom: 0, charisma: 0, luck: 0 });
+    }
+  }, [adventurer!.stat_upgrades_available]);
 
   const handleExplore = async () => {
     if (!skipAllAnimations) {
@@ -45,7 +61,6 @@ export default function ExploreOverlay() {
   };
 
   const handleSelectStats = async () => {
-    setIsSelectingStats(true);
     executeGameAction({
       type: 'select_stat_upgrades',
       statUpgrades: selectedStats
@@ -53,17 +68,31 @@ export default function ExploreOverlay() {
   };
 
   const handleCheckout = () => {
-    setInProgress(true);
+    const slotsToEquip = new Set<string>();
+    let itemPurchases = cart.items.map(item => {
+      const slot = ItemUtils.getItemSlot(item.id).toLowerCase();
+      const slotEmpty = adventurer?.equipment[slot as keyof typeof adventurer.equipment]?.id === 0;
+      const shouldEquip = (slotEmpty && !slotsToEquip.has(slot))
+        || slot === 'weapon' && [Tier.T1, Tier.T2].includes(ItemUtils.getItemTier(item.id)) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5;
 
-    let itemPurchases = cart.items.map(item => ({
-      item_id: item.id,
-      equip: adventurer?.equipment[ItemUtils.getItemSlot(item.id).toLowerCase() as keyof typeof adventurer.equipment]?.id === 0 ? true : false,
-    }));
+      if (shouldEquip) {
+        slotsToEquip.add(slot);
+      }
+      return {
+        item_id: item.id,
+        equip: shouldEquip,
+      };
+    });
+
+    const potionCost = potionPrice(calculateLevel(adventurer?.xp || 0), adventurer?.stats?.charisma || 0);
+    const totalCost = cart.items.reduce((sum, item) => sum + item.price, 0) + (cart.potions * potionCost);
+    const remainingGold = (adventurer?.gold || 0) - totalCost;
 
     executeGameAction({
       type: 'buy_items',
       potions: cart.potions,
       itemPurchases,
+      remainingGold,
     });
   };
 
@@ -159,14 +188,29 @@ export default function ExploreOverlay() {
         </Box>
       </Box>
 
-      <InventoryOverlay disabledEquip={isExploring || isSelectingStats || inProgress} />
+      <InventoryOverlay disabledEquip={isExploring} />
       <TipsOverlay />
       <SettingsOverlay />
 
-      <MarketOverlay />
+      <MarketOverlay disabledPurchase={isExploring} />
 
       {/* Bottom Buttons */}
-      {!spectating && <Box sx={styles.buttonContainer}>
+      {!spectating && <Box sx={[styles.buttonContainer, advancedMode && styles.advancedButtonContainer]}>
+        {advancedMode && <Box sx={styles.lethalChancesContainer}>
+          <Typography sx={styles.lethalChanceLabel}>
+            Ambush Lethal Chance
+            <Typography component="span" sx={styles.lethalChanceValue}>
+              {formatPercent(ambushLethalChance)}
+            </Typography>
+          </Typography>
+          <Typography sx={styles.lethalChanceLabel}>
+            Trap Lethal Chance
+            <Typography component="span" sx={styles.lethalChanceValue}>
+              {formatPercent(trapLethalChance)}
+            </Typography>
+          </Typography>
+        </Box>}
+
         {adventurer?.stat_upgrades_available! > 0 ? (
           <Button
             variant="contained"
@@ -175,29 +219,18 @@ export default function ExploreOverlay() {
               ...styles.exploreButton,
               ...(Object.values(selectedStats).reduce((a, b) => a + b, 0) === adventurer?.stat_upgrades_available && styles.selectStatsButtonHighlighted)
             }}
-            disabled={isSelectingStats || Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
+            disabled={Object.values(selectedStats).reduce((a, b) => a + b, 0) !== adventurer?.stat_upgrades_available}
           >
-            {isSelectingStats
-              ? <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Selecting Stats</Typography>
-                <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
-              </Box>
-              : <Typography sx={styles.buttonText}>Select Stats</Typography>
-            }
+            <Typography sx={styles.buttonText}>Select Stats</Typography>
           </Button>
         ) : (
           <Button
             variant="contained"
             onClick={cart.items.length > 0 || cart.potions > 0 ? handleCheckout : handleExplore}
             sx={styles.exploreButton}
-            disabled={inProgress || isExploring}
+            disabled={isExploring}
           >
-            {inProgress ? (
-              <Box display={'flex'} alignItems={'baseline'}>
-                <Typography sx={styles.buttonText}>Processing</Typography>
-                <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
-              </Box>
-            ) : isExploring ? (
+            {isExploring ? (
               <Box display={'flex'} alignItems={'baseline'}>
                 <Typography sx={styles.buttonText}>Exploring</Typography>
                 <div className='dotLoader yellow' style={{ opacity: 0.5 }} />
@@ -364,5 +397,33 @@ const styles = {
     color: '#d0c98d',
     letterSpacing: '0.5px',
     margin: 0,
+  },
+  lethalChancesContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    alignItems: 'center',
+  },
+  lethalChanceLabel: {
+    fontSize: '0.9rem',
+    color: '#d0c98d',
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+  },
+  lethalChanceValue: {
+    fontWeight: 600,
+    color: '#ff6b6b',
+  },
+  advancedButtonContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    border: '1px solid rgba(8, 62, 34, 0.8)',
+    background: 'rgba(24, 40, 24, 0.85)',
+    backdropFilter: 'blur(8px)',
   },
 };

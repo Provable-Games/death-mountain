@@ -3,6 +3,10 @@ import { getBeastName, getBeastTier, getBeastType } from "./beast";
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { BEAST_NAMES } from "@/constants/beast";
 import { Dungeon } from "@/dojo/useDungeon";
+import { Adventurer, GameAction, Item, ItemPurchase, Stats } from "@/types/game";
+import { GameEvent } from "./events";
+import { ItemUtils } from "./loot";
+import { STARTING_HEALTH } from "@/constants/game";
 
 const parseData = (values: string[], type: string): any => {
   const value = values.splice(0, 1)[0];
@@ -309,4 +313,110 @@ export const translateGameEvent = (event: any, manifest: any, gameId: number | n
   }
 
   return result;
+}
+
+export const optimisticGameEvents = (adventurer: Adventurer, bag: Item[], action: GameAction): GameEvent[] => {
+  let events: GameEvent[] = [];
+  let action_count = adventurer.action_count;
+
+  if (action.type === "select_stat_upgrades") {
+    let stats: Stats = action.statUpgrades!;
+    events = [{
+      type: 'stat_upgrade',
+      action_count,
+      stats,
+    }, {
+      type: 'adventurer',
+      action_count,
+      adventurer: {
+        ...adventurer,
+        stat_upgrades_available: 0,
+        health: adventurer.health + (stats.vitality * 15),
+        stats: {
+          charisma: adventurer.stats.charisma + stats.charisma,
+          dexterity: adventurer.stats.dexterity + stats.dexterity,
+          intelligence: adventurer.stats.intelligence + stats.intelligence,
+          strength: adventurer.stats.strength + stats.strength,
+          vitality: adventurer.stats.vitality + stats.vitality,
+          wisdom: adventurer.stats.wisdom + stats.wisdom,
+          luck: adventurer.stats.luck + stats.luck,
+        },
+        action_count,
+      },
+    }]
+  } else if (action.type === "buy_items") {
+    let potions = action.potions!;
+    let items_purchased: ItemPurchase[] = action.itemPurchases!;
+
+    let equippedWeapon = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isWeapon(item.item_id));
+    let equippedChest = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isChest(item.item_id));
+    let equippedHead = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isHead(item.item_id));
+    let equippedWaist = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isWaist(item.item_id));
+    let equippedFoot = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isFoot(item.item_id));
+    let equippedHand = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isHand(item.item_id));
+    let equippedNeck = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isNecklace(item.item_id));
+    let equippedRing = items_purchased.find((item: ItemPurchase) => item.equip && ItemUtils.isRing(item.item_id));
+
+    let updatedBag = [...bag, ...items_purchased.filter((item: ItemPurchase) => !item.equip)
+      .map((item: ItemPurchase) => ({ id: item.item_id, xp: 0 }))];
+
+    if (equippedWeapon && adventurer.equipment.weapon.id !== 0) {
+      updatedBag.push(adventurer.equipment.weapon);
+    }
+    if (equippedChest && adventurer.equipment.chest.id !== 0) {
+      updatedBag.push(adventurer.equipment.chest);
+    }
+    if (equippedHead && adventurer.equipment.head.id !== 0) {
+      updatedBag.push(adventurer.equipment.head);
+    }
+    if (equippedWaist && adventurer.equipment.waist.id !== 0) {
+      updatedBag.push(adventurer.equipment.waist);
+    }
+    if (equippedFoot && adventurer.equipment.foot.id !== 0) {
+      updatedBag.push(adventurer.equipment.foot);
+    }
+    if (equippedHand && adventurer.equipment.hand.id !== 0) {
+      updatedBag.push(adventurer.equipment.hand);
+    }
+    if (equippedNeck && adventurer.equipment.neck.id !== 0) {
+      updatedBag.push(adventurer.equipment.neck);
+    }
+    if (equippedRing && adventurer.equipment.ring.id !== 0) {
+      updatedBag.push(adventurer.equipment.ring);
+    }
+
+    events = [
+      {
+        type: 'bag',
+        action_count,
+        bag: updatedBag,
+      },
+      {
+        type: 'buy_items',
+        action_count,
+        potions,
+        items_purchased,
+      }, {
+        type: 'adventurer',
+        action_count,
+        adventurer: {
+          ...adventurer,
+          action_count,
+          gold: action.remainingGold!,
+          health: Math.min(adventurer.health + (potions * 10), STARTING_HEALTH + (adventurer.stats.vitality * 15)),
+          equipment: {
+            weapon: equippedWeapon ? { id: equippedWeapon.item_id, xp: 0 } : adventurer.equipment.weapon,
+            chest: equippedChest ? { id: equippedChest.item_id, xp: 0 } : adventurer.equipment.chest,
+            head: equippedHead ? { id: equippedHead.item_id, xp: 0 } : adventurer.equipment.head,
+            waist: equippedWaist ? { id: equippedWaist.item_id, xp: 0 } : adventurer.equipment.waist,
+            foot: equippedFoot ? { id: equippedFoot.item_id, xp: 0 } : adventurer.equipment.foot,
+            hand: equippedHand ? { id: equippedHand.item_id, xp: 0 } : adventurer.equipment.hand,
+            neck: equippedNeck ? { id: equippedNeck.item_id, xp: 0 } : adventurer.equipment.neck,
+            ring: equippedRing ? { id: equippedRing.item_id, xp: 0 } : adventurer.equipment.ring,
+          },
+        },
+      }]
+  }
+
+  return events;
 }

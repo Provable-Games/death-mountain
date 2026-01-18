@@ -1,11 +1,12 @@
+import { useDungeon } from '@/dojo/useDungeon';
 import { useGameStore } from '@/stores/gameStore';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Box, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { isMobile } from 'react-device-detect';
+import ActivePlayers from './ActivePlayers';
 import SettingsMenu from './HeaderMenu';
 import WalletConnect from './WalletConnect';
-import { useDungeon } from '@/dojo/useDungeon';
 
 function Header() {
   const { gameId, adventurer } = useGameStore();
@@ -23,7 +24,8 @@ function Header() {
 
   return (
     <Box sx={styles.header}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <ActivePlayers />
       </Box>
 
 

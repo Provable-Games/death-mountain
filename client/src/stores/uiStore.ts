@@ -11,7 +11,7 @@ interface UIState {
   isGameSettingsDialogOpen: boolean
   gameSettingsEdit: boolean
   selectedSettingsId: number | null
-  
+
   // Client preferences
   setUseMobileClient: (useMobile: boolean) => void
   useMobileClient: boolean
@@ -21,6 +21,14 @@ interface UIState {
   setSkipAllAnimations: (skip: boolean) => void
   skipIntroOutro: boolean
   skipAllAnimations: boolean
+
+  // Game
+  setSkipFirstBattle: (skip: boolean) => void
+  skipFirstBattle: boolean
+  setFastBattle: (fast: boolean) => void
+  fastBattle: boolean
+  setAdvancedMode: (advanced: boolean) => void
+  advancedMode: boolean
 }
 
 export const useUIStore = create<UIState>()(
@@ -42,6 +50,14 @@ export const useUIStore = create<UIState>()(
       skipIntroOutro: false,
       skipAllAnimations: false,
 
+      // Game
+      setSkipFirstBattle: (skip) => set({ skipFirstBattle: skip }),
+      skipFirstBattle: false,
+      setFastBattle: (fast) => set({ fastBattle: fast }),
+      fastBattle: false,
+      setAdvancedMode: (advanced) => set({ advancedMode: advanced }),
+      advancedMode: false,
+
       // Client preferences
       setUseMobileClient: (useMobile) => set({ useMobileClient: useMobile }),
       useMobileClient: false,
@@ -52,6 +68,9 @@ export const useUIStore = create<UIState>()(
         useMobileClient: state.useMobileClient,
         skipIntroOutro: state.skipIntroOutro,
         skipAllAnimations: state.skipAllAnimations,
+        skipFirstBattle: state.skipFirstBattle,
+        fastBattle: state.fastBattle,
+        advancedMode: state.advancedMode,
       }),
     }
   )

@@ -1,20 +1,39 @@
+import BeastCollectedPopup from '@/components/BeastCollectedPopup';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { getEventIcon, getEventTitle } from '@/utils/events';
 import { Box, Button, Typography, keyframes } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import AdventurerInfo from '../components/AdventurerInfo';
-import BeastCollectedPopup from '@/components/BeastCollectedPopup';
-import { useMarketStore } from '@/stores/marketStore';
+import { useUIStore } from '@/stores/uiStore';
+import { useExplorationWorker } from '@/hooks/useExplorationWorker';
 
-export default function ExploreScreen() {
+interface ExploreScreenProps {
+  isExploring: boolean;
+  setIsExploring: (value: boolean) => void;
+}
+
+export default function ExploreScreen({ isExploring, setIsExploring }: ExploreScreenProps) {
+  const { advancedMode } = useUIStore();
   const { executeGameAction, actionFailed } = useGameDirector();
-  const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable } = useGameStore();
-  const { inProgress, setInProgress } = useMarketStore();
+  const { adventurer, exploreLog, collectable, collectableTokenURI, setCollectable, gameSettings } = useGameStore();
 
   const [untilBeast, setUntilBeast] = useState(false);
-  const [isExploring, setIsExploring] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Use Web Worker for lethal chance calculations (Monte Carlo, 100k samples)
+  const { ambushLethalChance, trapLethalChance } = useExplorationWorker(
+    adventurer ?? null,
+    gameSettings ?? null,
+  );
+
+  const formatPercent = (value: number | null | undefined) => {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return '-';
+    }
+
+    return `${value.toFixed(1)}%`;
+  };
 
   // Function to scroll to top
   const scrollToTop = () => {
@@ -26,7 +45,6 @@ export default function ExploreScreen() {
   useEffect(() => {
     scrollToTop();
     setIsExploring(false);
-    setInProgress(false);
   }, [adventurer!.action_count, actionFailed]);
 
   const handleExplore = async () => {
@@ -156,7 +174,7 @@ export default function ExploreScreen() {
           <Button
             variant="contained"
             onClick={handleExplore}
-            disabled={isExploring || inProgress}
+            disabled={isExploring}
             sx={styles.exploreButton}
           >
             {isExploring
@@ -166,18 +184,27 @@ export default function ExploreScreen() {
                 </Typography>
                 <div className='dotLoader green' />
               </Box>
-              : inProgress ?
-                <Box display={'flex'} alignItems={'baseline'}>
-                  <Typography variant={'h4'} lineHeight={'16px'}>
-                    Purchasing Items
-                  </Typography>
-                  <div className='dotLoader green' />
-                </Box>
-                : <Typography variant={'h4'} lineHeight={'16px'}>
-                  EXPLORE
-                </Typography>
+              : <Typography variant={'h4'} lineHeight={'16px'}>
+                EXPLORE
+              </Typography>
             }
           </Button>
+          {advancedMode && (
+            <Box sx={styles.lethalInfoContainer}>
+              <Typography sx={styles.lethalLabel}>
+                Ambush Lethal Chance
+                <Typography component="span" sx={styles.lethalValue}>
+                  {formatPercent(ambushLethalChance)}
+                </Typography>
+              </Typography>
+              <Typography sx={styles.lethalLabel}>
+                Trap Lethal Chance
+                <Typography component="span" sx={styles.lethalValue}>
+                  {formatPercent(trapLethalChance)}
+                </Typography>
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -215,6 +242,45 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 1,
+  },
+  lethalInfoContainer: {
+    marginTop: '8px',
+    display: 'flex',
+    flexDirection: 'row' as const,
+    gap: '8px',
+    padding: '8px 12px',
+    background: 'rgba(0, 0, 0, 0.45)',
+    borderRadius: '10px',
+    border: '1px solid rgba(128, 255, 0, 0.2)',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.25)',
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
+  },
+  lethalLabel: {
+    color: 'rgba(128, 255, 0, 0.8)',
+    fontFamily: 'VT323, monospace',
+    fontSize: '1rem',
+    letterSpacing: '0.5px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textTransform: 'uppercase' as const,
+    flex: 1,
+    borderRight: '1px solid rgba(128, 255, 0, 0.2)',
+    paddingLeft: '8px',
+    paddingRight: '8px',
+    '&:last-of-type': {
+      borderRight: 'none',
+      paddingRight: 0,
+      paddingLeft: '8px',
+    },
+  },
+  lethalValue: {
+    color: '#F4F6F8',
+    fontFamily: 'VT323, monospace',
+    fontSize: '1.2rem',
+    letterSpacing: '0.5px',
   },
   xpSection: {
     background: 'rgba(128, 255, 0, 0.05)',
@@ -287,7 +353,7 @@ const styles = {
     flexDirection: 'column',
     gap: '8px',
     pr: 1,
-    maxHeight: '300px',
+    maxHeight: 'calc(100dvh - 460px)',
     overflowY: 'auto',
     '&::-webkit-scrollbar': {
       width: '6px',
