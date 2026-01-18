@@ -1,7 +1,9 @@
+import FollowButton from "@/components/FollowButton";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { useSystemCalls } from "@/dojo/useSystemCalls";
+import { useFollowStore } from "@/stores/followStore";
 import { calculateLevel } from "@/utils/game";
 import { ChainId } from '@/utils/networkConfig';
 import { getContractByName } from "@dojoengine/core";
@@ -33,6 +35,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const dungeon = useDungeon();
   const { updatePlayerName } = useSystemCalls();
   const { enqueueSnackbar } = useSnackbar();
+  const { followedPlayers, getFollowedAddresses } = useFollowStore();
 
   const [playerBestGame, setPlayerBestGame] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -42,6 +45,11 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
   const [localNameOverrides, setLocalNameOverrides] = useState<Record<number, string>>({});
   const [displayedGames, setDisplayedGames] = useState<any[]>([]);
   const prevGamesRef = useRef<any[]>([]);
+
+  // Get followed addresses for filtering
+  const followedAddresses = useMemo(() => {
+    return getFollowedAddresses();
+  }, [getFollowedAddresses, followedPlayers]);
 
   const handleTabChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -115,9 +123,16 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
       } else if (activeTab === 0) {
         // All tab: accept any data
         setDisplayedGames(games);
+      } else if (activeTab === 2) {
+        // Following tab: filter to show only games from followed players
+        const filteredGames = games.filter((g: any) => {
+          const normalizedOwner = addAddressPadding(g.owner).toLowerCase();
+          return followedAddresses.includes(normalizedOwner);
+        });
+        setDisplayedGames(filteredGames);
       }
     }
-  }, [loading, games, activeTab, address]);
+  }, [loading, games, activeTab, address, followedAddresses]);
 
   const handleChange = useCallback((event: any, newValue: number) => {
     goToPage(newValue - 1);
@@ -209,6 +224,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
         >
           <Tab label="All" sx={styles.tab} />
           <Tab label="My Games" sx={styles.tab} />
+          <Tab label="Following" sx={styles.tab} />
         </Tabs>
       </Box>
 
@@ -219,7 +235,7 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
           </Typography>
         ) : displayedGames.length === 0 ? (
           <Typography sx={{ textAlign: "center", py: 2 }}>
-            {activeTab === 1 ? "You have no games yet." : "No games found."}
+            {activeTab === 1 ? "You have no games yet." : activeTab === 2 ? "No games from followed players." : "No games found."}
           </Typography>
         ) : displayedGames.map((game: any, index: number) => (
           <Box sx={styles.listItem} key={game.token_id}>
@@ -315,6 +331,12 @@ export default function Leaderboard({ onBack }: LeaderboardProps) {
                       >
                         <EditIcon sx={{ fontSize: 12 }} />
                       </IconButton>
+                    )}
+                    {!loading && (
+                      <FollowButton
+                        playerAddress={game.owner}
+                        playerName={localNameOverrides[game.token_id] ?? game.player_name ?? `Player #${game.token_id}`}
+                      />
                     )}
                   </Box>
                 )}

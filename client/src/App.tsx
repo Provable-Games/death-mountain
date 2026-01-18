@@ -8,6 +8,7 @@ import { SoundProvider } from '@/desktop/contexts/Sound';
 import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
 import { GameDirector } from '@/desktop/contexts/GameDirector';
 import { GameDirector as MobileGameDirector } from '@/mobile/contexts/GameDirector';
+import { useFollowedPlayerNotifications } from '@/hooks/useFollowedPlayerNotifications';
 import { useUIStore } from '@/stores/uiStore';
 import { isBrowser, isMobile } from 'react-device-detect';
 import GameSettings from './mobile/components/GameSettings';
@@ -23,6 +24,9 @@ function AppContent() {
   const { useMobileClient } = useUIStore();
   const { showTermsOfService, acceptTermsOfService } = useController();
   const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+
+  // Initialize notifications for followed players
+  useFollowedPlayerNotifications();
 
   return (
     <>
