@@ -16,6 +16,7 @@ import { addAddressPadding } from 'starknet';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useFollowStore } from '@/stores/followStore';
 import { useController } from '@/contexts/controller';
+import { hexToAscii } from '@dojoengine/utils';
 
 interface PlayerSearchResult {
   owner: string;
@@ -43,12 +44,18 @@ export default function PlayerSearch() {
 
     try {
       // Search for players by name using Torii SQL
+      // Join TokenPlayerNameUpdate with OwnersUpdate to get owner addresses
+      // The namespace is 'relayer_0_0_1' based on the game's configuration
       const url = `${currentNetworkConfig.toriiUrl}/sql?query=
-        SELECT DISTINCT owner, player_name, token_id
-        FROM "relayer_0_0_1-TokenMetadataUpdate"
-        WHERE player_name LIKE '%${searchQuery.trim()}%'
-        ORDER BY player_name ASC
-        LIMIT 10`;
+        SELECT DISTINCT
+          o.owner,
+          pn.player_name,
+          o.token_id
+        FROM "relayer_0_0_1-TokenPlayerNameUpdate" pn
+        LEFT JOIN "relayer_0_0_1-OwnersUpdate" o ON o.token_id = pn.id
+        WHERE pn.player_name IS NOT NULL
+        ORDER BY pn.player_name ASC
+        LIMIT 100`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -63,8 +70,31 @@ export default function PlayerSearch() {
 
       const data: PlayerSearchResult[] = await response.json();
 
+      // Decode player names from hex and filter by search query
+      const searchLower = searchQuery.trim().toLowerCase();
+      const decodedResults = data
+        .map((item) => {
+          // Decode the hex player_name to ASCII
+          let decodedName = '';
+          try {
+            decodedName = hexToAscii(item.player_name).replace(/^\0+/, '');
+          } catch {
+            decodedName = item.player_name;
+          }
+          return {
+            ...item,
+            player_name: decodedName,
+          };
+        })
+        .filter((item) => {
+          // Filter by search query (case-insensitive)
+          return item.player_name.toLowerCase().includes(searchLower);
+        });
+
       // Filter out duplicates by owner address and current user
-      const uniqueResults = data.reduce((acc: PlayerSearchResult[], curr) => {
+      const uniqueResults = decodedResults.reduce((acc: PlayerSearchResult[], curr) => {
+        if (!curr.owner) return acc;
+
         const normalizedOwner = addAddressPadding(curr.owner).toLowerCase();
         const normalizedCurrentUser = currentUserAddress
           ? addAddressPadding(currentUserAddress).toLowerCase()
@@ -81,7 +111,7 @@ export default function PlayerSearch() {
         return [...acc, curr];
       }, []);
 
-      setSearchResults(uniqueResults);
+      setSearchResults(uniqueResults.slice(0, 10));
     } catch (error) {
       console.error('Error searching for players:', error);
       enqueueSnackbar('Failed to search for players', { variant: 'error' });
