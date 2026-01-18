@@ -301,12 +301,25 @@ export function getCartItemPlacements(
   const itemPlacements: CartItemPlacement[] = [];
   const slotsToEquip = new Set<string>();
 
-  cartItems.forEach(cartItem => {
+  // Sort cart items by tier (best first: T1, T2, T3...) so best items claim slots first
+  const sortedCartItems = [...cartItems].sort((a, b) => {
+    const tierA = ItemUtils.getItemTier(a.id);
+    const tierB = ItemUtils.getItemTier(b.id);
+    return tierA - tierB; // Lower tier number = better
+  });
+
+  sortedCartItems.forEach(cartItem => {
     const slot = ItemUtils.getItemSlot(cartItem.id).toLowerCase();
     const currentEquipped = adventurer?.equipment[slot as keyof typeof adventurer.equipment];
     const slotEmpty = currentEquipped?.id === 0;
-    const shouldEquip = (slotEmpty && !slotsToEquip.has(slot))
-      || (slot === 'weapon' && [Tier.T1, Tier.T2].includes(ItemUtils.getItemTier(cartItem.id)) && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5);
+    const slotAlreadyClaimed = slotsToEquip.has(slot);
+    
+    // Equip if: slot is empty and not claimed, OR it's a T1/T2 weapon replacing a T5 (and slot not yet claimed)
+    const isWeaponUpgrade = slot === 'weapon' 
+      && !slotAlreadyClaimed 
+      && [Tier.T1, Tier.T2].includes(ItemUtils.getItemTier(cartItem.id)) 
+      && ItemUtils.getItemTier(adventurer?.equipment.weapon.id!) === Tier.T5;
+    const shouldEquip = (slotEmpty && !slotAlreadyClaimed) || isWeaponUpgrade;
 
     // Create a preview Item from the cart item
     const previewItem: Item = {
@@ -315,6 +328,10 @@ export function getCartItemPlacements(
     };
 
     if (shouldEquip) {
+      // If replacing an existing equipped item, move it to the bag
+      if (!slotEmpty && currentEquipped) {
+        previewBag.push(currentEquipped);
+      }
       slotsToEquip.add(slot);
       previewEquipped[slot] = previewItem;
     } else {

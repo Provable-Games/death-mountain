@@ -44,6 +44,15 @@ export const totalSurvivorTokens = 2258100;
 export const totalCollectableBeasts = 93225;
 export const JACKPOT_AMOUNT = 33333;
 
+// Cache configuration for beast tier data
+const BEAST_TIER_CACHE_KEY = 'beast_tier_data_cache';
+const BEAST_TIER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+interface CachedBeastTierData {
+  data: TierData[];
+  timestamp: number;
+}
+
 // Total beasts per tier (93,225 / 5 = 18,645 per tier, assuming equal distribution)
 export const BEASTS_PER_TIER: { [tier: number]: number } = {
   1: 18645,
@@ -108,7 +117,37 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
   };
 
   const fetchBeastsByTier = async () => {
+    console.time('[fetchBeastsByTier] Total');
+    
+    // Check for cached data first
+    try {
+      const cached = localStorage.getItem(BEAST_TIER_CACHE_KEY);
+      if (cached) {
+        const { data, timestamp }: CachedBeastTierData = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+        const isExpired = age > BEAST_TIER_CACHE_TTL;
+        
+        console.log('[fetchBeastsByTier] Cache found, age:', Math.round(age / 1000), 'seconds, expired:', isExpired);
+        
+        if (!isExpired && data.length > 0) {
+          // Use cached data immediately
+          console.log('[fetchBeastsByTier] Using cached data');
+          setBeastTierData(data);
+          console.timeEnd('[fetchBeastsByTier] Total');
+          return;
+        }
+      } else {
+        console.log('[fetchBeastsByTier] No cache found');
+      }
+    } catch (e) {
+      console.log('[fetchBeastsByTier] Cache read error:', e);
+    }
+
+    // Fetch fresh data
+    console.log('[fetchBeastsByTier] Fetching fresh data...');
+    console.time('[fetchBeastsByTier] countBeastsByTier call');
     const tierCounts = await countBeastsByTier();
+    console.timeEnd('[fetchBeastsByTier] countBeastsByTier call');
     
     const tierData: TierData[] = [1, 2, 3, 4, 5].map(tier => ({
       tier,
@@ -120,6 +159,20 @@ export const StatisticsProvider = ({ children }: PropsWithChildren) => {
     }));
     
     setBeastTierData(tierData);
+
+    // Cache the result
+    try {
+      const cacheData: CachedBeastTierData = {
+        data: tierData,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(BEAST_TIER_CACHE_KEY, JSON.stringify(cacheData));
+      console.log('[fetchBeastsByTier] Data cached');
+    } catch (e) {
+      console.log('[fetchBeastsByTier] Cache write error:', e);
+    }
+    
+    console.timeEnd('[fetchBeastsByTier] Total');
   };
 
   const fetchPriceHistory = async () => {

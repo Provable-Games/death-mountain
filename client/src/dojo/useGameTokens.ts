@@ -160,7 +160,7 @@ export const useGameTokens = () => {
 
   const countBeastsByTier = async (): Promise<{ [tier: number]: number }> => {
     let beast_address = NETWORKS.SN_MAIN.beasts;
-    // Query to get Beast ID for all minted beasts
+    // Simple query: group by Beast ID, calculate tier in JS (faster than SQL CASE)
     let url = `${SQL_ENDPOINT}/sql?query=
       SELECT ta.trait_value as beast_id, COUNT(*) as count
       FROM token_attributes ta
@@ -170,16 +170,23 @@ export const useGameTokens = () => {
       GROUP BY ta.trait_value`
 
     try {
+      console.time('[countBeastsByTier] SQL query');
       const sql = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json"
         }
       })
+      console.timeEnd('[countBeastsByTier] SQL query');
 
+      console.time('[countBeastsByTier] JSON parse');
       let data = await sql.json()
+      console.timeEnd('[countBeastsByTier] JSON parse');
       
-      // Aggregate counts by tier
+      console.log('[countBeastsByTier] Rows returned:', data.length);
+      
+      // Aggregate counts by tier in JS (very fast)
+      console.time('[countBeastsByTier] JS tier calculation');
       const tierCounts: { [tier: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       
       for (const row of data) {
@@ -187,7 +194,9 @@ export const useGameTokens = () => {
         const tier = getTierFromBeastId(beastId);
         tierCounts[tier] += parseInt(row.count);
       }
+      console.timeEnd('[countBeastsByTier] JS tier calculation');
       
+      console.log('[countBeastsByTier] Final tier counts:', tierCounts);
       return tierCounts;
     } catch (error) {
       console.error("Error counting beasts by tier:", error);
