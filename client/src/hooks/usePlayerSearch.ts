@@ -31,7 +31,10 @@ export function usePlayerSearch() {
     : addAddressPadding(dungeon.address);
 
   const searchPlayers = useCallback(async (searchQuery: string): Promise<PlayerSearchResult[]> => {
+    console.log('[PlayerSearch] Starting search for:', searchQuery);
+
     if (!searchQuery.trim()) {
+      console.log('[PlayerSearch] Empty search query, clearing results');
       setResults([]);
       return [];
     }
@@ -58,7 +61,12 @@ export function usePlayerSearch() {
         LIMIT 200
       `.replace(/\s+/g, ' ').trim();
 
+      console.log('[PlayerSearch] mintedByAddress:', mintedByAddress);
+      console.log('[PlayerSearch] toriiUrl:', currentNetworkConfig.toriiUrl);
+      console.log('[PlayerSearch] Query:', query);
+
       const url = `${currentNetworkConfig.toriiUrl}/sql?query=${encodeURIComponent(query)}`;
+      console.log('[PlayerSearch] Full URL:', url);
 
       const response = await fetch(url, {
         method: 'GET',
@@ -67,11 +75,22 @@ export function usePlayerSearch() {
         },
       });
 
+      console.log('[PlayerSearch] Response status:', response.status, response.statusText);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[PlayerSearch] Error response body:', errorText);
         throw new Error(`Search failed: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('[PlayerSearch] Raw data from server:', data);
+      console.log('[PlayerSearch] Number of rows returned:', Array.isArray(data) ? data.length : 'not an array');
+
+      // Log first few items for debugging
+      if (Array.isArray(data) && data.length > 0) {
+        console.log('[PlayerSearch] First 3 items:', data.slice(0, 3));
+      }
 
       // Decode player names and filter by search query
       const searchLower = searchQuery.toLowerCase();
@@ -79,18 +98,27 @@ export function usePlayerSearch() {
       const seenOwners = new Set<string>();
 
       for (const item of data) {
-        if (!item.owner || !item.player_name) continue;
+        if (!item.owner || !item.player_name) {
+          console.log('[PlayerSearch] Skipping item with missing data:', item);
+          continue;
+        }
 
         // Decode hex player name
         let decodedName = '';
         try {
           decodedName = hexToAscii(item.player_name).replace(/^\0+/, '');
-        } catch {
+          console.log('[PlayerSearch] Decoded name:', item.player_name, '->', decodedName);
+        } catch (decodeErr) {
+          console.log('[PlayerSearch] Failed to decode, using raw:', item.player_name, decodeErr);
           decodedName = item.player_name;
         }
 
         // Skip if doesn't match search
-        if (!decodedName.toLowerCase().includes(searchLower)) continue;
+        if (!decodedName.toLowerCase().includes(searchLower)) {
+          continue;
+        }
+
+        console.log('[PlayerSearch] Match found:', decodedName);
 
         // Deduplicate by owner
         const normalizedOwner = addAddressPadding(item.owner).toLowerCase();
@@ -106,10 +134,11 @@ export function usePlayerSearch() {
         if (decodedResults.length >= 10) break;
       }
 
+      console.log('[PlayerSearch] Final decoded results:', decodedResults);
       setResults(decodedResults);
       return decodedResults;
     } catch (err) {
-      console.error('Error searching for players:', err);
+      console.error('[PlayerSearch] Error searching for players:', err);
       setError(err instanceof Error ? err.message : 'Search failed');
       setResults([]);
       return [];

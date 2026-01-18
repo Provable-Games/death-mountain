@@ -35,10 +35,15 @@ export default function PlayerSearch() {
     return normalizedOwner !== normalizedCurrentUser;
   });
 
+  // Debug logging
+  console.log('[PlayerSearch UI] Current state - loading:', loading, 'error:', error, 'results:', results.length, 'filtered:', filteredResults.length, 'hasSearched:', hasSearched);
+
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
+    console.log('[PlayerSearch UI] Triggering search for:', searchQuery);
     setHasSearched(true);
-    await searchPlayers(searchQuery);
+    const results = await searchPlayers(searchQuery);
+    console.log('[PlayerSearch UI] Search complete, results:', results);
   }, [searchQuery, searchPlayers]);
 
   const handleFollow = useCallback((result: PlayerSearchResult) => {
