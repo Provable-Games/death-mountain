@@ -38,6 +38,14 @@ pub struct CombatResult {
     pub total_damage: u16,
 }
 
+/// Used for providing precomputed combat results
+/// @dev this is a struct for returning the results of a combat calculation
+#[derive(Drop, Serde)]
+pub struct CombatOutcomes {
+    pub total_damage: u16,
+    pub total_crit_damage: u16,
+}
+
 #[generate_trait]
 pub impl ImplCombat of ICombat {
     /// @notice Calculates the damage dealt to a defender based on various combat specifications and
@@ -100,6 +108,55 @@ pub impl ImplCombat of ICombat {
             critical_hit_bonus,
             weapon_special_bonus,
             total_damage,
+        }
+    }
+
+    fn calculate_combat_outcomes(
+        weapon: CombatSpec,
+        armor: CombatSpec,
+        minimum_damage: u8,
+        attacker_strength: u8,
+        defender_strength: u8,
+    ) -> CombatOutcomes {
+        // get base attack and armor
+        let base_attack = Self::get_attack_hp(weapon);
+        let base_armor = Self::get_armor_hp(armor);
+
+        // adjust base damage for elemental effectiveness
+        let elemental_adjusted_damage = Self::elemental_adjusted_damage(base_attack, weapon.item_type, armor.item_type);
+
+        // get strength bonus using elemental adjusted damage
+        let strength_bonus = Self::strength_bonus(elemental_adjusted_damage, attacker_strength);
+
+        // get critical hit bonus using elemental adjusted damage
+        let critical_hit_bonus = Self::critical_hit_bonus(
+            elemental_adjusted_damage, 100, 0,
+        );
+
+        // get weapon special bonus using elemental adjusted damage
+        let weapon_special_bonus = Self::weapon_special_bonus(
+            elemental_adjusted_damage, weapon.specials, armor.specials,
+        );
+
+        // total the damage
+        let total_attack = elemental_adjusted_damage + strength_bonus + weapon_special_bonus;
+        let total_crit_attack = total_attack + critical_hit_bonus;
+
+        let mut total_damage: u16 = minimum_damage.into();
+        let mut total_crit_damage: u16 = 0;
+
+        if total_attack > base_armor + minimum_damage.into() {
+            total_damage = total_attack - base_armor;
+        }
+
+        if total_crit_attack > base_armor + minimum_damage.into() {
+            total_crit_damage = total_crit_attack - base_armor;
+        }
+
+        // return the resulting damages
+        CombatOutcomes {
+            total_damage,
+            total_crit_damage,
         }
     }
 
