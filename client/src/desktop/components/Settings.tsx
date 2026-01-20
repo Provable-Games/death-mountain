@@ -33,9 +33,9 @@ export default function Settings({ onBack, showExitGame = false, onExitGame, sho
     setDefaultPaymentToken,
   } = useUIStore();
 
-  // Filter payment tokens to exclude special tokens (TICKET)
+  // Filter payment tokens to exclude special tokens (TICKET, USDC.e Bridged)
   const paymentTokenOptions = NETWORKS.SN_MAIN.paymentTokens.filter(
-    (token: any) => token.name !== 'TICKET'
+    (token: any) => token.name !== 'TICKET' && token.name !== 'USDC.e Bridged'
   );
   const { volume, setVolume, muted, setMuted, musicVolume, setMusicVolume, musicMuted, setMusicMuted } = useSound();
 
