@@ -112,11 +112,7 @@ pub impl ImplCombat of ICombat {
     }
 
     fn calculate_combat_outcomes(
-        weapon: CombatSpec,
-        armor: CombatSpec,
-        minimum_damage: u8,
-        attacker_strength: u8,
-        defender_strength: u8,
+        weapon: CombatSpec, armor: CombatSpec, minimum_damage: u8, attacker_strength: u8,
     ) -> CombatOutcomes {
         // get base attack and armor
         let base_attack = Self::get_attack_hp(weapon);
@@ -129,9 +125,7 @@ pub impl ImplCombat of ICombat {
         let strength_bonus = Self::strength_bonus(elemental_adjusted_damage, attacker_strength);
 
         // get critical hit bonus using elemental adjusted damage
-        let critical_hit_bonus = Self::critical_hit_bonus(
-            elemental_adjusted_damage, 100, 0,
-        );
+        let critical_hit_bonus = Self::critical_hit_bonus(elemental_adjusted_damage, 100, 0);
 
         // get weapon special bonus using elemental adjusted damage
         let weapon_special_bonus = Self::weapon_special_bonus(
@@ -154,10 +148,7 @@ pub impl ImplCombat of ICombat {
         }
 
         // return the resulting damages
-        CombatOutcomes {
-            total_damage,
-            total_crit_damage,
-        }
+        CombatOutcomes { total_damage, total_crit_damage }
     }
 
     /// @notice gets the attack HP of a weapon
