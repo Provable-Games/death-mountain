@@ -11,6 +11,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@avnu/avnu-sdk": "^4.0.1",
     "@cartridge/connector": "^0.10.1",
     "@cartridge/controller": "^0.10.1",
     "@cloudflare/stream-react": "^1.9.3",

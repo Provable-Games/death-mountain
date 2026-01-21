@@ -1,5 +1,4 @@
-import ROUTER_ABI from "@/abi/router-abi.json";
-import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
+import { getAvnuQuoteForExactOutput, generateAvnuSwapCalls, Quote } from "@/api/avnu";
 import { useController } from "@/contexts/controller";
 import { useDungeon } from "@/dojo/useDungeon";
 import { useUIStore } from "@/stores/uiStore";
@@ -18,10 +17,9 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
-import { useProvider } from "@starknet-react/core";
+import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { Contract } from "starknet";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface PaymentOptionsModalProps {
   open: boolean;
@@ -220,19 +218,12 @@ export default function PaymentOptionsModal({
     useController();
   const { defaultPaymentToken } = useUIStore();
 
-  // Use the provider from StarknetConfig
-  const { provider } = useProvider();
+  // Get account for AVNU quotes
+  const { account } = useAccount();
   const dungeon = useDungeon();
 
-  const routerContract = useMemo(
-    () =>
-      new Contract({
-        abi: ROUTER_ABI,
-        address: NETWORKS.SN_MAIN.ekuboRouter,
-        providerOrAccount: provider,
-      }),
-    [provider]
-  );
+  // Store the quote for swap execution
+  const currentQuoteRef = useRef<Quote | null>(null);
 
   // Get payment tokens from network config
   const paymentTokens = useMemo(() => {
@@ -301,7 +292,7 @@ export default function PaymentOptionsModal({
         (t: any) => t.symbol === tokenSymbol
       );
 
-      if (!selectedTokenData?.address || !dungeon.ticketAddress) {
+      if (!selectedTokenData?.address || !dungeon.ticketAddress || !account?.address) {
         setTokenQuote({
           amount: "",
           loading: false,
@@ -313,14 +304,18 @@ export default function PaymentOptionsModal({
       setTokenQuote({ amount: "", loading: true });
 
       try {
-        const quote = await getSwapQuote(
-          -1e18,
+        const quoteResult = await getAvnuQuoteForExactOutput(
+          1n * 10n ** 18n, // Buy 1 ticket
           dungeon.ticketAddress,
-          selectedTokenData.address
+          selectedTokenData.address,
+          account.address
         );
-        if (quote) {
+
+        if (quoteResult && quoteResult.sellAmount > 0n) {
+          currentQuoteRef.current = quoteResult.quote;
+
           const rawAmount =
-            (quote.total * -1) / Math.pow(10, selectedTokenData.decimals || 18);
+            Number(quoteResult.sellAmount) / Math.pow(10, selectedTokenData.decimals || 18);
           if (rawAmount === 0) {
             setTokenQuote({
               amount: "",
@@ -347,7 +342,7 @@ export default function PaymentOptionsModal({
         });
       }
     },
-    [userTokens]
+    [userTokens, account?.address, dungeon.ticketAddress]
   );
 
   const useGoldenToken = () => {
@@ -371,24 +366,32 @@ export default function PaymentOptionsModal({
     const selectedTokenData = userTokens.find(
       (t: any) => t.symbol === selectedToken
     );
-    const quote = await getSwapQuote(
-      -1e18,
-      dungeon.ticketAddress!,
-      selectedTokenData!.address
-    );
 
-    let tokenSwapData = {
-      tokenAddress: dungeon.ticketAddress!,
-      minimumAmount: 1,
-      quote: quote,
-    };
-    const calls = generateSwapCalls(
-      routerContract,
-      selectedTokenData!.address,
-      tokenSwapData
-    );
+    if (!selectedTokenData || !account?.address || !dungeon.ticketAddress) {
+      console.error("Missing required data for swap");
+      return;
+    }
 
-    enterDungeon({ paymentType: "Ticket" }, calls);
+    try {
+      // Get a fresh quote for the swap (quotes expire quickly)
+      const quoteResult = await getAvnuQuoteForExactOutput(
+        1n * 10n ** 18n, // Buy 1 ticket
+        dungeon.ticketAddress,
+        selectedTokenData.address,
+        account.address
+      );
+
+      // Generate swap calls with 1% slippage
+      const calls = await generateAvnuSwapCalls(
+        quoteResult.quote,
+        0.01, // 1% slippage
+        account.address
+      );
+
+      enterDungeon({ paymentType: "Ticket" }, calls);
+    } catch (error) {
+      console.error("Error preparing swap:", error);
+    }
   };
 
   // Handle token selection change
