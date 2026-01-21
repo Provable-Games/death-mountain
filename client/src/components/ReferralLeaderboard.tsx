@@ -53,6 +53,23 @@ export default function ReferralLeaderboard({
     }
   };
 
+  const getPrize = (rank: number): string => {
+    const prizes: Record<number, number> = {
+      1: 25000,
+      2: 15000,
+      3: 9000,
+      4: 6000,
+      5: 4500,
+      6: 3500,
+      7: 2500,
+      8: 1500,
+      9: 1500,
+      10: 1500,
+    };
+    const prize = prizes[rank];
+    return prize ? prize.toLocaleString() : "—";
+  };
+
   if (loading) {
     return (
       <Box sx={styles.loadingContainer}>
@@ -82,11 +99,15 @@ export default function ReferralLeaderboard({
 
   return (
     <Box sx={styles.container}>
-      <Typography sx={styles.title}>TOP REFERRERS</Typography>
+      <Typography sx={styles.title}>REFERRAL LEADERBOARD</Typography>
+      <Typography sx={styles.subtitle}>Refreshes every 30 minutes.</Typography>
 
       <Box sx={styles.headerRow}>
-        <Typography sx={[styles.headerCell, { width: "40px" }]}>#</Typography>
-        <Typography sx={[styles.headerCell, { flex: 1 }]}>Player</Typography>
+        <Typography sx={[styles.headerCell, { width: "40px" }]}>Rank</Typography>
+        <Typography sx={[styles.headerCell, { width: "70px", textAlign: "center" }]}>
+          Prize
+        </Typography>
+        <Typography sx={[styles.headerCell, { flex: 1 }]}>Referrer</Typography>
         <Typography sx={[styles.headerCell, { width: "60px", textAlign: "center" }]}>
           Refs
         </Typography>
@@ -107,6 +128,9 @@ export default function ReferralLeaderboard({
           <Box sx={[styles.cell, { width: "40px", justifyContent: "center" }]}>
             {getTrophyIcon(entry.rank)}
           </Box>
+          <Box sx={[styles.cell, { width: "70px", justifyContent: "center" }]}>
+            <Typography sx={styles.prizeValue}>{getPrize(entry.rank)}</Typography>
+          </Box>
           <Box sx={[styles.cell, { flex: 1 }]}>
             <Typography sx={styles.playerName}>
               {entry.referrer_username || truncateAddress(entry.referrer_address, 4)}
@@ -117,7 +141,7 @@ export default function ReferralLeaderboard({
           </Box>
           <Box sx={[styles.cell, { width: "70px", justifyContent: "flex-end" }]}>
             <Typography sx={styles.pointsValue}>
-              {entry.points.toFixed(1)}
+              {entry.points.toFixed(2)}
             </Typography>
           </Box>
         </Box>
@@ -155,7 +179,16 @@ const styles = {
     color: "#d7c529",
     letterSpacing: 0.5,
     textAlign: "center",
+    mb: 0.25,
+  },
+  subtitle: {
+    fontSize: "0.65rem",
+    fontWeight: 400,
+    color: "rgba(208, 201, 141, 0.6)",
+    textAlign: "center",
     mb: 1,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   headerRow: {
     display: "flex",
@@ -212,6 +245,11 @@ const styles = {
     fontSize: "0.8rem",
     fontWeight: 600,
     color: "#d7c529",
+  },
+  prizeValue: {
+    fontSize: "0.8rem",
+    fontWeight: 500,
+    color: "rgba(208, 201, 141, 0.9)",
   },
   loadingContainer: {
     display: "flex",
