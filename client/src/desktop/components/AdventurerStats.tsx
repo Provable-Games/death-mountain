@@ -1,11 +1,14 @@
 import { MAX_STAT_VALUE } from '@/constants/game';
+import { useStatChanges } from '@/hooks/useStatChanges';
 import { useGameStore } from '@/stores/gameStore';
 import { useUIStore } from '@/stores/uiStore';
+import { statChangeVariants } from '@/utils/animations';
 import { ability_based_percentage, calculateLevel } from '@/utils/game';
 import { suggestBestCombatGear } from '@/utils/gearSuggestion';
 import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 
 const STAT_DESCRIPTIONS = {
@@ -27,6 +30,9 @@ export default function AdventurerStats() {
   const equippedItemStats = useMemo(() => {
     return ItemUtils.getEquippedItemStats(adventurer!, bag);
   }, [adventurer, bag]);
+
+  // Track stat changes from equipment for animation
+  const statChanges = useStatChanges(adventurer?.stats);
 
   const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
   const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
@@ -242,9 +248,17 @@ export default function AdventurerStats() {
               width: '18px',
               textAlign: 'center',
               pt: '1px',
-              color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d'
             }}>
-              {adventurer?.stats?.[stat as keyof typeof STAT_DESCRIPTIONS]! + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]!}
+              <motion.span
+                variants={statChangeVariants}
+                animate={statChanges[stat as keyof typeof STAT_DESCRIPTIONS] || 'initial'}
+                style={{
+                  display: 'inline-block',
+                  color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d',
+                }}
+              >
+                {adventurer?.stats?.[stat as keyof typeof STAT_DESCRIPTIONS]! + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]!}
+              </motion.span>
             </Typography>
 
             {adventurer?.stat_upgrades_available! > 0 && stat !== 'luck' && <Button

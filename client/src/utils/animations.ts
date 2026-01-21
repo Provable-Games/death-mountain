@@ -109,3 +109,77 @@ export const fadeVariant = {
     transition: { duration: 0.5 }
   }
 };
+
+// Stat change animations for equip/unequip feedback (desktop - gold text)
+export const statChangeVariants: Variants = {
+  initial: {
+    scale: 1,
+  },
+  increase: {
+    scale: [1, 1.2, 1],
+    color: ['#d0c98d', '#4caf50', '#4caf50', '#d0c98d'],
+    textShadow: [
+      '0 0 0px transparent',
+      '0 0 10px rgba(76, 175, 80, 0.9)',
+      '0 0 6px rgba(76, 175, 80, 0.5)',
+      '0 0 0px transparent',
+    ],
+    transition: {
+      duration: 1,
+      ease: 'easeOut',
+      times: [0, 0.15, 0.6, 1],
+    },
+  },
+  decrease: {
+    scale: [1, 1.2, 1],
+    color: ['#d0c98d', '#ef5350', '#ef5350', '#d0c98d'],
+    textShadow: [
+      '0 0 0px transparent',
+      '0 0 10px rgba(239, 83, 80, 0.9)',
+      '0 0 6px rgba(239, 83, 80, 0.5)',
+      '0 0 0px transparent',
+    ],
+    transition: {
+      duration: 1,
+      ease: 'easeOut',
+      times: [0, 0.15, 0.6, 1],
+    },
+  },
+};
+
+// Stat change animations for mobile (green text #80FF00)
+export const statChangeVariantsMobile: Variants = {
+  initial: {
+    scale: 1,
+  },
+  increase: {
+    scale: [1, 1.2, 1],
+    color: ['#80FF00', '#4caf50', '#4caf50', '#80FF00'],
+    textShadow: [
+      '0 0 0px transparent',
+      '0 0 10px rgba(76, 175, 80, 0.9)',
+      '0 0 6px rgba(76, 175, 80, 0.5)',
+      '0 0 0px transparent',
+    ],
+    transition: {
+      duration: 1,
+      ease: 'easeOut',
+      times: [0, 0.15, 0.6, 1],
+    },
+  },
+  decrease: {
+    scale: [1, 1.2, 1],
+    color: ['#80FF00', '#ef5350', '#ef5350', '#80FF00'],
+    textShadow: [
+      '0 0 0px transparent',
+      '0 0 10px rgba(239, 83, 80, 0.9)',
+      '0 0 6px rgba(239, 83, 80, 0.5)',
+      '0 0 0px transparent',
+    ],
+    transition: {
+      duration: 1,
+      ease: 'easeOut',
+      times: [0, 0.15, 0.6, 1],
+    },
+  },
+};

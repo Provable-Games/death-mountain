@@ -1,7 +1,10 @@
 import { useController } from "@/contexts/controller";
+import { useStatChanges } from "@/hooks/useStatChanges";
 import { useGameStore } from "@/stores/gameStore";
+import { statChangeVariantsMobile } from "@/utils/animations";
 import { calculateLevel, calculateNextLevelXP, calculateProgress } from "@/utils/game";
 import { LinearProgress, Typography } from "@mui/material";
+import { motion } from "framer-motion";
 
 import { STARTING_HEALTH } from "@/constants/game";
 import { Box } from "@mui/material";
@@ -9,6 +12,10 @@ import { Box } from "@mui/material";
 export default function AdventurerInfo() {
   const { openProfile, playerName } = useController();
   const { adventurer, metadata } = useGameStore();
+  
+  // Track stat changes from equipment for animation
+  const statChanges = useStatChanges(adventurer?.stats);
+  
   // Calculate level using the proper function
   const level = calculateLevel(adventurer?.xp || 1);
   const progress = calculateProgress(adventurer?.xp || 1);
@@ -73,31 +80,87 @@ export default function AdventurerInfo() {
       <Box sx={styles.statsGrid}>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>STR</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.strength || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.strength || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.strength || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>DEX</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.dexterity || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.dexterity || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.dexterity || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>VIT</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.vitality || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.vitality || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.vitality || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>INT</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.intelligence || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.intelligence || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.intelligence || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>WIS</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.wisdom || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.wisdom || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.wisdom || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>CHA</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.charisma || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.charisma || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.charisma || 0}
+            </motion.span>
+          </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>LUCK</Typography>
-          <Typography sx={styles.statValue}>{adventurer?.stats?.luck || 0}</Typography>
+          <Typography sx={styles.statValue}>
+            <motion.span
+              variants={statChangeVariantsMobile}
+              animate={statChanges.luck || 'initial'}
+              style={{ display: 'inline-block' }}
+            >
+              {adventurer?.stats?.luck || 0}
+            </motion.span>
+          </Typography>
         </Box>
       </Box>
     </>
