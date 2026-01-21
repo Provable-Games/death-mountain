@@ -2,14 +2,27 @@ import { MAX_STAT_VALUE } from '@/constants/game';
 import { useStatChanges } from '@/hooks/useStatChanges';
 import { useGameStore } from '@/stores/gameStore';
 import { useUIStore } from '@/stores/uiStore';
-import { statChangeVariants } from '@/utils/animations';
 import { ability_based_percentage, calculateLevel } from '@/utils/game';
 import { suggestBestCombatGear } from '@/utils/gearSuggestion';
 import { ItemUtils } from '@/utils/loot';
 import { potionPrice } from '@/utils/market';
-import { Box, Button, Tooltip, Typography } from '@mui/material';
-import { motion } from 'framer-motion';
+import { Box, Button, Tooltip, Typography, keyframes } from '@mui/material';
 import { useState, useMemo } from 'react';
+
+// CSS Keyframes for stat change animations
+const statIncrease = keyframes`
+  0% { transform: scale(1); color: #d0c98d; text-shadow: 0 0 0px transparent; font-weight: normal; }
+  10% { transform: scale(1.3); color: #00FF00; text-shadow: 0 0 14px rgba(0, 255, 0, 1); font-weight: bold; }
+  50% { transform: scale(1.15); color: #00FF00; text-shadow: 0 0 10px rgba(0, 255, 0, 0.7); font-weight: bold; }
+  100% { transform: scale(1); color: #d0c98d; text-shadow: 0 0 0px transparent; font-weight: normal; }
+`;
+
+const statDecrease = keyframes`
+  0% { transform: scale(1); color: #d0c98d; text-shadow: 0 0 0px transparent; font-weight: normal; }
+  10% { transform: scale(1.3); color: #ef5350; text-shadow: 0 0 14px rgba(239, 83, 80, 1); font-weight: bold; }
+  50% { transform: scale(1.15); color: #ef5350; text-shadow: 0 0 10px rgba(239, 83, 80, 0.7); font-weight: bold; }
+  100% { transform: scale(1); color: #d0c98d; text-shadow: 0 0 0px transparent; font-weight: normal; }
+`;
 
 const STAT_DESCRIPTIONS = {
   strength: "Increases attack damage.",
@@ -32,7 +45,7 @@ export default function AdventurerStats() {
   }, [adventurer, bag]);
 
   // Track stat changes from equipment for animation
-  const statChanges = useStatChanges(adventurer?.stats);
+  const { changes: statChanges, version: statChangeVersion } = useStatChanges(adventurer?.stats);
 
   const totalSelected = Object.values(selectedStats).reduce((a, b) => a + b, 0);
   const pointsRemaining = adventurer!.stat_upgrades_available - totalSelected;
@@ -149,11 +162,23 @@ export default function AdventurerStats() {
                   -
                 </Button>}
 
-                <Typography sx={{
-                  ...styles.statValue,
-                  color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d'
-                }}>
-                  {totalStatValue}
+                <Typography sx={styles.statValue}>
+                  <Box
+                    component="span"
+                    key={`adv-${stat}-${statChangeVersion}`}
+                    sx={{
+                      display: 'inline-block',
+                      color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d',
+                      ...(statChanges[stat as keyof typeof STAT_DESCRIPTIONS] === 'increase' && {
+                        animation: `${statIncrease} 1.5s ease-out`,
+                      }),
+                      ...(statChanges[stat as keyof typeof STAT_DESCRIPTIONS] === 'decrease' && {
+                        animation: `${statDecrease} 1.5s ease-out`,
+                      }),
+                    }}
+                  >
+                    {totalStatValue}
+                  </Box>
                 </Typography>
 
                 {adventurer?.stat_upgrades_available! > 0 && stat !== 'luck' && <Button
@@ -249,16 +274,22 @@ export default function AdventurerStats() {
               textAlign: 'center',
               pt: '1px',
             }}>
-              <motion.span
-                variants={statChangeVariants}
-                animate={statChanges[stat as keyof typeof STAT_DESCRIPTIONS] || 'initial'}
-                style={{
+              <Box
+                component="span"
+                key={`${stat}-${statChangeVersion}`}
+                sx={{
                   display: 'inline-block',
                   color: selectedStats[stat as keyof typeof STAT_DESCRIPTIONS] > 0 ? '#4caf50' : '#d0c98d',
+                  ...(statChanges[stat as keyof typeof STAT_DESCRIPTIONS] === 'increase' && {
+                    animation: `${statIncrease} 1.5s ease-out`,
+                  }),
+                  ...(statChanges[stat as keyof typeof STAT_DESCRIPTIONS] === 'decrease' && {
+                    animation: `${statDecrease} 1.5s ease-out`,
+                  }),
                 }}
               >
                 {adventurer?.stats?.[stat as keyof typeof STAT_DESCRIPTIONS]! + selectedStats[stat as keyof typeof STAT_DESCRIPTIONS]!}
-              </motion.span>
+              </Box>
             </Typography>
 
             {adventurer?.stat_upgrades_available! > 0 && stat !== 'luck' && <Button

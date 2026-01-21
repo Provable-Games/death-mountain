@@ -1,8 +1,13 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Stats } from '@/types/game';
 
 export type StatChangeType = 'increase' | 'decrease' | null;
 export type StatChanges = Record<keyof Stats, StatChangeType>;
+
+export interface UseStatChangesResult {
+  changes: StatChanges;
+  version: number; // Increments each time a change is detected, use as key for animation
+}
 
 const EMPTY_CHANGES: StatChanges = {
   strength: null,
@@ -20,19 +25,26 @@ const EMPTY_CHANGES: StatChanges = {
  * 
  * @param currentStats - The current stats object from adventurer
  * @param duration - How long the change state persists (default 1000ms)
- * @returns Object with each stat's change type ('increase' | 'decrease' | null)
+ * @returns Object with changes and version counter for animation keys
  */
 export function useStatChanges(
   currentStats: Stats | undefined,
-  duration = 1000
-): StatChanges {
+  duration = 1500
+): UseStatChangesResult {
   const prevStatsRef = useRef<Stats | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [changes, setChanges] = useState<StatChanges>(EMPTY_CHANGES);
+  const [version, setVersion] = useState(0);
 
   const clearChanges = useCallback(() => {
     setChanges(EMPTY_CHANGES);
   }, []);
+
+  // Create a stable string key from stat values for reliable dependency comparison
+  const statsKey = useMemo(() => {
+    if (!currentStats) return null;
+    return `${currentStats.strength},${currentStats.dexterity},${currentStats.vitality},${currentStats.intelligence},${currentStats.wisdom},${currentStats.charisma},${currentStats.luck}`;
+  }, [currentStats]);
 
   useEffect(() => {
     if (!currentStats) return;
@@ -66,6 +78,7 @@ export function useStatChanges(
         }
 
         setChanges(newChanges);
+        setVersion(v => v + 1); // Increment version to trigger animation key change
 
         // Clear changes after animation duration
         timeoutRef.current = setTimeout(clearChanges, duration);
@@ -75,13 +88,13 @@ export function useStatChanges(
     // Store current stats as previous for next comparison
     prevStatsRef.current = { ...currentStats };
 
-    // Cleanup timeout on unmount
+    // Cleanup timeout on unmount or before re-running effect
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [currentStats, duration, clearChanges]);
+  }, [statsKey, duration, clearChanges, currentStats]);
 
-  return changes;
+  return { changes, version };
 }

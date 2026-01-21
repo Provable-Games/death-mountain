@@ -1,20 +1,33 @@
 import { useController } from "@/contexts/controller";
 import { useStatChanges } from "@/hooks/useStatChanges";
 import { useGameStore } from "@/stores/gameStore";
-import { statChangeVariantsMobile } from "@/utils/animations";
 import { calculateLevel, calculateNextLevelXP, calculateProgress } from "@/utils/game";
-import { LinearProgress, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { LinearProgress, Typography, keyframes } from "@mui/material";
 
 import { STARTING_HEALTH } from "@/constants/game";
 import { Box } from "@mui/material";
+
+// CSS Keyframes for stat change animations (mobile - green text)
+const statIncreaseMobile = keyframes`
+  0% { transform: scale(1); color: #80FF00; text-shadow: 0 0 0px transparent; }
+  10% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 14px rgba(255, 215, 0, 1); }
+  50% { transform: scale(1.15); color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7); }
+  100% { transform: scale(1); color: #80FF00; text-shadow: 0 0 0px transparent; }
+`;
+
+const statDecreaseMobile = keyframes`
+  0% { transform: scale(1); color: #80FF00; text-shadow: 0 0 0px transparent; }
+  10% { transform: scale(1.3); color: #ef5350; text-shadow: 0 0 14px rgba(239, 83, 80, 1); }
+  50% { transform: scale(1.15); color: #ef5350; text-shadow: 0 0 10px rgba(239, 83, 80, 0.7); }
+  100% { transform: scale(1); color: #80FF00; text-shadow: 0 0 0px transparent; }
+`;
 
 export default function AdventurerInfo() {
   const { openProfile, playerName } = useController();
   const { adventurer, metadata } = useGameStore();
   
   // Track stat changes from equipment for animation
-  const statChanges = useStatChanges(adventurer?.stats);
+  const { changes: statChanges, version: statChangeVersion } = useStatChanges(adventurer?.stats);
   
   // Calculate level using the proper function
   const level = calculateLevel(adventurer?.xp || 1);
@@ -81,85 +94,113 @@ export default function AdventurerInfo() {
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>STR</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.strength || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`str-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.strength === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.strength === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.strength || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>DEX</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.dexterity || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`dex-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.dexterity === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.dexterity === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.dexterity || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>VIT</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.vitality || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`vit-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.vitality === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.vitality === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.vitality || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>INT</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.intelligence || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`int-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.intelligence === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.intelligence === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.intelligence || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>WIS</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.wisdom || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`wis-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.wisdom === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.wisdom === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.wisdom || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>CHA</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.charisma || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`cha-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.charisma === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.charisma === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.charisma || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
         <Box sx={styles.statCard}>
           <Typography sx={styles.statLabel}>LUCK</Typography>
           <Typography sx={styles.statValue}>
-            <motion.span
-              variants={statChangeVariantsMobile}
-              animate={statChanges.luck || 'initial'}
-              style={{ display: 'inline-block' }}
+            <Box
+              component="span"
+              key={`luck-${statChangeVersion}`}
+              sx={{
+                display: 'inline-block',
+                ...(statChanges.luck === 'increase' && { animation: `${statIncreaseMobile} 1.5s ease-out` }),
+                ...(statChanges.luck === 'decrease' && { animation: `${statDecreaseMobile} 1.5s ease-out` }),
+              }}
             >
               {adventurer?.stats?.luck || 0}
-            </motion.span>
+            </Box>
           </Typography>
         </Box>
       </Box>
