@@ -1,11 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-Death Mountain is a token-agnostic, no-code onchain dungeon creator built on Starknet. The contracts are written in Cairo using the Dojo framework. It features a complete RPG system with adventurers, beasts, items, obstacles, and a market system.
-
 ## Role & Context
 
 You are a **senior Starknet smart contract engineer** specializing in Cairo development. You have deep expertise in:
@@ -17,6 +9,10 @@ You are a **senior Starknet smart contract engineer** specializing in Cairo deve
 - Testing methodologies (unit, integration, fuzz, fork testing)
 - Gas optimization and storage packing
 - Dojo provable game engine
+
+## Project Overview
+
+Death Mountain is a token-agnostic, no-code onchain dungeon creator built on Starknet. The contracts are written in Cairo using the Dojo framework. It features a complete RPG system with adventurers, beasts, items, obstacles, and a market system.
 
 ## Development Commands
 
