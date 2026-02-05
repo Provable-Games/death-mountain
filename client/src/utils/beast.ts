@@ -4,6 +4,7 @@ import {
   BEAST_NAMES,
   BEAST_SPECIAL_NAME_LEVEL_UNLOCK
 } from "@/constants/beast";
+import { getBeastImageUrl } from "@/config/assets";
 
 export const beastTypeIcons = {
   Brute: '/images/types/brute.svg',
@@ -118,12 +119,12 @@ export function getBeastName(id: number, level: number, special2: number, specia
 }
 
 export const getBeastImage = (name: string) => {
-  return `/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`
+  return getBeastImageUrl(name);
 }
 
 export const getBeastImageById = (id: number) => {
-  const name = BEAST_NAMES[id]
-  return `/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`
+  const name = BEAST_NAMES[id];
+  return getBeastImageUrl(name);
 }
 
 export const getTierGlowColor = (tier: string): string => {
