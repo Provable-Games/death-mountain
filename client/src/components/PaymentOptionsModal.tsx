@@ -233,11 +233,13 @@ const FiatTabContent = memo(({
   walletAddress,
   totalFiatUsd,
   minFiatGames,
+  strkPerGame,
   isMinting,
 }: {
   walletAddress: string;
   totalFiatUsd: number | null;
   minFiatGames: number;
+  strkPerGame: number | null;
   isMinting: boolean;
 }) => {
   return (
@@ -258,10 +260,21 @@ const FiatTabContent = memo(({
           </Typography>
         </Box>
       )}
-      <Box sx={{ px: 3, pt: 1, pb: 0.5, textAlign: "center" }}>
-        <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-          Buy ~${totalFiatUsd ? Math.ceil(totalFiatUsd * 1.03) : "..."} of STRK to get {minFiatGames} game{minFiatGames > 1 ? "s" : ""}
+      {/* Info banner */}
+      <Box sx={{
+        mx: 2, mt: 1.5, mb: 1, px: 2, py: 1.5,
+        background: "rgba(208, 201, 141, 0.08)",
+        border: "1px solid rgba(208, 201, 141, 0.2)",
+        borderRadius: 1, textAlign: "center",
+      }}>
+        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#d0c98d", letterSpacing: 0.5 }}>
+          ~${totalFiatUsd ? Math.ceil(totalFiatUsd * 1.03) : "..."} = {minFiatGames} game{minFiatGames > 1 ? "s" : ""}
         </Typography>
+        {strkPerGame && (
+          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
+            1 game = {strkPerGame.toFixed(1)} STRK — buy more to get extra games
+          </Typography>
+        )}
       </Box>
       <iframe
         src={buildOnramperUrl(walletAddress, totalFiatUsd)}
@@ -827,6 +840,7 @@ export default function PaymentOptionsModal({
                           walletAddress={accountAddress}
                           totalFiatUsd={totalFiatUsd}
                           minFiatGames={minFiatGames}
+                          strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
                         />
                       )}
