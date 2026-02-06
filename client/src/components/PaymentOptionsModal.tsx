@@ -32,7 +32,7 @@ import { Contract } from "starknet";
 // --- Constants ---
 
 const MIN_GAMES = 1;
-const MAX_GAMES = 20;
+const MAX_GAMES = 50;
 const FALLBACK_MIN_FIAT_USD = 12; // Fallback if API fetch fails (~$11.72 observed)
 const BALANCE_POLL_INTERVAL = 10_000; // 10 seconds
 const BALANCE_POLL_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -87,21 +87,32 @@ const buildOnramperUrl = (walletAddress: string, totalUsd: number | null) => {
   let url = `${ONRAMPER_BASE_URL}&networkWallets=starknet:${walletAddress}`;
 
   if (totalUsd && totalUsd > 0) {
-    // Add ~15% buffer for provider fees + slippage
-    const amountWithBuffer = Math.ceil(totalUsd * 1.15);
+    // Add ~3% buffer for provider fees + slippage, rounded up
+    const amountWithBuffer = Math.ceil(totalUsd * 1.03);
     url += `&defaultFiat=usd&defaultAmount=${amountWithBuffer}`;
   }
 
   return url;
 };
 
-// Slider marks
-const SLIDER_MARKS = [
+// Slider marks for crypto tab (min 1)
+const CRYPTO_SLIDER_MARKS = [
   { value: 1, label: "1" },
-  { value: 5, label: "5" },
   { value: 10, label: "10" },
   { value: 20, label: "20" },
+  { value: 30, label: "30" },
+  { value: 40, label: "40" },
+  { value: 50, label: "50" },
 ];
+
+// Build fiat slider marks dynamically (min varies by onramp provider)
+const buildFiatSliderMarks = (minFiat: number) => {
+  const marks = [{ value: minFiat, label: `${minFiat}` }];
+  for (const v of [25, 30, 40, 50]) {
+    if (v > minFiat) marks.push({ value: v, label: `${v}` });
+  }
+  return marks;
+};
 
 // --- Interfaces ---
 
@@ -112,49 +123,50 @@ interface PaymentOptionsModalProps {
 
 // --- Sub-components ---
 
-// Game count selector shared between crypto and fiat tabs
+// Game count selector - rendered inside each tab
 const GameCountSelector = memo(({
   gameCount,
   onGameCountChange,
   ticketPriceUsd,
-  minGames,
-  isFiatTab,
+  sliderMin,
+  sliderMarks,
+  showMinNotice,
 }: {
   gameCount: number;
   onGameCountChange: (count: number) => void;
   ticketPriceUsd: string | null;
-  minGames: number;
-  isFiatTab: boolean;
+  sliderMin: number;
+  sliderMarks: { value: number; label: string }[];
+  showMinNotice?: string | null;
 }) => {
-  const effectiveMin = isFiatTab ? minGames : MIN_GAMES;
   const totalPrice = ticketPriceUsd
     ? (parseFloat(ticketPriceUsd) * gameCount).toFixed(2)
     : null;
 
   return (
-    <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, letterSpacing: 0.5 }}>
-          Number of games
+    <Box sx={{ px: 0, pt: 1, pb: 0.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 600, letterSpacing: 0.5, color: "rgba(255,255,255,0.8)" }}>
+          Games
         </Typography>
         <TextField
           type="number"
           value={gameCount}
           onChange={(e) => {
-            const val = Math.min(Math.max(parseInt(e.target.value) || effectiveMin, effectiveMin), MAX_GAMES);
+            const val = Math.min(Math.max(parseInt(e.target.value) || sliderMin, sliderMin), MAX_GAMES);
             onGameCountChange(val);
           }}
           size="small"
           slotProps={{
             input: {
-              inputProps: { min: effectiveMin, max: MAX_GAMES, style: { textAlign: "center" } },
+              inputProps: { min: sliderMin, max: MAX_GAMES, style: { textAlign: "center" } },
             },
           }}
           sx={{
-            width: 60,
+            width: 56,
             "& .MuiOutlinedInput-root": {
-              height: 32,
-              fontSize: 14,
+              height: 28,
+              fontSize: 13,
               fontWeight: 600,
               color: "#d0c98d",
               background: "rgba(0, 0, 0, 0.3)",
@@ -167,27 +179,27 @@ const GameCountSelector = memo(({
       </Box>
       <Slider
         value={gameCount}
-        onChange={(_, val) => onGameCountChange(Math.max(val as number, effectiveMin))}
-        min={MIN_GAMES}
+        onChange={(_, val) => onGameCountChange(Math.max(val as number, sliderMin))}
+        min={sliderMin}
         max={MAX_GAMES}
         step={1}
-        marks={SLIDER_MARKS}
+        marks={sliderMarks}
         sx={{
           color: "#d0c98d",
-          "& .MuiSlider-markLabel": { fontSize: 10, color: "rgba(255,255,255,0.5)" },
-          "& .MuiSlider-thumb": { width: 16, height: 16 },
+          "& .MuiSlider-markLabel": { fontSize: 9, color: "rgba(255,255,255,0.45)" },
+          "& .MuiSlider-thumb": { width: 14, height: 14 },
           "& .MuiSlider-rail": { opacity: 0.3 },
         }}
       />
       {totalPrice && (
-        <Typography sx={{ fontSize: 12, color: "#FFD700", opacity: 0.8, textAlign: "center", mt: -0.5 }}>
+        <Typography sx={{ fontSize: 11, color: "#FFD700", opacity: 0.8, textAlign: "center", mt: -0.5 }}>
           ~${totalPrice} for {gameCount} game{gameCount > 1 ? "s" : ""}
           {ticketPriceUsd && <span style={{ opacity: 0.6 }}> (${ticketPriceUsd}/game)</span>}
         </Typography>
       )}
-      {isFiatTab && minGames > 1 && (
-        <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textAlign: "center", mt: 0.5 }}>
-          Minimum {minGames} games for fiat purchase (onramp provider minimum)
+      {showMinNotice && (
+        <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", mt: 0.5 }}>
+          {showMinNotice}
         </Typography>
       )}
     </Box>
@@ -203,6 +215,8 @@ const CryptoTabContent = memo(({
   onTokenChange,
   buyDungeonTicket,
   gameCount,
+  onGameCountChange,
+  ticketPriceUsd,
 }: {
   userTokens: any[];
   selectedToken: string;
@@ -210,6 +224,8 @@ const CryptoTabContent = memo(({
   onTokenChange: (tokenSymbol: string) => void;
   buyDungeonTicket: () => void;
   gameCount: number;
+  onGameCountChange: (count: number) => void;
+  ticketPriceUsd: string | null;
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
@@ -231,10 +247,14 @@ const CryptoTabContent = memo(({
   }
 
   return (
-    <Box sx={{ px: 3, py: 2 }}>
-      <Typography sx={{ fontSize: 12, color: "#FFD700", opacity: 0.7, mb: 1.5, textAlign: "center", letterSpacing: 0.5 }}>
-        Swap tokens from your wallet
-      </Typography>
+    <Box sx={{ px: 3, py: 1.5 }}>
+      <GameCountSelector
+        gameCount={gameCount}
+        onGameCountChange={onGameCountChange}
+        ticketPriceUsd={ticketPriceUsd}
+        sliderMin={MIN_GAMES}
+        sliderMarks={CRYPTO_SLIDER_MARKS}
+      />
 
       <Button
         variant="outlined"
@@ -331,6 +351,8 @@ const FiatTabContent = memo(({
   walletAddress,
   ticketPriceUsd,
   gameCount,
+  onGameCountChange,
+  minFiatGames,
   fiatPhase,
   onFiatPhaseChange,
   onSwapAndEnter,
@@ -342,6 +364,8 @@ const FiatTabContent = memo(({
   walletAddress: string;
   ticketPriceUsd: string | null;
   gameCount: number;
+  onGameCountChange: (count: number) => void;
+  minFiatGames: number;
   fiatPhase: "onramp" | "funded";
   onFiatPhaseChange: (phase: "onramp" | "funded") => void;
   onSwapAndEnter: () => void;
@@ -352,6 +376,7 @@ const FiatTabContent = memo(({
 }) => {
   const totalUsd = ticketPriceUsd ? parseFloat(ticketPriceUsd) * gameCount : null;
   const hasEnoughStrk = strkQuoteForGames !== null && strkBalance >= strkQuoteForGames;
+  const fiatMarks = useMemo(() => buildFiatSliderMarks(minFiatGames), [minFiatGames]);
 
   if (fiatPhase === "funded") {
     return (
@@ -424,10 +449,20 @@ const FiatTabContent = memo(({
   // Phase: onramp
   return (
     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+      <Box sx={{ width: "100%", px: 3, pt: 1.5 }}>
+        <GameCountSelector
+          gameCount={gameCount}
+          onGameCountChange={onGameCountChange}
+          ticketPriceUsd={ticketPriceUsd}
+          sliderMin={minFiatGames}
+          sliderMarks={fiatMarks}
+          showMinNotice={minFiatGames > 1 ? `Min ${minFiatGames} games (onramp provider minimum)` : null}
+        />
+      </Box>
       <iframe
         src={buildOnramperUrl(walletAddress, totalUsd)}
         title="Onramper Widget"
-        height="630px"
+        height="560px"
         width="100%"
         style={{ border: "none" }}
         allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
@@ -530,8 +565,8 @@ export default function PaymentOptionsModal({
     if (!ticketPriceUsd) return MIN_GAMES;
     const pricePerGame = parseFloat(ticketPriceUsd);
     if (pricePerGame <= 0) return MIN_GAMES;
-    // Apply the same 15% buffer we use for the Onramper defaultAmount
-    const minGames = Math.ceil(minFiatAmount / (pricePerGame * 1.15));
+    // Apply the same 3% buffer we use for the Onramper defaultAmount
+    const minGames = Math.ceil(minFiatAmount / (pricePerGame * 1.03));
     return Math.max(MIN_GAMES, Math.min(minGames, MAX_GAMES));
   }, [minFiatAmount, ticketPriceUsd]);
 
@@ -936,15 +971,6 @@ export default function PaymentOptionsModal({
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       style={{ width: "100%" }}
                     >
-                      {/* Shared Game Count Selector */}
-                      <GameCountSelector
-                        gameCount={gameCount}
-                        onGameCountChange={handleGameCountChange}
-                        ticketPriceUsd={ticketPriceUsd}
-                        minGames={minFiatGames}
-                        isFiatTab={activeTab === "fiat"}
-                      />
-
                       {/* Tab Headers */}
                       <Box sx={{ borderBottom: 1, borderColor: "rgba(208, 201, 141, 0.2)", mx: 2 }}>
                         <Tabs
@@ -990,6 +1016,8 @@ export default function PaymentOptionsModal({
                           onTokenChange={handleTokenChange}
                           buyDungeonTicket={buyDungeonTicket}
                           gameCount={gameCount}
+                          onGameCountChange={handleGameCountChange}
+                          ticketPriceUsd={ticketPriceUsd}
                         />
                       )}
                       {activeTab === "fiat" && (
@@ -997,6 +1025,8 @@ export default function PaymentOptionsModal({
                           walletAddress={accountAddress}
                           ticketPriceUsd={ticketPriceUsd}
                           gameCount={gameCount}
+                          onGameCountChange={handleGameCountChange}
+                          minFiatGames={minFiatGames}
                           fiatPhase={fiatPhase}
                           onFiatPhaseChange={setFiatPhase}
                           onSwapAndEnter={swapStrkAndEnter}
@@ -1093,7 +1123,6 @@ const styles = {
     boxShadow:
       "0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px rgba(208, 201, 141, 0.1)",
     position: "relative" as const,
-    overflow: "hidden",
   },
   modalGlow: {
     position: "absolute" as const,
@@ -1159,34 +1188,11 @@ const styles = {
     position: "relative" as const,
     backdropFilter: "blur(4px)",
   },
-  cardHeader: {
-    display: "flex",
-    alignItems: "center",
-    gap: 2,
-    p: 2,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: "8px",
-    background: "rgba(0, 0, 0, 0.3)",
-    border: "1px solid rgba(208, 201, 141, 0.2)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   paymentTitle: {
     fontSize: 16,
     fontWeight: 600,
     letterSpacing: 0.5,
     mb: 0.5,
-  },
-  paymentSubtitle: {
-    fontSize: 12,
-    color: "#FFD700",
-    opacity: 0.7,
-    letterSpacing: 0.5,
-    lineHeight: 1.2,
   },
   mobileSelectButton: {
     height: "48px",
