@@ -7,8 +7,7 @@ import { NETWORKS } from "@/utils/networkConfig";
 import { formatAmount } from "@/utils/utils";
 import CloseIcon from "@mui/icons-material/Close";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+
 import TokenIcon from "@mui/icons-material/Token";
 import {
   Box,
@@ -18,10 +17,8 @@ import {
   Link,
   Menu,
   MenuItem,
-  Slider,
   Tab,
   Tabs,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useAccount, useProvider } from "@starknet-react/core";
@@ -95,15 +92,6 @@ const buildOnramperUrl = (walletAddress: string, totalUsd: number | null) => {
   return url;
 };
 
-// Build fiat slider marks dynamically (min varies by onramp provider)
-const buildFiatSliderMarks = (minFiat: number) => {
-  const marks = [{ value: minFiat, label: `${minFiat}` }];
-  for (const v of [25, 30, 40, 50]) {
-    if (v > minFiat) marks.push({ value: v, label: `${v}` });
-  }
-  return marks;
-};
-
 // --- Interfaces ---
 
 interface PaymentOptionsModalProps {
@@ -112,90 +100,6 @@ interface PaymentOptionsModalProps {
 }
 
 // --- Sub-components ---
-
-// Game count selector - rendered inside each tab
-const GameCountSelector = memo(({
-  gameCount,
-  onGameCountChange,
-  ticketPriceUsd,
-  sliderMin,
-  sliderMarks,
-  showMinNotice,
-}: {
-  gameCount: number;
-  onGameCountChange: (count: number) => void;
-  ticketPriceUsd: string | null;
-  sliderMin: number;
-  sliderMarks: { value: number; label: string }[];
-  showMinNotice?: string | null;
-}) => {
-  const totalPrice = ticketPriceUsd
-    ? (parseFloat(ticketPriceUsd) * gameCount).toFixed(2)
-    : null;
-
-  return (
-    <Box sx={{ px: 0, pt: 1, pb: 0.5 }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
-        <Typography sx={{ fontSize: 12, fontWeight: 600, letterSpacing: 0.5, color: "rgba(255,255,255,0.8)" }}>
-          Games
-        </Typography>
-        <TextField
-          type="number"
-          value={gameCount}
-          onChange={(e) => {
-            const val = Math.min(Math.max(parseInt(e.target.value) || sliderMin, sliderMin), MAX_GAMES);
-            onGameCountChange(val);
-          }}
-          size="small"
-          slotProps={{
-            input: {
-              inputProps: { min: sliderMin, max: MAX_GAMES, style: { textAlign: "center" } },
-            },
-          }}
-          sx={{
-            width: 56,
-            "& .MuiOutlinedInput-root": {
-              height: 28,
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#d0c98d",
-              background: "rgba(0, 0, 0, 0.3)",
-              "& fieldset": { borderColor: "rgba(208, 201, 141, 0.3)" },
-              "&:hover fieldset": { borderColor: "rgba(208, 201, 141, 0.5)" },
-              "&.Mui-focused fieldset": { borderColor: "#d0c98d" },
-            },
-          }}
-        />
-      </Box>
-      <Slider
-        value={gameCount}
-        onChange={(_, val) => onGameCountChange(Math.max(val as number, sliderMin))}
-        min={sliderMin}
-        max={MAX_GAMES}
-        step={1}
-        marks={sliderMarks}
-        sx={{
-          color: "#d0c98d",
-          "& .MuiSlider-markLabel": { fontSize: 9, color: "rgba(255,255,255,0.45)" },
-          "& .MuiSlider-thumb": { width: 14, height: 14 },
-          "& .MuiSlider-rail": { opacity: 0.3 },
-        }}
-      />
-      {totalPrice && (
-        <Typography sx={{ fontSize: 11, color: "#FFD700", opacity: 0.8, textAlign: "center", mt: -0.5 }}>
-          ~${totalPrice} for {gameCount} game{gameCount > 1 ? "s" : ""}
-          {ticketPriceUsd && <span style={{ opacity: 0.6 }}> (${ticketPriceUsd}/game)</span>}
-        </Typography>
-      )}
-      {showMinNotice && (
-        <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", mt: 0.5 }}>
-          {showMinNotice}
-        </Typography>
-      )}
-    </Box>
-  );
-});
-GameCountSelector.displayName = "GameCountSelector";
 
 // Crypto tab content — 1 game at a time (swap + enter dungeon)
 const CryptoTabContent = memo(({
@@ -324,139 +228,49 @@ const CryptoTabContent = memo(({
 });
 CryptoTabContent.displayName = "CryptoTabContent";
 
-// Fiat tab content with onramp/funded phases
+// Fiat tab — Onramper iframe with automatic STRK detection + auto-mint
 const FiatTabContent = memo(({
   walletAddress,
-  ticketPriceUsd,
-  gameCount,
-  onGameCountChange,
+  totalFiatUsd,
   minFiatGames,
-  fiatPhase,
-  onFiatPhaseChange,
-  onSwapAndMint,
-  strkBalance,
-  strkQuoteForGames,
-  isPolling,
-  isSwapping,
+  isMinting,
 }: {
   walletAddress: string;
-  ticketPriceUsd: string | null;
-  gameCount: number;
-  onGameCountChange: (count: number) => void;
+  totalFiatUsd: number | null;
   minFiatGames: number;
-  fiatPhase: "onramp" | "funded";
-  onFiatPhaseChange: (phase: "onramp" | "funded") => void;
-  onSwapAndMint: () => void;
-  strkBalance: number;
-  strkQuoteForGames: number | null;
-  isPolling: boolean;
-  isSwapping: boolean;
+  isMinting: boolean;
 }) => {
-  const totalUsd = ticketPriceUsd ? parseFloat(ticketPriceUsd) * gameCount : null;
-  const hasEnoughStrk = strkQuoteForGames !== null && strkBalance >= strkQuoteForGames;
-  const fiatMarks = useMemo(() => buildFiatSliderMarks(minFiatGames), [minFiatGames]);
-
-  if (fiatPhase === "funded") {
-    return (
-      <Box sx={{ px: 3, py: 3, textAlign: "center" }}>
-        {isSwapping ? (
-          <>
-            <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-              Buying {gameCount} game{gameCount > 1 ? "s" : ""}...
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-              Please confirm the transaction in your wallet
-            </Typography>
-          </>
-        ) : hasEnoughStrk ? (
-          <>
-            <CheckCircleOutlineIcon sx={{ fontSize: 40, color: "#4caf50", mb: 1 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-              Funds received!
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)", mb: 2 }}>
-              STRK Balance: {strkBalance.toFixed(2)}
-              {strkQuoteForGames && ` (need ~${strkQuoteForGames.toFixed(2)})`}
-            </Typography>
-            <Button
-              variant="contained"
-              sx={styles.activateButton}
-              onClick={onSwapAndMint}
-              fullWidth
-            >
-              <Typography sx={styles.buttonText}>
-                Mint {gameCount} Game{gameCount > 1 ? "s" : ""}
-              </Typography>
-            </Button>
-          </>
-        ) : (
-          <>
-            <HourglassEmptyIcon sx={{ fontSize: 40, color: "#d0c98d", mb: 1 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-              Waiting for STRK to arrive...
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)", mb: 1 }}>
-              STRK Balance: {strkBalance.toFixed(2)}
-              {strkQuoteForGames && ` (need ~${strkQuoteForGames.toFixed(2)})`}
-            </Typography>
-            {isPolling && (
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
-                <CircularProgress size={14} sx={{ color: "#d0c98d" }} />
-                <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                  Checking every 10s...
-                </Typography>
-              </Box>
-            )}
-            <Button
-              variant="outlined"
-              onClick={() => onFiatPhaseChange("onramp")}
-              sx={{ ...styles.mobileSelectButton, mb: 1 }}
-              fullWidth
-            >
-              <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-                Back to Onramper
-              </Typography>
-            </Button>
-          </>
-        )}
-      </Box>
-    );
-  }
-
-  // Phase: onramp
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-      <Box sx={{ width: "100%", px: 3, pt: 1.5 }}>
-        <GameCountSelector
-          gameCount={gameCount}
-          onGameCountChange={onGameCountChange}
-          ticketPriceUsd={ticketPriceUsd}
-          sliderMin={minFiatGames}
-          sliderMarks={fiatMarks}
-          showMinNotice={minFiatGames > 1 ? `Min ${minFiatGames} games (onramp provider minimum)` : null}
-        />
+    <Box sx={{ position: "relative", width: "100%" }}>
+      {/* Minting overlay */}
+      {isMinting && (
+        <Box sx={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          background: "rgba(15, 31, 15, 0.95)", borderRadius: 1,
+        }}>
+          <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
+          <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
+            Minting {minFiatGames} game{minFiatGames > 1 ? "s" : ""}...
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+            Confirm the transaction in your wallet
+          </Typography>
+        </Box>
+      )}
+      <Box sx={{ px: 3, pt: 1, pb: 0.5, textAlign: "center" }}>
+        <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+          Buy ~${totalFiatUsd ? Math.ceil(totalFiatUsd * 1.03) : "..."} of STRK to get {minFiatGames} game{minFiatGames > 1 ? "s" : ""}
+        </Typography>
       </Box>
       <iframe
-        src={buildOnramperUrl(walletAddress, totalUsd)}
+        src={buildOnramperUrl(walletAddress, totalFiatUsd)}
         title="Onramper Widget"
         height="560px"
         width="100%"
         style={{ border: "none" }}
         allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
       />
-      <Box sx={{ px: 3, pb: 2, width: "100%" }}>
-        <Button
-          variant="contained"
-          sx={styles.activateButton}
-          onClick={() => onFiatPhaseChange("funded")}
-          fullWidth
-        >
-          <Typography sx={styles.buttonText}>
-            I've completed my payment
-          </Typography>
-        </Button>
-      </Box>
     </Box>
   );
 });
@@ -524,10 +338,8 @@ export default function PaymentOptionsModal({
 
   const [specialView, setSpecialView] = useState<"golden" | "dungeon" | null>(null);
   const [activeTab, setActiveTab] = useState<"crypto" | "fiat">("crypto");
-  const [fiatPhase, setFiatPhase] = useState<"onramp" | "funded">("onramp");
-  const [gameCount, setGameCount] = useState(1);
   const [selectedToken, setSelectedToken] = useState("");
-  const [isSwapping, setIsSwapping] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
   const [tokenQuote, setTokenQuote] = useState<{
     amount: string;
     loading: boolean;
@@ -535,7 +347,6 @@ export default function PaymentOptionsModal({
   }>({ amount: "", loading: false });
   const [ticketPriceUsd, setTicketPriceUsd] = useState<string | null>(null);
   const [strkQuoteForGames, setStrkQuoteForGames] = useState<number | null>(null);
-  const [isPolling, setIsPolling] = useState(false);
   const [minFiatAmount, setMinFiatAmount] = useState(FALLBACK_MIN_FIAT_USD);
 
   // Minimum games for fiat tab (derived from onramp minimum and ticket price)
@@ -543,15 +354,22 @@ export default function PaymentOptionsModal({
     if (!ticketPriceUsd) return MIN_GAMES;
     const pricePerGame = parseFloat(ticketPriceUsd);
     if (pricePerGame <= 0) return MIN_GAMES;
-    // Apply the same 3% buffer we use for the Onramper defaultAmount
     const minGames = Math.ceil(minFiatAmount / (pricePerGame * 1.03));
     return Math.max(MIN_GAMES, Math.min(minGames, MAX_GAMES));
   }, [minFiatAmount, ticketPriceUsd]);
 
-  // Refs for polling cleanup
+  // Total fiat USD for the Onramper widget (min games * price per game)
+  const totalFiatUsd = useMemo(() => {
+    if (!ticketPriceUsd) return null;
+    return parseFloat(ticketPriceUsd) * minFiatGames;
+  }, [ticketPriceUsd, minFiatGames]);
+
+  // Refs for polling cleanup and auto-mint tracking
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialTabSet = useRef(false);
+  const initialStrkBalance = useRef<number | null>(null);
+  const autoMintTriggered = useRef(false);
 
   // --- Initialize view on open ---
 
@@ -559,10 +377,10 @@ export default function PaymentOptionsModal({
     if (!open) {
       // Reset state on close
       setSpecialView(null);
-      setFiatPhase("onramp");
-      setIsSwapping(false);
-      setIsPolling(false);
+      setIsMinting(false);
       initialTabSet.current = false;
+      initialStrkBalance.current = null;
+      autoMintTriggered.current = false;
       stopPolling();
       return;
     }
@@ -613,25 +431,17 @@ export default function PaymentOptionsModal({
     fetchOnramperMinFiat().then(setMinFiatAmount);
   }, []);
 
-  // --- Auto-bump game count when switching to fiat tab ---
-
-  useEffect(() => {
-    if (activeTab === "fiat" && gameCount < minFiatGames) {
-      setGameCount(minFiatGames);
-    }
-  }, [activeTab, minFiatGames]);
-
-  // --- Fetch STRK quote for N games (for the funded phase check) ---
+  // --- Fetch STRK quote for minFiatGames (how much STRK needed to buy N tickets) ---
 
   useEffect(() => {
     const fetchStrkQuote = async () => {
-      if (!dungeon.ticketAddress) return;
+      if (!dungeon.ticketAddress || minFiatGames < 1) return;
       const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
       if (!strkToken) return;
 
       try {
         const quote = await getSwapQuote(
-          -gameCount * 1e18,
+          -minFiatGames * 1e18,
           dungeon.ticketAddress,
           strkToken.address
         );
@@ -644,7 +454,7 @@ export default function PaymentOptionsModal({
       }
     };
     fetchStrkQuote();
-  }, [dungeon.ticketAddress, gameCount]);
+  }, [dungeon.ticketAddress, minFiatGames]);
 
   // --- Default token selection ---
 
@@ -709,20 +519,20 @@ export default function PaymentOptionsModal({
       clearTimeout(pollTimeoutRef.current);
       pollTimeoutRef.current = null;
     }
-    setIsPolling(false);
   }, []);
 
+  // Start polling automatically when fiat tab is shown
   useEffect(() => {
-    if (fiatPhase === "funded" && activeTab === "fiat" && specialView === null && open) {
-      // Start polling
-      setIsPolling(true);
-      refreshTokenBalances();
+    if (activeTab === "fiat" && specialView === null && open && !isMinting) {
+      // Record initial STRK balance
+      if (initialStrkBalance.current === null) {
+        initialStrkBalance.current = strkBalance;
+      }
 
       pollIntervalRef.current = setInterval(() => {
         refreshTokenBalances();
       }, BALANCE_POLL_INTERVAL);
 
-      // Timeout after 30 minutes
       pollTimeoutRef.current = setTimeout(() => {
         stopPolling();
       }, BALANCE_POLL_TIMEOUT);
@@ -731,7 +541,23 @@ export default function PaymentOptionsModal({
     } else {
       stopPolling();
     }
-  }, [fiatPhase, activeTab, specialView, open]);
+  }, [activeTab, specialView, open, isMinting]);
+
+  // Auto-trigger mint when STRK balance increases enough
+  useEffect(() => {
+    if (
+      activeTab === "fiat" &&
+      !isMinting &&
+      !autoMintTriggered.current &&
+      initialStrkBalance.current !== null &&
+      strkQuoteForGames !== null &&
+      strkBalance > initialStrkBalance.current &&
+      (strkBalance - initialStrkBalance.current) >= strkQuoteForGames * 0.9 // 90% threshold for slippage
+    ) {
+      autoMintTriggered.current = true;
+      swapStrkAndMint();
+    }
+  }, [strkBalance, activeTab, isMinting, strkQuoteForGames]);
 
   // --- Actions ---
 
@@ -776,27 +602,29 @@ export default function PaymentOptionsModal({
     const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
     if (!strkToken) return;
 
-    setIsSwapping(true);
+    setIsMinting(true);
+    stopPolling();
     try {
       const quote = await getSwapQuote(
-        -gameCount * 1e18,
+        -minFiatGames * 1e18,
         dungeon.ticketAddress,
         strkToken.address
       );
 
       const tokenSwapData = {
         tokenAddress: dungeon.ticketAddress!,
-        minimumAmount: gameCount,
+        minimumAmount: minFiatGames,
         quote: quote,
       };
       const calls = generateSwapCalls(routerContract, strkToken.address, tokenSwapData);
-      purchaseGames(calls, gameCount, () => {
-        setIsSwapping(false);
+      purchaseGames(calls, minFiatGames, () => {
+        setIsMinting(false);
         onClose();
       });
     } catch (error) {
       console.error("Error swapping STRK:", error);
-      setIsSwapping(false);
+      setIsMinting(false);
+      autoMintTriggered.current = false; // Allow retry
     }
   };
 
@@ -806,10 +634,6 @@ export default function PaymentOptionsModal({
     },
     []
   );
-
-  const handleGameCountChange = useCallback((count: number) => {
-    setGameCount(count);
-  }, []);
 
   // --- Render helpers ---
 
@@ -1001,17 +825,9 @@ export default function PaymentOptionsModal({
                       {activeTab === "fiat" && (
                         <FiatTabContent
                           walletAddress={accountAddress}
-                          ticketPriceUsd={ticketPriceUsd}
-                          gameCount={gameCount}
-                          onGameCountChange={handleGameCountChange}
+                          totalFiatUsd={totalFiatUsd}
                           minFiatGames={minFiatGames}
-                          fiatPhase={fiatPhase}
-                          onFiatPhaseChange={setFiatPhase}
-                          onSwapAndMint={swapStrkAndMint}
-                          strkBalance={strkBalance}
-                          strkQuoteForGames={strkQuoteForGames}
-                          isPolling={isPolling}
-                          isSwapping={isSwapping}
+                          isMinting={isMinting}
                         />
                       )}
                     </motion.div>
