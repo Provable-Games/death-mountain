@@ -36,6 +36,7 @@ export interface ControllerContext {
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
   bulkMintGames: (amount: number, callback: () => void) => void;
+  purchaseGames: (txs: any[], amount: number, callback: () => void) => void;
   refreshTokenBalances: () => Promise<void>;
 }
 
@@ -179,6 +180,25 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     );
   };
 
+  // Buy multiple games with prepended swap calls (e.g. STRK → tickets + mint all)
+  const purchaseGames = async (txs: any[], amount: number, callback: () => void) => {
+    if (!account) return;
+    amount = Math.min(amount, 50);
+    const resolvedName = resolvePlayerName();
+
+    await buyGame(
+      account,
+      { paymentType: "Ticket" },
+      resolvedName,
+      txs,
+      amount,
+      () => {
+        fetchTokenBalances();
+        callback();
+      }
+    );
+  };
+
   const createBurner = async () => {
     setCreatingBurner(true);
     let account = await createBurnerAccount(demoRpcProvider);
@@ -233,6 +253,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         logout: () => disconnect(),
         enterDungeon,
         bulkMintGames,
+        purchaseGames,
         refreshTokenBalances: fetchTokenBalances,
       }}
     >

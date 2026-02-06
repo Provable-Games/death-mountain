@@ -95,16 +95,6 @@ const buildOnramperUrl = (walletAddress: string, totalUsd: number | null) => {
   return url;
 };
 
-// Slider marks for crypto tab (min 1)
-const CRYPTO_SLIDER_MARKS = [
-  { value: 1, label: "1" },
-  { value: 10, label: "10" },
-  { value: 20, label: "20" },
-  { value: 30, label: "30" },
-  { value: 40, label: "40" },
-  { value: 50, label: "50" },
-];
-
 // Build fiat slider marks dynamically (min varies by onramp provider)
 const buildFiatSliderMarks = (minFiat: number) => {
   const marks = [{ value: minFiat, label: `${minFiat}` }];
@@ -207,25 +197,19 @@ const GameCountSelector = memo(({
 });
 GameCountSelector.displayName = "GameCountSelector";
 
-// Crypto tab content
+// Crypto tab content — 1 game at a time (swap + enter dungeon)
 const CryptoTabContent = memo(({
   userTokens,
   selectedToken,
   tokenQuote,
   onTokenChange,
   buyDungeonTicket,
-  gameCount,
-  onGameCountChange,
-  ticketPriceUsd,
 }: {
   userTokens: any[];
   selectedToken: string;
   tokenQuote: { amount: string; loading: boolean; error?: string };
   onTokenChange: (tokenSymbol: string) => void;
   buyDungeonTicket: () => void;
-  gameCount: number;
-  onGameCountChange: (count: number) => void;
-  ticketPriceUsd: string | null;
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
@@ -247,14 +231,10 @@ const CryptoTabContent = memo(({
   }
 
   return (
-    <Box sx={{ px: 3, py: 1.5 }}>
-      <GameCountSelector
-        gameCount={gameCount}
-        onGameCountChange={onGameCountChange}
-        ticketPriceUsd={ticketPriceUsd}
-        sliderMin={MIN_GAMES}
-        sliderMarks={CRYPTO_SLIDER_MARKS}
-      />
+    <Box sx={{ px: 3, py: 2 }}>
+      <Typography sx={{ fontSize: 12, color: "#FFD700", opacity: 0.7, mb: 1.5, textAlign: "center", letterSpacing: 0.5 }}>
+        Swap tokens from your wallet
+      </Typography>
 
       <Button
         variant="outlined"
@@ -336,9 +316,7 @@ const CryptoTabContent = memo(({
         disabled={tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance}
       >
         <Typography sx={styles.buttonText}>
-          {hasEnoughBalance
-            ? `Enter Dungeon${gameCount > 1 ? ` (${gameCount} games)` : ""}`
-            : "Insufficient Balance"}
+          {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
         </Typography>
       </Button>
     </Box>
@@ -355,7 +333,7 @@ const FiatTabContent = memo(({
   minFiatGames,
   fiatPhase,
   onFiatPhaseChange,
-  onSwapAndEnter,
+  onSwapAndMint,
   strkBalance,
   strkQuoteForGames,
   isPolling,
@@ -368,7 +346,7 @@ const FiatTabContent = memo(({
   minFiatGames: number;
   fiatPhase: "onramp" | "funded";
   onFiatPhaseChange: (phase: "onramp" | "funded") => void;
-  onSwapAndEnter: () => void;
+  onSwapAndMint: () => void;
   strkBalance: number;
   strkQuoteForGames: number | null;
   isPolling: boolean;
@@ -385,7 +363,7 @@ const FiatTabContent = memo(({
           <>
             <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
             <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-              Swapping STRK for {gameCount} ticket{gameCount > 1 ? "s" : ""}...
+              Buying {gameCount} game{gameCount > 1 ? "s" : ""}...
             </Typography>
             <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
               Please confirm the transaction in your wallet
@@ -404,11 +382,11 @@ const FiatTabContent = memo(({
             <Button
               variant="contained"
               sx={styles.activateButton}
-              onClick={onSwapAndEnter}
+              onClick={onSwapAndMint}
               fullWidth
             >
               <Typography sx={styles.buttonText}>
-                Enter Dungeon{gameCount > 1 ? ` (${gameCount} games)` : ""}
+                Mint {gameCount} Game{gameCount > 1 ? "s" : ""}
               </Typography>
             </Button>
           </>
@@ -491,7 +469,7 @@ export default function PaymentOptionsModal({
   onClose,
 }: PaymentOptionsModalProps) {
   const {
-    tokenBalances, goldenPassIds, enterDungeon, bulkMintGames, refreshTokenBalances,
+    tokenBalances, goldenPassIds, enterDungeon, bulkMintGames, purchaseGames, refreshTokenBalances,
   } = useController();
   const { defaultPaymentToken } = useUIStore();
 
@@ -713,12 +691,12 @@ export default function PaymentOptionsModal({
     [userTokens, dungeon.ticketAddress]
   );
 
-  // Fetch quote when token or game count changes (crypto tab active)
+  // Fetch quote when token changes (crypto tab — always 1 game)
   useEffect(() => {
     if (selectedToken && specialView === null) {
-      fetchTokenQuote(selectedToken, gameCount);
+      fetchTokenQuote(selectedToken, 1);
     }
-  }, [selectedToken, gameCount, specialView]);
+  }, [selectedToken, specialView]);
 
   // --- Balance polling for fiat funded phase ---
 
@@ -779,21 +757,21 @@ export default function PaymentOptionsModal({
     if (!selectedTokenData) return;
 
     const quote = await getSwapQuote(
-      -gameCount * 1e18,
+      -1e18,
       dungeon.ticketAddress!,
       selectedTokenData.address
     );
 
     const tokenSwapData = {
       tokenAddress: dungeon.ticketAddress!,
-      minimumAmount: gameCount,
+      minimumAmount: 1,
       quote: quote,
     };
     const calls = generateSwapCalls(routerContract, selectedTokenData.address, tokenSwapData);
     enterDungeon({ paymentType: "Ticket" }, calls);
   };
 
-  const swapStrkAndEnter = async () => {
+  const swapStrkAndMint = async () => {
     if (!dungeon.ticketAddress) return;
     const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
     if (!strkToken) return;
@@ -812,7 +790,10 @@ export default function PaymentOptionsModal({
         quote: quote,
       };
       const calls = generateSwapCalls(routerContract, strkToken.address, tokenSwapData);
-      enterDungeon({ paymentType: "Ticket" }, calls);
+      purchaseGames(calls, gameCount, () => {
+        setIsSwapping(false);
+        onClose();
+      });
     } catch (error) {
       console.error("Error swapping STRK:", error);
       setIsSwapping(false);
@@ -1015,9 +996,6 @@ export default function PaymentOptionsModal({
                           tokenQuote={tokenQuote}
                           onTokenChange={handleTokenChange}
                           buyDungeonTicket={buyDungeonTicket}
-                          gameCount={gameCount}
-                          onGameCountChange={handleGameCountChange}
-                          ticketPriceUsd={ticketPriceUsd}
                         />
                       )}
                       {activeTab === "fiat" && (
@@ -1029,7 +1007,7 @@ export default function PaymentOptionsModal({
                           minFiatGames={minFiatGames}
                           fiatPhase={fiatPhase}
                           onFiatPhaseChange={setFiatPhase}
-                          onSwapAndEnter={swapStrkAndEnter}
+                          onSwapAndMint={swapStrkAndMint}
                           strkBalance={strkBalance}
                           strkQuoteForGames={strkQuoteForGames}
                           isPolling={isPolling}
