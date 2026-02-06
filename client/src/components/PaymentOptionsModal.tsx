@@ -16,29 +16,57 @@ import {
   Link,
   Menu,
   MenuItem,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
-import { useProvider } from "@starknet-react/core";
+import { useAccount, useProvider } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Contract } from "starknet";
+
+// Onramper API key from environment variable
+const ONRAMPER_API_KEY = import.meta.env.VITE_ONRAMPER_API_KEY || "";
+
+// Use dev domain for test keys, prod domain for prod keys
+const ONRAMPER_DOMAIN = ONRAMPER_API_KEY.startsWith("pk_test_")
+  ? "buy.onramper.dev"
+  : "buy.onramper.com";
+
+// Onramper widget base URL with Loot Survivor theme
+const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&redirectAtCheckout=true&hideTopBar=true`;
+
+// Build Onramper URL with default fiat amount (ticket price + fees buffer)
+const buildOnramperUrl = (walletAddress: string, ticketPriceUsd: string | null) => {
+  let url = `${ONRAMPER_BASE_URL}&networkWallets=starknet:${walletAddress}`;
+
+  if (ticketPriceUsd) {
+    // Add buffer for price fluctuations (~10%)
+    const amountWithFees = Math.ceil(parseFloat(ticketPriceUsd) * 1.10);
+    url += `&defaultFiat=usd&defaultAmount=${amountWithFees}`;
+  }
+
+  return url;
+};
 
 interface PaymentOptionsModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-interface TokenSelectionProps {
+interface CryptoFiatPaymentProps {
   userTokens: any[];
   selectedToken: string;
   tokenQuote: { amount: string; loading: boolean; error?: string };
   onTokenChange: (tokenSymbol: string) => void;
   styles: any;
   buyDungeonTicket: () => void;
+  walletAddress: string;
+  ticketPriceUsd: string | null;
 }
 
-// Memoized token selection component
-const TokenSelectionContent = memo(
+// Memoized payment component with Crypto/Fiat tabs
+const CryptoFiatPayment = memo(
   ({
     userTokens,
     selectedToken,
@@ -46,11 +74,33 @@ const TokenSelectionContent = memo(
     onTokenChange,
     buyDungeonTicket,
     styles,
-  }: TokenSelectionProps) => {
+    walletAddress,
+    ticketPriceUsd,
+  }: CryptoFiatPaymentProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const selectedTokenData = userTokens.find(
       (t: any) => t.symbol === selectedToken
     );
+
+    // Determine if user has enough balance for the current quote
+    const hasEnoughBalance = useMemo(() => {
+      if (!selectedTokenData || !tokenQuote.amount) return false;
+      return Number(selectedTokenData.balance) >= Number(tokenQuote.amount);
+    }, [selectedTokenData, tokenQuote]);
+
+    // Track if initial tab has been set
+    const initialTabSet = useRef(false);
+
+    // Default to crypto tab, will be updated on first load
+    const [activeTab, setActiveTab] = useState<"crypto" | "fiat">("crypto");
+
+    // Set initial tab only once when quote first loads
+    useEffect(() => {
+      if (!initialTabSet.current && !tokenQuote.loading && tokenQuote.amount) {
+        setActiveTab(hasEnoughBalance ? "crypto" : "fiat");
+        initialTabSet.current = true;
+      }
+    }, [hasEnoughBalance, tokenQuote.loading, tokenQuote.amount]);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
       setAnchorEl(event.currentTarget);
@@ -65,148 +115,198 @@ const TokenSelectionContent = memo(
       handleClose();
     };
 
-    const hasEnoughBalance = useMemo(() => {
-      return Number(selectedTokenData.balance) >= Number(tokenQuote.amount);
-    }, [selectedTokenData, tokenQuote]);
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: "crypto" | "fiat") => {
+      setActiveTab(newValue);
+    };
 
     return (
       <Box
         sx={{
-          ...styles.paymentCard,
+          height: "auto",
+          minHeight: activeTab === "fiat" ? "680px" : "200px",
           position: "relative",
-          overflow: "visible",
+          overflow: "hidden",
+          transition: "min-height 0.3s ease",
+          width: "100%",
         }}
       >
-        <Box sx={styles.cardHeader}>
-          <Box sx={styles.iconContainer}>
-            <TokenIcon sx={{ fontSize: 28, color: "#d0c98d" }} />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
-            <Typography sx={styles.paymentSubtitle}>
-              Select any token in your controller wallet
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box sx={styles.sectionContainer} pb={2} mt={1}>
-          <Button
-            variant="outlined"
-            onClick={handleClick}
-            fullWidth
-            sx={styles.mobileSelectButton}
-          >
-            <Box
-              sx={{
-                fontSize: "0.6rem",
-                color: "text.primary",
-                marginLeft: "-5px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              ▼
-            </Box>
-            <Box sx={styles.tokenRow}>
-              <Box sx={styles.tokenLeft}>
-                <Typography sx={styles.tokenName}>
-                  {selectedTokenData
-                    ? selectedTokenData.symbol
-                    : "Select token"}
-                </Typography>
-              </Box>
-              {selectedTokenData && (
-                <Typography sx={styles.tokenBalance}>
-                  {selectedTokenData.balance}
-                </Typography>
-              )}
-            </Box>
-          </Button>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            slotProps={{
-              paper: {
-                sx: {
-                  mt: 0.5,
-                  width: "260px",
-                  maxHeight: 300,
-                  background: "rgba(24, 40, 24, 1)",
-                  border: "1px solid rgba(208, 201, 141, 0.3)",
-                  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-                  zIndex: 9999,
-                },
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: "rgba(208, 201, 141, 0.2)", mx: 2 }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{
+              minHeight: 40,
+              "& .MuiTabs-indicator": {
+                backgroundColor: "#d0c98d",
               },
             }}
-            sx={{
-              zIndex: 9999,
-            }}
           >
-            {userTokens.map((token: any) => (
-              <MenuItem
-                key={token.symbol}
-                onClick={() => handleTokenSelect(token.symbol)}
+            <Tab
+              value="crypto"
+              label="Crypto"
+              icon={<TokenIcon sx={{ fontSize: 18 }} />}
+              iconPosition="start"
+              sx={{
+                minHeight: 40,
+                fontSize: 13,
+                fontWeight: 600,
+                color: activeTab === "crypto" ? "#d0c98d" : "rgba(255,255,255,0.6)",
+                "&.Mui-selected": { color: "#d0c98d" },
+              }}
+            />
+            <Tab
+              value="fiat"
+              label="Fiat"
+              icon={<CreditCardIcon sx={{ fontSize: 18 }} />}
+              iconPosition="start"
+              sx={{
+                minHeight: 40,
+                fontSize: 13,
+                fontWeight: 600,
+                color: activeTab === "fiat" ? "#d0c98d" : "rgba(255,255,255,0.6)",
+                "&.Mui-selected": { color: "#d0c98d" },
+              }}
+            />
+          </Tabs>
+        </Box>
+
+        {/* Crypto Tab Content */}
+        {activeTab === "crypto" && (
+          <Box sx={{ px: 3, py: 2 }}>
+            <Typography sx={{ ...styles.paymentSubtitle, mb: 1.5, textAlign: "center" }}>
+              Swap tokens from your wallet
+            </Typography>
+
+            <Button
+              variant="outlined"
+              onClick={handleClick}
+              fullWidth
+              sx={styles.mobileSelectButton}
+            >
+              <Box
                 sx={{
+                  fontSize: "0.6rem",
+                  color: "text.primary",
+                  marginLeft: "-5px",
                   display: "flex",
-                  justifyContent: "space-between",
                   alignItems: "center",
-                  gap: 1,
-                  backgroundColor:
-                    token.symbol === selectedToken
-                      ? "rgba(208, 201, 141, 0.2)"
-                      : "transparent",
-                  "&:hover": {
-                    backgroundColor:
-                      token.symbol === selectedToken
-                        ? "rgba(208, 201, 141, 0.3)"
-                        : "rgba(208, 201, 141, 0.1)",
-                  },
                 }}
               >
-                <Box sx={styles.tokenRow}>
-                  <Box sx={styles.tokenLeft}>
-                    <Typography sx={styles.tokenName}>
-                      {token.symbol}
-                    </Typography>
-                  </Box>
-                  <Typography sx={styles.tokenBalance}>
-                    {token.balance}
+                ▼
+              </Box>
+              <Box sx={styles.tokenRow}>
+                <Box sx={styles.tokenLeft}>
+                  <Typography sx={styles.tokenName}>
+                    {selectedTokenData
+                      ? selectedTokenData.symbol
+                      : "Select token"}
                   </Typography>
                 </Box>
-              </MenuItem>
-            ))}
-          </Menu>
-        </Box>
+                {selectedTokenData && (
+                  <Typography sx={styles.tokenBalance}>
+                    {selectedTokenData.balance}
+                  </Typography>
+                )}
+              </Box>
+            </Button>
 
-        <Box sx={styles.costDisplay}>
-          <Typography sx={styles.costText}>
-            {tokenQuote.loading
-              ? "Loading quote..."
-              : tokenQuote.error
-                ? `Error: ${tokenQuote.error}`
-                : tokenQuote.amount
-                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-                  : "Loading..."}
-          </Typography>
-        </Box>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              slotProps={{
+                paper: {
+                  sx: {
+                    mt: 0.5,
+                    width: "260px",
+                    maxHeight: 300,
+                    background: "rgba(24, 40, 24, 1)",
+                    border: "1px solid rgba(208, 201, 141, 0.3)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                    zIndex: 9999,
+                  },
+                },
+              }}
+              sx={{ zIndex: 9999 }}
+            >
+              {userTokens.map((token: any) => (
+                <MenuItem
+                  key={token.symbol}
+                  onClick={() => handleTokenSelect(token.symbol)}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1,
+                    backgroundColor:
+                      token.symbol === selectedToken
+                        ? "rgba(208, 201, 141, 0.2)"
+                        : "transparent",
+                    "&:hover": {
+                      backgroundColor:
+                        token.symbol === selectedToken
+                          ? "rgba(208, 201, 141, 0.3)"
+                          : "rgba(208, 201, 141, 0.1)",
+                    },
+                  }}
+                >
+                  <Box sx={styles.tokenRow}>
+                    <Box sx={styles.tokenLeft}>
+                      <Typography sx={styles.tokenName}>
+                        {token.symbol}
+                      </Typography>
+                    </Box>
+                    <Typography sx={styles.tokenBalance}>
+                      {token.balance}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Menu>
 
-        <Box sx={{ display: "flex", justifyContent: "center", px: 2, mb: 2 }}>
-          <Button
-            variant="contained"
-            sx={styles.activateButton}
-            onClick={buyDungeonTicket}
-            fullWidth
-            disabled={
-              tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance
-            }
-          >
-            <Typography sx={styles.buttonText}>
-              {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
-            </Typography>
-          </Button>
-        </Box>
+            <Box sx={{ ...styles.costDisplay, mt: 2, mb: 1 }}>
+              <Typography sx={styles.costText}>
+                {tokenQuote.loading
+                  ? "Loading quote..."
+                  : tokenQuote.error
+                    ? `Error: ${tokenQuote.error}`
+                    : tokenQuote.amount
+                      ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+                      : "Loading..."}
+              </Typography>
+            </Box>
+
+            <Button
+              variant="contained"
+              sx={styles.activateButton}
+              onClick={buyDungeonTicket}
+              fullWidth
+              disabled={
+                tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance
+              }
+            >
+              <Typography sx={styles.buttonText}>
+                {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
+              </Typography>
+            </Button>
+          </Box>
+        )}
+
+        {/* Fiat Tab Content - Onramper */}
+        {activeTab === "fiat" && (
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+            <iframe
+              src={buildOnramperUrl(walletAddress, ticketPriceUsd)}
+              title="Onramper Widget"
+              height="630px"
+              width="100%"
+              style={{ border: "none" }}
+              allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
+            />
+          </Box>
+        )}
       </Box>
     );
   }
@@ -222,6 +322,7 @@ export default function PaymentOptionsModal({
 
   // Use the provider from StarknetConfig
   const { provider } = useProvider();
+  const { address: accountAddress } = useAccount();
   const dungeon = useDungeon();
 
   const routerContract = useMemo(
@@ -277,6 +378,39 @@ export default function PaymentOptionsModal({
     amount: "",
     loading: false,
   });
+
+  // Ticket price in USD (from Ekubo USDC quote)
+  const [ticketPriceUsd, setTicketPriceUsd] = useState<string | null>(null);
+
+  // Fetch ticket price in USDC (~USD) from Ekubo for Onramper default amount
+  useEffect(() => {
+    const fetchTicketPriceUsd = async () => {
+      if (!dungeon.ticketAddress) return;
+
+      // Find USDC token address
+      const usdcToken = NETWORKS.SN_MAIN.paymentTokens.find(
+        (t: any) => t.name === "USDC"
+      );
+      if (!usdcToken) return;
+
+      try {
+        const quote = await getSwapQuote(
+          -1e18,
+          dungeon.ticketAddress,
+          usdcToken.address
+        );
+        if (quote && quote.total !== 0) {
+          // USDC has 6 decimals
+          const priceUsd = ((quote.total * -1) / 1e6).toFixed(2);
+          setTicketPriceUsd(priceUsd);
+        }
+      } catch (error) {
+        console.error("Error fetching ticket price in USD:", error);
+      }
+    };
+
+    fetchTicketPriceUsd();
+  }, [dungeon.ticketAddress]);
 
   useEffect(() => {
     if (userTokens.length > 0 && !selectedToken) {
@@ -505,7 +639,6 @@ export default function PaymentOptionsModal({
                   flexDirection: "column",
                   gap: 1,
                   width: "100%",
-                  maxWidth: "330px",
                   mx: "auto",
                 }}
               >
@@ -613,8 +746,8 @@ export default function PaymentOptionsModal({
                     </MotionWrapper>
                   )}
 
-                  {/* Token Payment Option */}
-                  {currentView === "token" && (
+                  {/* Token Payment Option with Crypto/Fiat tabs */}
+                  {currentView === "token" && accountAddress && (
                     <motion.div
                       key="token-view"
                       initial={{ opacity: 0, y: 20 }}
@@ -623,13 +756,15 @@ export default function PaymentOptionsModal({
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       style={{ width: "100%" }}
                     >
-                      <TokenSelectionContent
+                      <CryptoFiatPayment
                         userTokens={userTokens}
                         selectedToken={selectedToken}
                         tokenQuote={tokenQuote}
                         onTokenChange={handleTokenChange}
                         styles={styles}
                         buyDungeonTicket={buyDungeonTicket}
+                        walletAddress={accountAddress}
+                        ticketPriceUsd={ticketPriceUsd}
                       />
                     </motion.div>
                   )}
@@ -752,18 +887,6 @@ export default function PaymentOptionsModal({
                       ></Link>
                     ))}
 
-                  {/* TODO: Temporarily disabled - waiting for additional support from Cartridge */}
-                  {/* {currentView === "token" && (
-                    <Link
-                      component="button"
-                      onClick={() => openBuyTicket()}
-                      sx={styles.footerLink}
-                    >
-                      Pay with other wallets
-                    </Link>
-                  )} */}
-
-
                   {currentView === "credit" &&
                     (userTokens.length > 0 ? (
                       <Link
@@ -815,8 +938,8 @@ const styles = {
     backdropFilter: "blur(8px)",
   },
   modal: {
-    width: "420px",
-    maxWidth: "90dvw",
+    width: "500px",
+    maxWidth: "95dvw",
     p: 0,
     borderRadius: 3,
     background: "linear-gradient(145deg, #1a2f1a 0%, #0f1f0f 100%)",
