@@ -36,6 +36,7 @@ export interface ControllerContext {
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
   bulkMintGames: (amount: number, callback: () => void) => void;
+  refreshTokenBalances: () => Promise<void>;
 }
 
 // Create a context
@@ -232,6 +233,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
         logout: () => disconnect(),
         enterDungeon,
         bulkMintGames,
+        refreshTokenBalances: fetchTokenBalances,
       }}
     >
       {children}
