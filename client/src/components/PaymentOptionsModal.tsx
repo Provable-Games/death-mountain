@@ -77,7 +77,7 @@ const fetchOnramperMinFiat = async (): Promise<number> => {
 };
 
 // Onramper widget base URL with Loot Survivor theme
-const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&redirectAtCheckout=true&hideTopBar=true`;
+const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&hideTopBar=true`;
 
 // Fetch HMAC-SHA256 signature for sensitive URL params (required by Onramper prod)
 const fetchOnramperSignature = async (walletAddress: string): Promise<string | null> => {
@@ -575,7 +575,18 @@ export default function PaymentOptionsModal({
         stopPolling();
       }, BALANCE_POLL_TIMEOUT);
 
-      return () => stopPolling();
+      // Force refresh when user returns to the tab (browser throttles timers in background)
+      const onVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          refreshTokenBalances();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibilityChange);
+
+      return () => {
+        stopPolling();
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+      };
     } else {
       stopPolling();
     }
