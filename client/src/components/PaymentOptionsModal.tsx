@@ -79,14 +79,31 @@ const fetchOnramperMinFiat = async (): Promise<number> => {
 // Onramper widget base URL with Loot Survivor theme
 const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&redirectAtCheckout=true&hideTopBar=true`;
 
-// Build Onramper URL with wallet address and pre-filled fiat amount
-const buildOnramperUrl = (walletAddress: string, totalUsd: number | null) => {
+// Fetch HMAC-SHA256 signature for sensitive URL params (required by Onramper prod)
+const fetchOnramperSignature = async (walletAddress: string): Promise<string | null> => {
+  try {
+    const networkWallets = `starknet:${walletAddress}`;
+    const res = await fetch(`/api/sign-onramper?networkWallets=${encodeURIComponent(networkWallets)}`);
+    if (!res.ok) return null;
+    const { signature } = await res.json();
+    return signature || null;
+  } catch {
+    return null;
+  }
+};
+
+// Build Onramper URL with wallet address, pre-filled fiat amount, and signature
+const buildOnramperUrl = (walletAddress: string, totalUsd: number | null, signature: string | null) => {
   let url = `${ONRAMPER_BASE_URL}&networkWallets=starknet:${walletAddress}`;
 
   if (totalUsd && totalUsd > 0) {
     // Add ~3% buffer for provider fees + slippage, rounded up
     const amountWithBuffer = Math.ceil(totalUsd * 1.03);
     url += `&defaultFiat=usd&defaultAmount=${amountWithBuffer}`;
+  }
+
+  if (signature) {
+    url += `&signature=${signature}`;
   }
 
   return url;
@@ -242,6 +259,14 @@ const FiatTabContent = memo(({
   strkPerGame: number | null;
   isMinting: boolean;
 }) => {
+  const [signature, setSignature] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (walletAddress) {
+      fetchOnramperSignature(walletAddress).then(setSignature);
+    }
+  }, [walletAddress]);
+
   return (
     <Box sx={{ position: "relative", width: "100%" }}>
       {/* Minting overlay */}
@@ -277,7 +302,7 @@ const FiatTabContent = memo(({
         )}
       </Box>
       <iframe
-        src={buildOnramperUrl(walletAddress, totalFiatUsd)}
+        src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
         title="Onramper Widget"
         height="560px"
         width="100%"
