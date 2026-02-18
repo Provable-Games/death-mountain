@@ -304,9 +304,13 @@ const FiatTabContent = memo(({
       <iframe
         src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
         title="Onramper Widget"
-        height="560px"
         width="100%"
-        style={{ border: "none" }}
+        scrolling="no"
+        style={{
+          border: "none",
+          display: "block",
+          height: "clamp(620px, calc(96dvh - 240px), 980px)",
+        }}
         allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
       />
     </Box>
@@ -958,7 +962,7 @@ const styles = {
   modal: {
     width: "500px",
     maxWidth: "95dvw",
-    maxHeight: "90dvh",
+    maxHeight: "96dvh",
     overflowY: "auto" as const,
     p: 0,
     borderRadius: 3,
