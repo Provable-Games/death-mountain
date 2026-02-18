@@ -33,6 +33,7 @@ const MAX_GAMES = 50;
 const FALLBACK_MIN_FIAT_USD = 12; // Fallback if API fetch fails (~$11.72 observed)
 const BALANCE_POLL_INTERVAL = 10_000; // 10 seconds
 const BALANCE_POLL_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const ONRAMPER_TRANSITION_MASK_PX = 68;
 
 // Onramper API key from environment variable
 const ONRAMPER_API_KEY = import.meta.env.VITE_ONRAMPER_API_KEY || "";
@@ -77,7 +78,7 @@ const fetchOnramperMinFiat = async (): Promise<number> => {
 };
 
 // Onramper widget base URL with Loot Survivor theme
-const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&hideTopBar=true`;
+const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&hideTopBar=true&redirectAtCheckout=false`;
 
 // Fetch HMAC-SHA256 signature for sensitive URL params (required by Onramper prod)
 const fetchOnramperSignature = async (walletAddress: string): Promise<string | null> => {
@@ -252,12 +253,14 @@ const FiatTabContent = memo(({
   minFiatGames,
   strkPerGame,
   isMinting,
+  isOnrampInProgress,
 }: {
   walletAddress: string;
   totalFiatUsd: number | null;
   minFiatGames: number;
   strkPerGame: number | null;
   isMinting: boolean;
+  isOnrampInProgress: boolean;
 }) => {
   const [signature, setSignature] = useState<string | null>(null);
 
@@ -301,18 +304,67 @@ const FiatTabContent = memo(({
           </Typography>
         )}
       </Box>
-      <iframe
-        src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
-        title="Onramper Widget"
-        width="100%"
-        scrolling="no"
-        style={{
-          border: "none",
-          display: "block",
-          height: "clamp(620px, calc(96dvh - 240px), 980px)",
-        }}
-        allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
-      />
+      {isOnrampInProgress && (
+        <Box
+          sx={{
+            mx: 2,
+            mb: 1,
+            px: 1.5,
+            py: 1,
+            borderRadius: 1,
+            border: "1px solid rgba(208, 201, 141, 0.28)",
+            background: "rgba(208, 201, 141, 0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#d0c98d",
+              boxShadow: "0 0 10px rgba(208, 201, 141, 0.7)",
+              flexShrink: 0,
+            }}
+          />
+          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.35 }}>
+            Onramp in progress in another tab. Complete checkout, then return here.
+          </Typography>
+        </Box>
+      )}
+
+      <Box sx={{ position: "relative", width: "100%" }}>
+        {isOnrampInProgress && (
+          <Box
+            sx={{
+              pointerEvents: "none",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 2,
+              height: ONRAMPER_TRANSITION_MASK_PX,
+              background: "linear-gradient(180deg, rgba(10, 18, 10, 0.995) 0%, rgba(10, 18, 10, 0.96) 70%, rgba(10, 18, 10, 0) 100%)",
+              borderBottom: "1px solid rgba(208, 201, 141, 0.14)",
+            }}
+          />
+        )}
+
+        <iframe
+          src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
+          title="Onramper Widget"
+          width="100%"
+          scrolling="no"
+          style={{
+            border: "none",
+            display: "block",
+            height: "clamp(620px, calc(96dvh - 240px), 980px)",
+          }}
+          allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
+        />
+      </Box>
     </Box>
   );
 });
@@ -387,6 +439,7 @@ export default function PaymentOptionsModal({
     loading: boolean;
     error?: string;
   }>({ amount: "", loading: false });
+  const [isFiatCheckoutInProgress, setIsFiatCheckoutInProgress] = useState(false);
   const [ticketPriceUsd, setTicketPriceUsd] = useState<string | null>(null);
   const [strkQuoteForGames, setStrkQuoteForGames] = useState<number | null>(null);
   const [minFiatAmount, setMinFiatAmount] = useState(FALLBACK_MIN_FIAT_USD);
@@ -409,6 +462,7 @@ export default function PaymentOptionsModal({
   // Refs for polling cleanup and auto-mint tracking
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fiatTabWasHidden = useRef(false);
   const initialTabSet = useRef(false);
   const initialStrkBalance = useRef<number | null>(null);
   const autoMintTriggered = useRef(false);
@@ -420,6 +474,8 @@ export default function PaymentOptionsModal({
       // Reset state on close
       setSpecialView(null);
       setIsMinting(false);
+      setIsFiatCheckoutInProgress(false);
+      fiatTabWasHidden.current = false;
       initialTabSet.current = false;
       initialStrkBalance.current = null;
       autoMintTriggered.current = false;
@@ -581,14 +637,25 @@ export default function PaymentOptionsModal({
 
       // Force refresh when user returns to the tab (browser throttles timers in background)
       const onVisibilityChange = () => {
+        if (document.visibilityState === "hidden") {
+          fiatTabWasHidden.current = true;
+          return;
+        }
+
         if (document.visibilityState === "visible") {
           refreshTokenBalances();
+
+          if (fiatTabWasHidden.current) {
+            setIsFiatCheckoutInProgress(true);
+            fiatTabWasHidden.current = false;
+          }
         }
       };
       document.addEventListener("visibilitychange", onVisibilityChange);
 
       return () => {
         stopPolling();
+        fiatTabWasHidden.current = false;
         document.removeEventListener("visibilitychange", onVisibilityChange);
       };
     } else {
@@ -608,6 +675,7 @@ export default function PaymentOptionsModal({
       (strkBalance - initialStrkBalance.current) >= strkQuoteForGames * 0.9 // 90% threshold for slippage
     ) {
       autoMintTriggered.current = true;
+      setIsFiatCheckoutInProgress(false);
       swapStrkAndMint();
     }
   }, [strkBalance, activeTab, isMinting, strkQuoteForGames]);
@@ -656,6 +724,7 @@ export default function PaymentOptionsModal({
     if (!strkToken) return;
 
     setIsMinting(true);
+    setIsFiatCheckoutInProgress(false);
     stopPolling();
     try {
       const quote = await getSwapQuote(
@@ -882,6 +951,7 @@ export default function PaymentOptionsModal({
                           minFiatGames={minFiatGames}
                           strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
+                          isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
                         />
                       )}
                     </motion.div>
