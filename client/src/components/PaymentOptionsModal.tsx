@@ -290,7 +290,7 @@ const FiatTabContent = memo(({
       )}
       {/* Info banner */}
       <Box sx={{
-        mx: 2, mt: 1.5, mb: 1, px: 2, py: 1.5,
+        mx: 2, mt: 1.5, mb: 1, px: 2, py: 1,
         background: "rgba(208, 201, 141, 0.08)",
         border: "1px solid rgba(208, 201, 141, 0.2)",
         borderRadius: 1, textAlign: "center",
@@ -330,13 +330,13 @@ const FiatTabContent = memo(({
             }}
           />
           <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.35 }}>
-            Onramp in progress in another tab. Complete checkout, then return here.
+            Onramp in progress in another tab. Complete checkout first.
           </Typography>
         </Box>
       )}
 
       <Box sx={{ position: "relative", width: "100%" }}>
-        {isOnrampInProgress && (
+        {/*isOnrampInProgress && (
           <Box
             sx={{
               pointerEvents: "none",
@@ -350,7 +350,7 @@ const FiatTabContent = memo(({
               borderBottom: "1px solid rgba(208, 201, 141, 0.14)",
             }}
           />
-        )}
+        )*/}
 
         <iframe
           src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
@@ -360,7 +360,7 @@ const FiatTabContent = memo(({
           style={{
             border: "none",
             display: "block",
-            height: "clamp(620px, calc(96dvh - 240px), 980px)",
+            height: "clamp(560px, calc(90dvh - 240px), 860px)",
           }}
           allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
         />
