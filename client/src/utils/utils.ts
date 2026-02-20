@@ -1,5 +1,6 @@
 import { BigNumberish, shortString } from "starknet";
 import * as starknet from "@scure/starknet";
+import { Capacitor } from "@capacitor/core";
 
 export const stringToFelt = (v: string): BigNumberish =>
   v ? shortString.encodeShortString(v) : "0x0";
@@ -13,6 +14,24 @@ export const bigintToHex = (v: BigNumberish): `0x${string}` =>
 
 export function delay(time: number) {
   return new Promise(resolve => setTimeout(resolve, time));
+}
+
+/**
+ * Format errors from @cartridge/controller-wasm for debugging.
+ * JsControllerError has getters (code, message, data) that don't show up in JSON.stringify,
+ * so you otherwise only see {"__wbg_ptr":...}. Use this in catch blocks when calling account.execute().
+ */
+export function formatWasmError(error: unknown): string {
+  if (error == null) return String(error);
+  const e = error as Record<string, unknown>;
+  if (typeof e.__wbg_ptr !== "undefined") {
+    const code = typeof e.code !== "undefined" ? e.code : "(no code)";
+    const message = typeof e.message !== "undefined" ? e.message : "(no message)";
+    const data = typeof e.data !== "undefined" ? e.data : "(no data)";
+    return `[WASM/JsControllerError] code=${code} message=${message} data=${data}`;
+  }
+  if (error instanceof Error) return error.message || error.stack || String(error);
+  return String(error);
 }
 
 export function ellipseAddress(address: string, start: number, end: number) {
@@ -187,4 +206,8 @@ export function generateBattleSalt(gameId: number, xp: number, actionCount: numb
   let params = [BigInt(xp), BigInt(gameId), BigInt(actionCount + 1)];
   let poseidon = starknet.poseidonHashMany(params);
   return poseidon;
+}
+
+export function isNative(): boolean {
+  return typeof Capacitor !== "undefined" && Capacitor.isNativePlatform();
 }
