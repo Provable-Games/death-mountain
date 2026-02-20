@@ -16,24 +16,6 @@ export function delay(time: number) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
-/**
- * Format errors from @cartridge/controller-wasm for debugging.
- * JsControllerError has getters (code, message, data) that don't show up in JSON.stringify,
- * so you otherwise only see {"__wbg_ptr":...}. Use this in catch blocks when calling account.execute().
- */
-export function formatWasmError(error: unknown): string {
-  if (error == null) return String(error);
-  const e = error as Record<string, unknown>;
-  if (typeof e.__wbg_ptr !== "undefined") {
-    const code = typeof e.code !== "undefined" ? e.code : "(no code)";
-    const message = typeof e.message !== "undefined" ? e.message : "(no message)";
-    const data = typeof e.data !== "undefined" ? e.data : "(no data)";
-    return `[WASM/JsControllerError] code=${code} message=${message} data=${data}`;
-  }
-  if (error instanceof Error) return error.message || error.stack || String(error);
-  return String(error);
-}
-
 export function ellipseAddress(address: string, start: number, end: number) {
   return `${address.slice(0, start)}...${address.slice(-end)}`.toUpperCase();
 }
