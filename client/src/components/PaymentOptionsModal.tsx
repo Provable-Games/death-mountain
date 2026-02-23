@@ -706,10 +706,11 @@ const FiatTabContent = memo(({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-end",
             background: "#0f1f0f",
             borderRadius: 1,
             px: 3,
+            pb: 3,
             textAlign: "center",
             gap: 1.5,
           }}
@@ -1334,8 +1335,7 @@ export default function PaymentOptionsModal({
             style={{
               display: "flex",
               alignItems: "center",
-            justifyContent: "flex-end",
-            pb: 3,
+              justifyContent: "center",
             }}
           >
             <Box sx={styles.modal}>
