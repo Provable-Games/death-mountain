@@ -1,11 +1,11 @@
 import {
-  ChainId,
+  getDefaultChainId,
   getNetworkConfig,
   NetworkConfig,
 } from "@/utils/networkConfig";
 import { stringToFelt } from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
-import { mainnet } from "@starknet-react/chains";
+import { mainnet, sepolia } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
 import {
   createContext,
@@ -24,7 +24,10 @@ const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(
   null
 );
 
-const controllerConfig = getNetworkConfig(ChainId.SN_MAIN);
+// Resolve network from VITE_NETWORK env var (defaults to mainnet)
+const defaultChainId = getDefaultChainId();
+const controllerConfig = getNetworkConfig(defaultChainId);
+
 const cartridgeController =
   typeof window !== "undefined"
     ? new ControllerConnector({
@@ -37,9 +40,16 @@ const cartridgeController =
     })
     : null;
 
+// Pick the matching starknet-react chain definition
+const starknetChain = defaultChainId === "SN_SEPOLIA" ? sepolia : mainnet;
+
+// Only auto-connect on mainnet — on other networks, force a fresh connection
+// to avoid restoring a stale mainnet session from the Controller iframe.
+const shouldAutoConnect = defaultChainId === "SN_MAIN";
+
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
   const [currentNetworkConfig, setCurrentNetworkConfig] =
-    useState<NetworkConfig>(getNetworkConfig(ChainId.SN_MAIN));
+    useState<NetworkConfig>(controllerConfig);
 
   const rpc = useCallback(() => {
     return { nodeUrl: controllerConfig.chains[0].rpcUrl };
@@ -53,11 +63,11 @@ export function DynamicConnectorProvider({ children }: PropsWithChildren) {
       }}
     >
       <StarknetConfig
-        chains={[mainnet]}
+        chains={[starknetChain]}
         provider={jsonRpcProvider({ rpc })}
         connectors={[cartridgeController as any]}
         explorer={voyager}
-        autoConnect={true}
+        autoConnect={shouldAutoConnect}
       >
         {children}
       </StarknetConfig>

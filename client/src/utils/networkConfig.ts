@@ -1,4 +1,5 @@
 import manifest_mainnet from "../../manifest_mainnet.json";
+import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
 
 export interface NetworkConfig {
@@ -106,6 +107,42 @@ export const NETWORKS = {
       },
     ],
   },
+  SN_SEPOLIA: {
+    chainId: ChainId.SN_SEPOLIA,
+    namespace: "ls_0_0_6",
+    slot: "pg-sepolia",
+    rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_8",
+    // TODO: replace with the actual Torii slot URL once a Sepolia indexer is running
+    torii: import.meta.env.VITE_SEPOLIA_TORII_URL || "http://localhost:8080",
+    tokens: {
+      erc20: [],
+    },
+    manifest: manifest_sepolia,
+    vrf: false,
+    denshokan:
+      "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
+    gameAddress:
+      "0x3012c0bab9e1fb18c36ef4ce02876e2070bf679be4178aa451b6e9d0904a34f",
+    beasts:
+      "0x0660e6dc65db95f11bf2e44f3f3c3e376147504ce298cf42958d451ad11da8e6",
+    goldenToken:
+      "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
+    ekuboRouter: "",
+    paymentTokens: [
+      {
+        name: "ETH",
+        address:
+          "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        displayDecimals: 4,
+      },
+      {
+        name: "STRK",
+        address:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        displayDecimals: 2,
+      },
+    ],
+  },
   WP_PG_SLOT: {
     chainId: ChainId.WP_PG_SLOT,
     namespace: "ls_0_0_6",
@@ -128,22 +165,33 @@ export const NETWORKS = {
   },
 };
 
+// Resolve the default network from env var, falling back to mainnet
+export function getDefaultChainId(): ChainId {
+  const env = import.meta.env.VITE_NETWORK?.toLowerCase();
+  if (env === "sepolia") return ChainId.SN_SEPOLIA;
+  if (env === "slot" || env === "katana") return ChainId.WP_PG_SLOT;
+  return ChainId.SN_MAIN;
+}
+
+// Mainnet policies (hardcoded contract addresses)
+const MAINNET_POLICIES = [
+  { target: "0x0452810188C4Cb3AEbD63711a3b445755BC0D6C4f27B923fDd99B1A118858136", method: "approve" },
+  { target: "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42", method: "buy_game" },
+];
+
+// Sepolia policies — derived from the manifest game_token_systems + game_systems
+const SEPOLIA_POLICIES = [
+  { target: "0x7ae26eecf0274aabb31677753ff3a4e15beec7268fa1b104f73ce3c89202831", method: "approve" },
+  { target: "0x3012c0bab9e1fb18c36ef4ce02876e2070bf679be4178aa451b6e9d0904a34f", method: "buy_game" },
+];
+
 export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
   if (!network) throw new Error(`Network ${networkKey} not found`);
 
-  const policies = [
-    // Dungeon ticket approve
-    {
-      target: "0x0452810188C4Cb3AEbD63711a3b445755BC0D6C4f27B923fDd99B1A118858136",
-      method: "approve",
-    },
-    // Dungeon buy_game
-    {
-      target: "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42",
-      method: "buy_game",
-    },
-  ];
+  const policies = networkKey === ChainId.SN_SEPOLIA
+    ? SEPOLIA_POLICIES
+    : MAINNET_POLICIES;
 
   return {
     chainId: network.chainId,

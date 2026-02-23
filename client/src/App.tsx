@@ -3,6 +3,7 @@ import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
 import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
+import SwapCompletePopup from '@/components/SwapCompletePopup';
 import { ControllerProvider, useController } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
 import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
@@ -46,6 +47,7 @@ function AppContent() {
                 </Routes>
 
               </Box>
+              <SwapCompletePopup />
             </GameDirector>
           </SoundProvider>
         </ThemeProvider>

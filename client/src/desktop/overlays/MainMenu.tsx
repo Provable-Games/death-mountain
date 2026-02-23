@@ -1,4 +1,5 @@
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
+import SwapProgressTracker from "@/components/SwapProgressTracker";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import discordIcon from "@/desktop/assets/images/discord.png";
@@ -317,6 +318,8 @@ export default function MainMenu() {
               </Button>
 
               {dungeon.ticketAddress && <PriceIndicator />}
+
+              <SwapProgressTracker />
 
               <Box sx={styles.bottom}>
                 {showBoost && dungeon.id === "survivor" && (

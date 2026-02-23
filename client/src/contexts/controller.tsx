@@ -88,7 +88,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   }, [account]);
 
+  // Only create/restore burner for the Katana slot network — not needed on mainnet
   useEffect(() => {
+    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) return;
+
     if (
       localStorage.getItem("burner") &&
       localStorage.getItem("burner_version") === "6"
@@ -104,7 +107,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     } else {
       createBurner();
     }
-  }, []);
+  }, [currentNetworkConfig.chainId]);
 
   // Get username when connector changes
   useEffect(() => {
@@ -201,12 +204,16 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
   const createBurner = async () => {
     setCreatingBurner(true);
-    let account = await createBurnerAccount(demoRpcProvider);
-
-    if (account) {
-      setBurner(account);
+    try {
+      let account = await createBurnerAccount(demoRpcProvider);
+      if (account) {
+        setBurner(account);
+      }
+    } catch (error) {
+      console.error("Failed to create burner account:", error);
+    } finally {
+      setCreatingBurner(false);
     }
-    setCreatingBurner(false);
   };
 
   async function fetchTokenBalances() {
@@ -246,10 +253,21 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         openBuyTicket: () => (connector as any)?.controller?.openStarterPack(3),
-        login: () =>
-          connect({
-            connector: connectors.find((conn) => conn.id === "controller"),
-          }),
+        login: async () => {
+          const controllerConnector = connectors.find(
+            (conn) => conn.id === "controller"
+          );
+          // On non-mainnet networks, clear stale mainnet session from the
+          // Controller iframe before connecting on the target chain.
+          if (currentNetworkConfig.chainId !== ChainId.SN_MAIN && controllerConnector) {
+            try {
+              await (controllerConnector as any).controller?.disconnect();
+            } catch (_) {
+              // Ignore — might not be connected yet
+            }
+          }
+          connect({ connector: controllerConnector });
+        },
         logout: () => disconnect(),
         enterDungeon,
         bulkMintGames,

@@ -2,6 +2,7 @@ import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
 import { useDungeon } from "@/dojo/useDungeon";
+import { OnrampStatus, useSwapStore } from "@/stores/swapStore";
 import { useUIStore } from "@/stores/uiStore";
 import { NETWORKS } from "@/utils/networkConfig";
 import { formatAmount } from "@/utils/utils";
@@ -37,6 +38,9 @@ const ONRAMPER_TRANSITION_MASK_PX = 68;
 
 // Onramper API key from environment variable
 const ONRAMPER_API_KEY = import.meta.env.VITE_ONRAMPER_API_KEY || "";
+
+// Dev mock mode: show debug panel instead of Onramper iframe when no API key in dev
+const IS_DEV_MOCK = import.meta.env.DEV && !ONRAMPER_API_KEY;
 
 // Use dev domain for test keys, prod domain for prod keys
 const ONRAMPER_DOMAIN = ONRAMPER_API_KEY.startsWith("pk_test_")
@@ -80,6 +84,35 @@ const fetchOnramperMinFiat = async (): Promise<number> => {
 // Onramper widget base URL with Loot Survivor theme
 const ONRAMPER_BASE_URL = `https://${ONRAMPER_DOMAIN}?apiKey=${ONRAMPER_API_KEY}&mode=buy&defaultCrypto=strk_starknet&onlyCryptoNetworks=starknet&themeName=dark&containerColor=0f1f0f&primaryColor=d0c98d&secondaryColor=1a2f1a&cardColor=182818&primaryTextColor=ffffff&secondaryTextColor=FFD700&borderRadius=0.5&wgBorderRadius=1&hideTopBar=true&redirectAtCheckout=false`;
 
+// Allowed Onramper origins for postMessage validation
+const ONRAMPER_ORIGINS = [
+  `https://${ONRAMPER_DOMAIN}`,
+  "https://buy.onramper.com",
+  "https://buy.onramper.dev",
+];
+
+// Map raw Onramper status strings to our OnrampStatus type
+const ONRAMP_STATUS_MAP: Record<string, OnrampStatus> = {
+  new: "new",
+  pending: "pending",
+  paid: "paid",
+  completed: "completed",
+  canceled: "canceled",
+  cancelled: "canceled", // Handle alternate spelling
+  failed: "failed",
+};
+
+// Human-readable labels for onramp statuses
+const ONRAMP_STATUS_LABELS: Record<OnrampStatus, string> = {
+  idle: "",
+  new: "Transaction created",
+  pending: "Payment processing...",
+  paid: "Payment received, delivering crypto...",
+  completed: "Crypto delivered!",
+  canceled: "Transaction canceled",
+  failed: "Transaction failed",
+};
+
 // Fetch HMAC-SHA256 signature for sensitive URL params (required by Onramper prod)
 const fetchOnramperSignature = async (walletAddress: string): Promise<string | null> => {
   try {
@@ -93,9 +126,21 @@ const fetchOnramperSignature = async (walletAddress: string): Promise<string | n
   }
 };
 
+// Generate a unique session ID for partnerContext tracking
+const generateSessionId = () =>
+  `ls_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
 // Build Onramper URL with wallet address, pre-filled fiat amount, and signature
-const buildOnramperUrl = (walletAddress: string, totalUsd: number | null, signature: string | null) => {
+const buildOnramperUrl = (
+  walletAddress: string,
+  totalUsd: number | null,
+  signature: string | null,
+  sessionId: string,
+) => {
   let url = `${ONRAMPER_BASE_URL}&networkWallets=starknet:${walletAddress}`;
+
+  // partnerContext lets us correlate this session in webhooks
+  url += `&partnerContext=${sessionId}`;
 
   if (totalUsd && totalUsd > 0) {
     // Add ~3% buffer for provider fees + slippage, rounded up
@@ -254,6 +299,9 @@ const FiatTabContent = memo(({
   strkPerGame,
   isMinting,
   isOnrampInProgress,
+  strkBalance,
+  strkQuoteForGames,
+  onTriggerSwapMint,
 }: {
   walletAddress: string;
   totalFiatUsd: number | null;
@@ -261,49 +309,378 @@ const FiatTabContent = memo(({
   strkPerGame: number | null;
   isMinting: boolean;
   isOnrampInProgress: boolean;
+  strkBalance?: number;
+  strkQuoteForGames?: number | null;
+  onTriggerSwapMint?: () => void;
 }) => {
   const [signature, setSignature] = useState<string | null>(null);
+  const sessionIdRef = useRef(generateSessionId());
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const onrampStatus = useSwapStore((s) => s.onrampStatus);
+  const onrampProvider = useSwapStore((s) => s.onrampProvider);
 
   useEffect(() => {
+    if (walletAddress && !IS_DEV_MOCK) {
+      fetchOnramperSignature(walletAddress).then(setSignature);
+    }
+  }, [walletAddress]);
+
+  // --- Listen for postMessage events from Onramper iframe ---
+  useEffect(() => {
+    if (IS_DEV_MOCK) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      // Validate origin — only accept messages from Onramper domains
+      const isOnramperOrigin = ONRAMPER_ORIGINS.some((origin) =>
+        event.origin.startsWith(origin)
+      );
+
+      // Log ALL messages for debugging (even non-Onramper ones, with less detail)
+      if (!isOnramperOrigin) {
+        // Only log if it looks like it could be from a payment provider
+        if (typeof event.data === "object" && event.data !== null) {
+          console.log("[OnRamp] postMessage from unknown origin:", event.origin, event.data);
+        }
+        return;
+      }
+
+      const data = event.data;
+      console.log("[OnRamp] postMessage received:", JSON.stringify(data, null, 2));
+
+      // Try to extract status from various possible payload shapes
+      const store = useSwapStore.getState();
+      let detectedStatus: OnrampStatus | null = null;
+
+      if (typeof data === "object" && data !== null) {
+        // Shape 1: { type: "...", payload: { status: "...", ... } }
+        if (data.payload?.status) {
+          const raw = String(data.payload.status).toLowerCase();
+          detectedStatus = ONRAMP_STATUS_MAP[raw] || null;
+          console.log(`[OnRamp] Detected status from payload: ${raw} -> ${detectedStatus}`);
+
+          store.setOnrampTransaction({
+            transactionId: data.payload.transactionId || data.payload.onrampTransactionId,
+            provider: data.payload.onramp || data.payload.provider,
+            paymentMethod: data.payload.paymentMethod,
+            status: detectedStatus || undefined,
+          });
+        }
+
+        // Shape 2: { status: "...", ... } (flat)
+        else if (data.status && typeof data.status === "string") {
+          const raw = String(data.status).toLowerCase();
+          detectedStatus = ONRAMP_STATUS_MAP[raw] || null;
+          console.log(`[OnRamp] Detected status (flat): ${raw} -> ${detectedStatus}`);
+
+          store.setOnrampTransaction({
+            transactionId: data.transactionId || data.onrampTransactionId,
+            provider: data.onramp || data.provider,
+            paymentMethod: data.paymentMethod,
+            status: detectedStatus || undefined,
+          });
+        }
+
+        // Shape 3: { type: "onramper-event", event: "tx_completed" } or similar
+        else if (data.type && typeof data.type === "string") {
+          const eventType = data.type.toLowerCase();
+          console.log(`[OnRamp] Event type received: ${eventType}`);
+
+          if (eventType.includes("complete") || eventType.includes("success")) {
+            detectedStatus = "completed";
+          } else if (eventType.includes("fail") || eventType.includes("error")) {
+            detectedStatus = "failed";
+          } else if (eventType.includes("cancel")) {
+            detectedStatus = "canceled";
+          } else if (eventType.includes("pending") || eventType.includes("processing")) {
+            detectedStatus = "pending";
+          } else if (eventType.includes("paid") || eventType.includes("payment")) {
+            detectedStatus = "paid";
+          } else if (eventType.includes("new") || eventType.includes("created")) {
+            detectedStatus = "new";
+          }
+
+          if (detectedStatus) {
+            console.log(`[OnRamp] Mapped event type "${eventType}" -> status "${detectedStatus}"`);
+            store.setOnrampStatus(detectedStatus);
+          }
+        }
+
+        // Log the raw event data for any shape
+        if (data.type || data.event || data.status || data.payload) {
+          console.log("[OnRamp] Event details:", {
+            type: data.type,
+            event: data.event,
+            status: data.status,
+            transactionId: data.transactionId || data.payload?.transactionId,
+            provider: data.onramp || data.payload?.onramp,
+            sessionId: sessionIdRef.current,
+          });
+        }
+      } else if (typeof data === "string") {
+        console.log("[OnRamp] String message:", data);
+        // Some widgets send simple string events
+        const lower = data.toLowerCase();
+        if (lower.includes("complete") || lower.includes("success")) {
+          store.setOnrampStatus("completed");
+        } else if (lower.includes("fail")) {
+          store.setOnrampStatus("failed");
+        } else if (lower.includes("cancel")) {
+          store.setOnrampStatus("canceled");
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    console.log("[OnRamp] postMessage listener registered, session:", sessionIdRef.current);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      console.log("[OnRamp] postMessage listener removed");
+    };
+  }, []);
+
+  // Reset the iframe for retry (cancel/failed cases)
+  const handleRetryOnramp = useCallback(() => {
+    console.log("[OnRamp] User retrying on-ramp flow");
+    const store = useSwapStore.getState();
+    store.resetOnramp();
+    // Generate a new session ID for the retry
+    sessionIdRef.current = generateSessionId();
+    // Force iframe reload by clearing and re-setting signature
+    setSignature(null);
     if (walletAddress) {
       fetchOnramperSignature(walletAddress).then(setSignature);
     }
   }, [walletAddress]);
 
-  return (
-    <Box sx={{ position: "relative", width: "100%" }}>
-      {/* Minting overlay */}
-      {isMinting && (
-        <Box sx={{
-          position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          background: "rgba(15, 31, 15, 0.95)", borderRadius: 1,
-        }}>
-          <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-            Minting {minFiatGames} game{minFiatGames > 1 ? "s" : ""}...
+  // Determine which overlay to show
+  const showOnrampOverlay = !isMinting && (
+    onrampStatus === "new" ||
+    onrampStatus === "pending" ||
+    onrampStatus === "paid" ||
+    onrampStatus === "canceled" ||
+    onrampStatus === "failed"
+  );
+  const isOnrampTerminalError = onrampStatus === "canceled" || onrampStatus === "failed";
+
+  // Minting overlay (shared by both dev and prod)
+  const mintingOverlay = isMinting && (
+    <Box sx={{
+      position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      background: "rgba(15, 31, 15, 0.95)", borderRadius: 1,
+    }}>
+      <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
+      <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
+        Minting {minFiatGames} game{minFiatGames > 1 ? "s" : ""}...
+      </Typography>
+      <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+        Confirm the transaction in your wallet
+      </Typography>
+    </Box>
+  );
+
+  // Onramp status overlay (spinner + status for new/pending/paid, error for canceled/failed)
+  const onrampOverlay = showOnrampOverlay && (
+    <Box sx={{
+      position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      background: "rgba(15, 31, 15, 0.92)", borderRadius: 1,
+    }}>
+      {!isOnrampTerminalError ? (
+        <>
+          <CircularProgress size={48} sx={{ color: "#d0c98d", mb: 2.5 }} />
+          <Typography sx={{
+            fontSize: 16, fontWeight: 700, mb: 1, letterSpacing: 0.5,
+            color: onrampStatus === "paid" ? "#80FF00" : "#d0c98d",
+          }}>
+            {ONRAMP_STATUS_LABELS[onrampStatus]}
           </Typography>
-          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-            Confirm the transaction in your wallet
+          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", px: 3 }}>
+            {onrampStatus === "new" && "Your purchase has been initiated. Please complete the payment."}
+            {onrampStatus === "pending" && "Your payment is being processed. This may take a few moments."}
+            {onrampStatus === "paid" && "Payment confirmed! Your STRK tokens are on their way."}
+          </Typography>
+          {onrampProvider && (
+            <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.3)", mt: 2 }}>
+              Provider: {onrampProvider}
+            </Typography>
+          )}
+        </>
+      ) : (
+        <>
+          <Box sx={{
+            width: 48, height: 48, borderRadius: "50%", mb: 2,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: onrampStatus === "canceled"
+              ? "rgba(255, 165, 0, 0.15)"
+              : "rgba(244, 67, 54, 0.15)",
+            border: `2px solid ${onrampStatus === "canceled" ? "rgba(255, 165, 0, 0.5)" : "rgba(244, 67, 54, 0.5)"}`,
+          }}>
+            <Typography sx={{
+              fontSize: 24, lineHeight: 1,
+              color: onrampStatus === "canceled" ? "#FFA500" : "#f44336",
+            }}>
+              {onrampStatus === "canceled" ? "!" : "X"}
+            </Typography>
+          </Box>
+          <Typography sx={{
+            fontSize: 16, fontWeight: 700, mb: 1,
+            color: onrampStatus === "canceled" ? "#FFA500" : "#f44336",
+          }}>
+            {ONRAMP_STATUS_LABELS[onrampStatus]}
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", px: 3, mb: 2.5 }}>
+            {onrampStatus === "canceled"
+              ? "The purchase was canceled. You can try again below."
+              : "Something went wrong with the payment. Please try again."}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={handleRetryOnramp}
+            sx={{
+              ...styles.activateButton,
+              px: 4,
+              background: onrampStatus === "canceled" ? "#FFA500" : "#f44336",
+              "&:hover": {
+                background: onrampStatus === "canceled" ? "#FFB733" : "#e53935",
+              },
+            }}
+          >
+            <Typography sx={{ ...styles.buttonText, color: "#fff" }}>
+              Return to On-Ramp
+            </Typography>
+          </Button>
+        </>
+      )}
+    </Box>
+  );
+
+  // Info banner (shared by both dev and prod)
+  const infoBanner = (
+    <Box sx={{
+      mx: 2, mt: 1.5, mb: 1, px: 2, py: 1.5,
+      background: "rgba(208, 201, 141, 0.08)",
+      border: "1px solid rgba(208, 201, 141, 0.2)",
+      borderRadius: 1, textAlign: "center",
+    }}>
+      {strkPerGame && (
+        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#d0c98d", letterSpacing: 0.5 }}>
+          1 game = {strkPerGame.toFixed(1)} STRK
+        </Typography>
+      )}
+      <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
+        ~${totalFiatUsd ? Math.ceil(totalFiatUsd * 1.03) : "..."} = {minFiatGames} game{minFiatGames > 1 ? "s" : ""} — buy more to get extra games
+      </Typography>
+    </Box>
+  );
+
+  // --- DEV MOCK MODE ---
+  if (IS_DEV_MOCK) {
+    const hasEnoughStrk = strkBalance != null && strkQuoteForGames != null && strkBalance >= strkQuoteForGames * 0.9;
+
+    return (
+      <Box sx={{ position: "relative", width: "100%" }}>
+        {mintingOverlay}
+        {onrampOverlay}
+        {infoBanner}
+        {/* Dev mock panel */}
+        <Box sx={{
+          mx: 2, mt: 1, mb: 2, p: 2,
+          background: "rgba(255, 165, 0, 0.08)",
+          border: "2px dashed rgba(255, 165, 0, 0.4)",
+          borderRadius: 1,
+        }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#FFA500", mb: 1.5, textAlign: "center", letterSpacing: 1 }}>
+            DEV MODE — Onramper iframe disabled
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mb: 2, textAlign: "center" }}>
+            No VITE_ONRAMPER_API_KEY set. Use the button below to test the swap+mint flow directly with STRK from your wallet.
+          </Typography>
+
+          {/* Debug info */}
+          <Box sx={{
+            p: 1.5, mb: 2, background: "rgba(0,0,0,0.3)", borderRadius: 1,
+            fontFamily: "monospace", fontSize: 11, lineHeight: 1.8,
+          }}>
+            <Box sx={{ color: "rgba(255,255,255,0.7)" }}>
+              Wallet: {walletAddress ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-6)}` : "not connected"}
+            </Box>
+            <Box sx={{ color: strkBalance != null && strkBalance > 0 ? "#4caf50" : "#f44336" }}>
+              STRK balance: {strkBalance?.toFixed(4) ?? "..."} STRK
+            </Box>
+            <Box sx={{ color: "rgba(255,255,255,0.7)" }}>
+              STRK needed: {strkQuoteForGames?.toFixed(4) ?? "..."} STRK ({minFiatGames} game{minFiatGames > 1 ? "s" : ""})
+            </Box>
+            <Box sx={{ color: "rgba(255,255,255,0.7)" }}>
+              Ticket price: ~${totalFiatUsd?.toFixed(2) ?? "..."} USD / {minFiatGames} game{minFiatGames > 1 ? "s" : ""}
+            </Box>
+            <Box sx={{ color: hasEnoughStrk ? "#4caf50" : "#f44336", fontWeight: 600, mt: 0.5 }}>
+              {hasEnoughStrk ? "Ready to swap" : "Insufficient STRK balance"}
+            </Box>
+            <Box sx={{ color: "#d0c98d", mt: 0.5 }}>
+              Session: {sessionIdRef.current}
+            </Box>
+            <Box sx={{ color: "#d0c98d" }}>
+              Onramp status: {onrampStatus}
+            </Box>
+          </Box>
+
+          {/* Dev: simulate onramp statuses */}
+          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mb: 2, justifyContent: "center" }}>
+            {(["new", "pending", "paid", "completed", "canceled", "failed"] as OnrampStatus[]).map((s) => (
+              <Button
+                key={s}
+                size="small"
+                variant="outlined"
+                onClick={() => useSwapStore.getState().setOnrampStatus(s)}
+                sx={{
+                  fontSize: 9, py: 0.25, px: 1, minWidth: 0,
+                  borderColor: onrampStatus === s ? "#FFA500" : "rgba(255,165,0,0.3)",
+                  color: onrampStatus === s ? "#FFA500" : "rgba(255,165,0,0.5)",
+                }}
+              >
+                {s}
+              </Button>
+            ))}
+          </Box>
+
+          {/* Trigger button */}
+          <Button
+            variant="contained"
+            fullWidth
+            disabled={!hasEnoughStrk || isMinting || !onTriggerSwapMint}
+            onClick={onTriggerSwapMint}
+            sx={{
+              ...styles.activateButton,
+              background: hasEnoughStrk ? "#FFA500" : "rgba(255, 165, 0, 0.3)",
+              "&:hover": {
+                background: hasEnoughStrk ? "#FFB733" : "rgba(255, 165, 0, 0.3)",
+              },
+            }}
+          >
+            <Typography sx={{ ...styles.buttonText, color: "#1a2f1a" }}>
+              {hasEnoughStrk
+                ? `Swap ${strkQuoteForGames?.toFixed(2)} STRK + Mint ${minFiatGames} Game${minFiatGames > 1 ? "s" : ""}`
+                : "Need more STRK in wallet"}
+            </Typography>
+          </Button>
+
+          <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.35)", mt: 1.5, textAlign: "center" }}>
+            This triggers the same swapStrkAndMint() flow that auto-fires after Onramper deposit in production.
+            Set VITE_ONRAMPER_API_KEY in .env.local to test the real Onramper widget.
           </Typography>
         </Box>
-      )}
-      {/* Info banner */}
-      <Box sx={{
-        mx: 2, mt: 1.5, mb: 1, px: 2, py: 1,
-        background: "rgba(208, 201, 141, 0.08)",
-        border: "1px solid rgba(208, 201, 141, 0.2)",
-        borderRadius: 1, textAlign: "center",
-      }}>
-        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#d0c98d", letterSpacing: 0.5 }}>
-          ~${totalFiatUsd ? Math.ceil(totalFiatUsd * 1.03) : "..."} = {minFiatGames} game{minFiatGames > 1 ? "s" : ""}
-        </Typography>
-        {strkPerGame && (
-          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
-            1 game = {strkPerGame.toFixed(1)} STRK — buy more to get extra games
-          </Typography>
-        )}
       </Box>
+    );
+  }
+
+  // --- PRODUCTION MODE ---
+  return (
+    <Box sx={{ position: "relative", width: "100%" }}>
+      {mintingOverlay}
+      {onrampOverlay}
+      {infoBanner}
       {isOnrampInProgress && (
         <Box
           sx={{
@@ -334,37 +711,19 @@ const FiatTabContent = memo(({
           </Typography>
         </Box>
       )}
-
-      <Box sx={{ position: "relative", width: "100%" }}>
-        {/*isOnrampInProgress && (
-          <Box
-            sx={{
-              pointerEvents: "none",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              zIndex: 2,
-              height: ONRAMPER_TRANSITION_MASK_PX,
-              background: "linear-gradient(180deg, rgba(10, 18, 10, 0.995) 0%, rgba(10, 18, 10, 0.96) 70%, rgba(10, 18, 10, 0) 100%)",
-              borderBottom: "1px solid rgba(208, 201, 141, 0.14)",
-            }}
-          />
-        )*/}
-
-        <iframe
-          src={buildOnramperUrl(walletAddress, totalFiatUsd, signature)}
-          title="Onramper Widget"
-          width="100%"
-          scrolling="no"
-          style={{
-            border: "none",
-            display: "block",
-            height: "clamp(560px, calc(90dvh - 240px), 860px)",
-          }}
-          allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
-        />
-      </Box>
+      <iframe
+        ref={iframeRef}
+        src={buildOnramperUrl(walletAddress, totalFiatUsd, signature, sessionIdRef.current)}
+        title="Onramper Widget"
+        width="100%"
+        scrolling="no"
+        style={{
+          border: "none",
+          display: "block",
+          height: "clamp(560px, calc(90dvh - 240px), 860px)",
+        }}
+        allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
+      />
     </Box>
   );
 });
@@ -480,6 +839,11 @@ export default function PaymentOptionsModal({
       initialStrkBalance.current = null;
       autoMintTriggered.current = false;
       stopPolling();
+      // Reset swap progress if it was in a non-terminal state
+      const swapState = useSwapStore.getState();
+      if (swapState.stage !== "done" && swapState.stage !== "idle") {
+        swapState.reset();
+      }
       return;
     }
 
@@ -625,6 +989,14 @@ export default function PaymentOptionsModal({
       // Record initial STRK balance
       if (initialStrkBalance.current === null) {
         initialStrkBalance.current = strkBalance;
+        console.log("[OnRamp] Initial STRK balance recorded:", strkBalance);
+        console.log("[OnRamp] STRK needed for", minFiatGames, "games:", strkQuoteForGames);
+        // Start the swap progress tracker (shows "Waiting for deposit")
+        const swapState = useSwapStore.getState();
+        if (swapState.stage === "idle") {
+          swapState.startFlow(minFiatGames);
+          console.log("[OnRamp] Flow started, waiting for deposit...");
+        }
       }
 
       pollIntervalRef.current = setInterval(() => {
@@ -632,6 +1004,7 @@ export default function PaymentOptionsModal({
       }, BALANCE_POLL_INTERVAL);
 
       pollTimeoutRef.current = setTimeout(() => {
+        console.log("[OnRamp] Polling timeout reached (30 min), stopping");
         stopPolling();
       }, BALANCE_POLL_TIMEOUT);
 
@@ -643,6 +1016,7 @@ export default function PaymentOptionsModal({
         }
 
         if (document.visibilityState === "visible") {
+          console.log("[OnRamp] Tab became visible, refreshing balances");
           refreshTokenBalances();
 
           if (fiatTabWasHidden.current) {
@@ -665,6 +1039,22 @@ export default function PaymentOptionsModal({
 
   // Auto-trigger mint when STRK balance increases enough
   useEffect(() => {
+    // Log balance changes during fiat flow for debugging
+    if (activeTab === "fiat" && initialStrkBalance.current !== null) {
+      const delta = strkBalance - initialStrkBalance.current;
+      if (delta !== 0) {
+        console.log("[OnRamp] STRK balance changed:", {
+          initial: initialStrkBalance.current,
+          current: strkBalance,
+          delta,
+          needed: strkQuoteForGames,
+          threshold: strkQuoteForGames ? strkQuoteForGames * 0.9 : null,
+          meetsThreshold: strkQuoteForGames ? delta >= strkQuoteForGames * 0.9 : false,
+          onrampStatus: useSwapStore.getState().onrampStatus,
+        });
+      }
+    }
+
     if (
       activeTab === "fiat" &&
       !isMinting &&
@@ -676,6 +1066,12 @@ export default function PaymentOptionsModal({
     ) {
       autoMintTriggered.current = true;
       setIsFiatCheckoutInProgress(false);
+      console.log("[OnRamp] STRK deposit detected! Balance delta meets threshold, triggering swap+mint");
+      // Update swap store — deposit has arrived
+      const swapState = useSwapStore.getState();
+      if (swapState.stage === "waiting_deposit") {
+        swapState.setStage("quoting");
+      }
       swapStrkAndMint();
     }
   }, [strkBalance, activeTab, isMinting, strkQuoteForGames]);
@@ -723,30 +1119,101 @@ export default function PaymentOptionsModal({
     const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
     if (!strkToken) return;
 
+    const swapProgress = useSwapStore.getState();
+    console.log("[OnRamp] swapStrkAndMint started", {
+      strkBalance,
+      minFiatGames,
+      strkQuoteForGames,
+      onrampStatus: swapProgress.onrampStatus,
+      onrampTransactionId: swapProgress.onrampTransactionId,
+    });
+
     setIsMinting(true);
     setIsFiatCheckoutInProgress(false);
     stopPolling();
+
+    // Drive swap progress store
+    if (swapProgress.stage === "idle") {
+      swapProgress.startFlow(minFiatGames);
+    }
+    swapProgress.setStage("quoting");
+
     try {
+      // Re-evaluate how many games we can actually afford at current prices.
+      // The price may have changed since the on-ramp amount was calculated,
+      // so we use a forward quote to determine the max affordable games.
+      const currentStrkBalance = strkBalance;
+      if (currentStrkBalance <= 0) {
+        throw new Error("No STRK available for swap");
+      }
+
+      // Use 98% of balance to account for the ~1% transfer buffer in generateSwapCalls
+      const safeBalanceWei = Math.floor(currentStrkBalance * 0.98 * 1e18);
+      console.log("[OnRamp] Getting forward quote for max games...", { safeBalanceWei });
+      const forwardQuote = await getSwapQuote(
+        safeBalanceWei,
+        strkToken.address,
+        dungeon.ticketAddress
+      );
+
+      let gamesToBuy = minFiatGames;
+
+      if (forwardQuote && forwardQuote.total !== 0) {
+        const maxAffordableGames = Math.floor(Math.abs(forwardQuote.total) / 1e18);
+        console.log("[OnRamp] Forward quote result:", { maxAffordableGames, minFiatGames });
+        if (maxAffordableGames < 1) {
+          throw new Error(
+            "Insufficient STRK to purchase even 1 game. The price may have changed since your purchase."
+          );
+        }
+        // Never buy more than originally planned; surplus STRK stays in wallet
+        gamesToBuy = Math.min(minFiatGames, maxAffordableGames);
+      }
+
+      if (gamesToBuy !== minFiatGames) {
+        console.log(
+          `[OnRamp] Price changed: adjusted from ${minFiatGames} to ${gamesToBuy} game(s). ` +
+          `Surplus STRK will remain in wallet.`
+        );
+      }
+
+      // Get the exact reverse quote for the determined number of games
+      console.log("[OnRamp] Getting exact reverse quote for", gamesToBuy, "games...");
       const quote = await getSwapQuote(
-        -minFiatGames * 1e18,
+        -gamesToBuy * 1e18,
         dungeon.ticketAddress,
         strkToken.address
       );
+      console.log("[OnRamp] Reverse quote received, proceeding to swap");
+
+      swapProgress.setStage("swapping");
 
       const tokenSwapData = {
         tokenAddress: dungeon.ticketAddress!,
-        minimumAmount: minFiatGames,
+        minimumAmount: gamesToBuy,
         quote: quote,
       };
       const calls = generateSwapCalls(routerContract, strkToken.address, tokenSwapData);
-      purchaseGames(calls, minFiatGames, () => {
-        setIsMinting(false);
-        onClose();
-      });
+
+      // TODO: Re-enable purchaseGames once done testing — minting is disabled so tickets can be resold
+      // swapProgress.setStage("minting");
+      // purchaseGames(calls, gamesToBuy, () => {
+      //   console.log("[OnRamp] Games minted successfully:", gamesToBuy);
+      //   setIsMinting(false);
+      //   useSwapStore.getState().complete(gamesToBuy);
+      //   onClose();
+      // });
+      console.log("[DEV] Skipping purchaseGames — minting disabled for resale testing");
+      setIsMinting(false);
+      useSwapStore.getState().complete(gamesToBuy);
+      onClose();
     } catch (error) {
-      console.error("Error swapping STRK:", error);
+      console.error("[OnRamp] Error in swapStrkAndMint:", error);
       setIsMinting(false);
       autoMintTriggered.current = false; // Allow retry
+      useSwapStore.getState().setError(
+        error instanceof Error ? error.message : "Swap failed — try again"
+      );
     }
   };
 
@@ -952,6 +1419,9 @@ export default function PaymentOptionsModal({
                           strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
                           isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
+                          strkBalance={strkBalance}
+                          strkQuoteForGames={strkQuoteForGames}
+                          onTriggerSwapMint={swapStrkAndMint}
                         />
                       )}
                     </motion.div>
