@@ -772,7 +772,7 @@ const FiatTabContent = memo(({
           </Box>
 
           {/* Cropped iframe container: only shows the very bottom where the provider "Open in new tab" button lives */}
-          <Box sx={{ position: "relative", height: "12vh", minHeight: 80, overflow: "hidden", flexShrink: 0 }}>
+          <Box sx={{ position: "relative", height: "8vh", minHeight: 56, overflow: "hidden", flexShrink: 0 }}>
             <iframe
               ref={iframeRef}
               src={buildOnramperUrl(walletAddress, totalFiatUsd, signature, sessionIdRef.current)}
@@ -784,7 +784,7 @@ const FiatTabContent = memo(({
                 display: "block",
                 height: "clamp(560px, calc(90dvh - 240px), 860px)",
                 position: "absolute",
-                bottom: 0,
+                bottom: "-10vh",
                 left: 0,
               }}
               allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
