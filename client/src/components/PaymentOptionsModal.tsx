@@ -693,7 +693,7 @@ const FiatTabContent = memo(({
       {mintingOverlay}
       {onrampOverlay}
       {infoBanner}
-      {/* Full overlay when the user comes back from the payment provider tab */}
+      {/* Compact overlay: covers everything except the bottom of the iframe where the provider button sits */}
       {isOnrampInProgress && (
         <Box
           sx={{
@@ -701,7 +701,7 @@ const FiatTabContent = memo(({
             top: 0,
             left: 0,
             right: 0,
-            bottom: 0,
+            bottom: "15%",
             zIndex: 10,
             display: "flex",
             flexDirection: "column",
@@ -711,68 +711,47 @@ const FiatTabContent = memo(({
             borderRadius: 1,
             px: 3,
             textAlign: "center",
-            gap: 2,
+            gap: 1.5,
           }}
         >
-          {/* Animated spinner */}
-          <Box sx={{
-            position: "relative",
-            width: 64,
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <CircularProgress
-              size={64}
-              thickness={2}
-              sx={{ color: "#d0c98d" }}
-            />
-            <CreditCardIcon sx={{
-              fontSize: 28,
-              color: "#d0c98d",
-              opacity: 0.9,
-              position: "absolute",
-            }} />
+          {/* Spinner + message in a compact layout */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box sx={{ position: "relative", width: 40, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CircularProgress size={40} thickness={2.5} sx={{ color: "#d0c98d" }} />
+              <CreditCardIcon sx={{ fontSize: 18, color: "#d0c98d", position: "absolute" }} />
+            </Box>
+            <Box sx={{ textAlign: "left" }}>
+              <Typography sx={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "#d0c98d",
+                fontFamily: "Cinzel, Georgia, serif",
+                lineHeight: 1.2,
+              }}>
+                {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
+                  ? "Almost there..."
+                  : "Payment in progress"}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4, mt: 0.25 }}>
+                {swapStage === "quoting"
+                  ? "We received your funds. Preparing your games..."
+                  : swapStage === "swapping"
+                    ? "Converting your payment into game tokens..."
+                    : swapStage === "minting"
+                      ? "Minting your games, hang tight..."
+                      : "Complete your payment in the other tab."}
+              </Typography>
+            </Box>
           </Box>
 
-          {/* Main message — human-friendly, step-aware */}
-          <Typography sx={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: "#d0c98d",
-            letterSpacing: 0.5,
-            fontFamily: "Cinzel, Georgia, serif",
-            lineHeight: 1.3,
-          }}>
-            {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
-              ? "Almost there..."
-              : "Payment in progress"}
-          </Typography>
-
-          <Typography sx={{
-            fontSize: 14,
-            color: "rgba(255, 255, 255, 0.75)",
-            lineHeight: 1.5,
-            maxWidth: 300,
-          }}>
-            {swapStage === "quoting"
-              ? "We received your funds. Preparing your games..."
-              : swapStage === "swapping"
-                ? "Converting your payment into game tokens..."
-                : swapStage === "minting"
-                  ? "Minting your games, hang tight..."
-                  : "Complete your payment in the other tab. We'll detect it automatically and prepare your games."}
-          </Typography>
-
-          {/* Pulsing dots to show it's alive */}
-          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+          {/* Pulsing dots */}
+          <Box sx={{ display: "flex", gap: 0.75 }}>
             {[0, 1, 2].map((i) => (
               <Box
                 key={i}
                 sx={{
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   borderRadius: "50%",
                   background: "#d0c98d",
                   animation: "onrampPulse 1.4s ease-in-out infinite",
@@ -786,38 +765,9 @@ const FiatTabContent = memo(({
             ))}
           </Box>
 
-          {/* Reassurance for non-crypto users */}
-          <Typography sx={{
-            fontSize: 11,
-            color: "rgba(255, 255, 255, 0.4)",
-            maxWidth: 280,
-            lineHeight: 1.4,
-          }}>
-            This page will update automatically. No action needed here.
+          <Typography sx={{ fontSize: 10, color: "rgba(255, 255, 255, 0.35)", lineHeight: 1.3 }}>
+            This page updates automatically. Use the button below if the tab didn't open.
           </Typography>
-
-          {/* Fallback button if the new tab didn't open */}
-          <Button
-            variant="outlined"
-            onClick={onDismissOnrampOverlay}
-            sx={{
-              mt: 2,
-              px: 3,
-              py: 1,
-              color: "rgba(208, 201, 141, 0.7)",
-              borderColor: "rgba(208, 201, 141, 0.25)",
-              textTransform: "none",
-              fontSize: 12,
-              letterSpacing: 0.3,
-              "&:hover": {
-                borderColor: "rgba(208, 201, 141, 0.5)",
-                background: "rgba(208, 201, 141, 0.08)",
-                color: "#d0c98d",
-              },
-            }}
-          >
-            The tab didn't open? Go back
-          </Button>
         </Box>
       )}
       <iframe
