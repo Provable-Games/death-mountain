@@ -1334,7 +1334,8 @@ export default function PaymentOptionsModal({
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
+            justifyContent: "flex-end",
+            pb: 3,
             }}
           >
             <Box sx={styles.modal}>
