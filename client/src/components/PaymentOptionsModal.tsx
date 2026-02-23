@@ -318,6 +318,7 @@ const FiatTabContent = memo(({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const onrampStatus = useSwapStore((s) => s.onrampStatus);
   const onrampProvider = useSwapStore((s) => s.onrampProvider);
+  const swapStage = useSwapStore((s) => s.stage);
 
   useEffect(() => {
     if (walletAddress && !IS_DEV_MOCK) {
@@ -335,10 +336,13 @@ const FiatTabContent = memo(({
         event.origin.startsWith(origin)
       );
 
-      // Log ALL messages for debugging (even non-Onramper ones, with less detail)
+      // Log non-Onramper messages for debugging, but skip noisy wallet detection events
       if (!isOnramperOrigin) {
-        // Only log if it looks like it could be from a payment provider
-        if (typeof event.data === "object" && event.data !== null) {
+        if (
+          typeof event.data === "object" &&
+          event.data !== null &&
+          event.data?.type !== "externalDetectWallets"
+        ) {
           console.log("[OnRamp] postMessage from unknown origin:", event.origin, event.data);
         }
         return;
@@ -681,33 +685,108 @@ const FiatTabContent = memo(({
       {mintingOverlay}
       {onrampOverlay}
       {infoBanner}
+      {/* Full overlay when the user comes back from the payment provider tab */}
       {isOnrampInProgress && (
         <Box
           sx={{
-            mx: 2,
-            mb: 1,
-            px: 1.5,
-            py: 1,
-            borderRadius: 1,
-            border: "1px solid rgba(208, 201, 141, 0.28)",
-            background: "rgba(208, 201, 141, 0.08)",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 1,
+            justifyContent: "center",
+            background: "rgba(15, 31, 15, 0.95)",
+            borderRadius: 1,
+            px: 3,
+            textAlign: "center",
+            gap: 2,
           }}
         >
-          <Box
-            sx={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#d0c98d",
-              boxShadow: "0 0 10px rgba(208, 201, 141, 0.7)",
-              flexShrink: 0,
-            }}
-          />
-          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.35 }}>
-            Onramp in progress in another tab. Complete checkout first.
+          {/* Animated spinner */}
+          <Box sx={{
+            position: "relative",
+            width: 64,
+            height: 64,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <CircularProgress
+              size={64}
+              thickness={2}
+              sx={{ color: "#d0c98d" }}
+            />
+            <CreditCardIcon sx={{
+              fontSize: 28,
+              color: "#d0c98d",
+              opacity: 0.9,
+              position: "absolute",
+            }} />
+          </Box>
+
+          {/* Main message — human-friendly, step-aware */}
+          <Typography sx={{
+            fontSize: 18,
+            fontWeight: 700,
+            color: "#d0c98d",
+            letterSpacing: 0.5,
+            fontFamily: "Cinzel, Georgia, serif",
+            lineHeight: 1.3,
+          }}>
+            {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
+              ? "Almost there..."
+              : "Payment in progress"}
+          </Typography>
+
+          <Typography sx={{
+            fontSize: 14,
+            color: "rgba(255, 255, 255, 0.75)",
+            lineHeight: 1.5,
+            maxWidth: 300,
+          }}>
+            {swapStage === "quoting"
+              ? "We received your funds. Preparing your games..."
+              : swapStage === "swapping"
+                ? "Converting your payment into game tokens..."
+                : swapStage === "minting"
+                  ? "Minting your games, hang tight..."
+                  : "Complete your payment in the other tab. We'll detect it automatically and prepare your games."}
+          </Typography>
+
+          {/* Pulsing dots to show it's alive */}
+          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+            {[0, 1, 2].map((i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#d0c98d",
+                  animation: "onrampPulse 1.4s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                  "@keyframes onrampPulse": {
+                    "0%, 80%, 100%": { opacity: 0.2, transform: "scale(0.8)" },
+                    "40%": { opacity: 1, transform: "scale(1.2)" },
+                  },
+                }}
+              />
+            ))}
+          </Box>
+
+          {/* Reassurance for non-crypto users */}
+          <Typography sx={{
+            fontSize: 11,
+            color: "rgba(255, 255, 255, 0.4)",
+            mt: 1,
+            maxWidth: 280,
+            lineHeight: 1.4,
+          }}>
+            This page will update automatically. No action needed here.
           </Typography>
         </Box>
       )}
@@ -1195,18 +1274,13 @@ export default function PaymentOptionsModal({
       };
       const calls = generateSwapCalls(routerContract, strkToken.address, tokenSwapData);
 
-      // TODO: Re-enable purchaseGames once done testing — minting is disabled so tickets can be resold
-      // swapProgress.setStage("minting");
-      // purchaseGames(calls, gamesToBuy, () => {
-      //   console.log("[OnRamp] Games minted successfully:", gamesToBuy);
-      //   setIsMinting(false);
-      //   useSwapStore.getState().complete(gamesToBuy);
-      //   onClose();
-      // });
-      console.log("[DEV] Skipping purchaseGames — minting disabled for resale testing");
-      setIsMinting(false);
-      useSwapStore.getState().complete(gamesToBuy);
-      onClose();
+      swapProgress.setStage("minting");
+      purchaseGames(calls, gamesToBuy, () => {
+        console.log("[OnRamp] Games minted successfully:", gamesToBuy);
+        setIsMinting(false);
+        useSwapStore.getState().complete(gamesToBuy);
+        onClose();
+      });
     } catch (error) {
       console.error("[OnRamp] Error in swapStrkAndMint:", error);
       setIsMinting(false);
