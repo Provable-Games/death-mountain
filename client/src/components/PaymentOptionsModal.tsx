@@ -341,7 +341,8 @@ const FiatTabContent = memo(({
         if (
           typeof event.data === "object" &&
           event.data !== null &&
-          event.data?.type !== "externalDetectWallets"
+          event.data?.type !== "externalDetectWallets" &&
+          event.data?.methodName !== "externalDetectWallets"
         ) {
           console.log("[OnRamp] postMessage from unknown origin:", event.origin, event.data);
         }
