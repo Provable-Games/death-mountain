@@ -299,7 +299,6 @@ const FiatTabContent = memo(({
   strkPerGame,
   isMinting,
   isOnrampInProgress,
-  onDismissOnrampOverlay,
   strkBalance,
   strkQuoteForGames,
   onTriggerSwapMint,
@@ -310,7 +309,6 @@ const FiatTabContent = memo(({
   strkPerGame: number | null;
   isMinting: boolean;
   isOnrampInProgress: boolean;
-  onDismissOnrampOverlay: () => void;
   strkBalance?: number;
   strkQuoteForGames?: number | null;
   onTriggerSwapMint?: () => void;
@@ -689,123 +687,100 @@ const FiatTabContent = memo(({
 
   // --- PRODUCTION MODE ---
   return (
-    <Box sx={{
-      position: "relative",
-      width: "100%",
-      display: isOnrampInProgress ? "flex" : "block",
-      flexDirection: "column",
-      height: isOnrampInProgress ? "clamp(560px, calc(90dvh - 240px), 860px)" : "auto",
-    }}>
+    <Box sx={{ position: "relative", width: "100%" }}>
       {mintingOverlay}
       {onrampOverlay}
       {infoBanner}
-      {/* When onramp is in progress: stacked layout with centered message + cropped iframe showing only the provider button */}
-      {isOnrampInProgress ? (
-        <>
-          {/* Centered progress message — fills available space */}
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#0f1f0f",
-              px: 3,
-              textAlign: "center",
-              gap: 1.5,
-              minHeight: 200,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box sx={{ position: "relative", width: 40, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <CircularProgress size={40} thickness={2.5} sx={{ color: "#d0c98d" }} />
-                <CreditCardIcon sx={{ fontSize: 18, color: "#d0c98d", position: "absolute" }} />
-              </Box>
-              <Box sx={{ textAlign: "left" }}>
-                <Typography sx={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "#d0c98d",
-                  fontFamily: "Cinzel, Georgia, serif",
-                  lineHeight: 1.2,
-                }}>
-                  {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
-                    ? "Almost there..."
-                    : "Payment in progress"}
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4, mt: 0.25 }}>
-                  {swapStage === "quoting"
-                    ? "We received your funds. Preparing your games..."
-                    : swapStage === "swapping"
-                      ? "Converting your payment into game tokens..."
-                      : swapStage === "minting"
-                        ? "Minting your games, hang tight..."
-                        : "Complete your payment in the other tab."}
-                </Typography>
-              </Box>
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 0.75 }}>
-              {[0, 1, 2].map((i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: "#d0c98d",
-                    animation: "onrampPulse 1.4s ease-in-out infinite",
-                    animationDelay: `${i * 0.2}s`,
-                    "@keyframes onrampPulse": {
-                      "0%, 80%, 100%": { opacity: 0.2, transform: "scale(0.8)" },
-                      "40%": { opacity: 1, transform: "scale(1.2)" },
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-
-            <Typography sx={{ fontSize: 10, color: "rgba(255, 255, 255, 0.35)", lineHeight: 1.3 }}>
-              This page updates automatically. Use the button below if the tab didn't open.
-            </Typography>
-          </Box>
-
-          {/* Cropped iframe container: only shows the very bottom where the provider "Open in new tab" button lives */}
-          <Box sx={{ position: "relative", height: "8vh", minHeight: 56, overflow: "hidden", flexShrink: 0 }}>
-            <iframe
-              ref={iframeRef}
-              src={buildOnramperUrl(walletAddress, totalFiatUsd, signature, sessionIdRef.current)}
-              title="Onramper Widget"
-              width="100%"
-              scrolling="no"
-              style={{
-                border: "none",
-                display: "block",
-                height: "clamp(560px, calc(90dvh - 240px), 860px)",
-                position: "absolute",
-                bottom: "-10vh",
-                left: 0,
-              }}
-              allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
-            />
-          </Box>
-        </>
-      ) : (
-        <iframe
-          ref={iframeRef}
-          src={buildOnramperUrl(walletAddress, totalFiatUsd, signature, sessionIdRef.current)}
-          title="Onramper Widget"
-          width="100%"
-          scrolling="no"
-          style={{
-            border: "none",
-            display: "block",
-            height: "clamp(560px, calc(90dvh - 240px), 860px)",
+      {/* Full overlay when onramp checkout is in progress in another tab */}
+      {isOnrampInProgress && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#0f1f0f",
+            borderRadius: 1,
+            px: 3,
+            textAlign: "center",
+            gap: 2,
           }}
-          allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
-        />
+        >
+          {/* Spinner + message */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box sx={{ position: "relative", width: 40, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CircularProgress size={40} thickness={2.5} sx={{ color: "#d0c98d" }} />
+              <CreditCardIcon sx={{ fontSize: 18, color: "#d0c98d", position: "absolute" }} />
+            </Box>
+            <Box sx={{ textAlign: "left" }}>
+              <Typography sx={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "#d0c98d",
+                fontFamily: "Cinzel, Georgia, serif",
+                lineHeight: 1.2,
+              }}>
+                {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
+                  ? "Almost there..."
+                  : "Payment in progress"}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4, mt: 0.25 }}>
+                {swapStage === "quoting"
+                  ? "We received your funds. Preparing your games..."
+                  : swapStage === "swapping"
+                    ? "Converting your payment into game tokens..."
+                    : swapStage === "minting"
+                      ? "Minting your games, hang tight..."
+                      : "Complete your payment in the other tab."}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Pulsing dots */}
+          <Box sx={{ display: "flex", gap: 0.75 }}>
+            {[0, 1, 2].map((i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#d0c98d",
+                  animation: "onrampPulse 1.4s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                  "@keyframes onrampPulse": {
+                    "0%, 80%, 100%": { opacity: 0.2, transform: "scale(0.8)" },
+                    "40%": { opacity: 1, transform: "scale(1.2)" },
+                  },
+                }}
+              />
+            ))}
+          </Box>
+
+          <Typography sx={{ fontSize: 10, color: "rgba(255, 255, 255, 0.35)", lineHeight: 1.3 }}>
+            This page updates automatically. If the tab didn't open, close this window and try again.
+          </Typography>
+        </Box>
       )}
+      <iframe
+        ref={iframeRef}
+        src={buildOnramperUrl(walletAddress, totalFiatUsd, signature, sessionIdRef.current)}
+        title="Onramper Widget"
+        width="100%"
+        scrolling="no"
+        style={{
+          border: "none",
+          display: "block",
+          height: "clamp(560px, calc(90dvh - 240px), 860px)",
+        }}
+        allow="accelerometer; autoplay; camera; gyroscope; payment; microphone"
+      />
     </Box>
   );
 });
@@ -1496,7 +1471,6 @@ export default function PaymentOptionsModal({
                           strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
                           isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
-                          onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
                           strkBalance={strkBalance}
                           strkQuoteForGames={strkQuoteForGames}
                           onTriggerSwapMint={swapStrkAndMint}
