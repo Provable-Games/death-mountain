@@ -770,8 +770,8 @@ const FiatTabContent = memo(({
               ))}
             </Box>
 
-            <Typography sx={{ fontSize: 10, color: "rgba(255, 255, 255, 0.35)", lineHeight: 1.3 }}>
-              This page updates automatically.
+            <Typography sx={{ fontSize: 11, color: "rgba(255, 255, 255, 0.45)", lineHeight: 1.5, maxWidth: 300 }}>
+              This can take a few minutes. Stay on this page — once your payment is confirmed, we'll handle everything and your games will be ready to play.
             </Typography>
           </Box>
 
