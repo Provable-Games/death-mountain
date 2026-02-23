@@ -299,6 +299,7 @@ const FiatTabContent = memo(({
   strkPerGame,
   isMinting,
   isOnrampInProgress,
+  onDismissOnrampOverlay,
   strkBalance,
   strkQuoteForGames,
   onTriggerSwapMint,
@@ -309,6 +310,7 @@ const FiatTabContent = memo(({
   strkPerGame: number | null;
   isMinting: boolean;
   isOnrampInProgress: boolean;
+  onDismissOnrampOverlay: () => void;
   strkBalance?: number;
   strkQuoteForGames?: number | null;
   onTriggerSwapMint?: () => void;
@@ -349,6 +351,12 @@ const FiatTabContent = memo(({
       }
 
       const data = event.data;
+
+      // Skip noisy wallet detection messages from the Onramper iframe
+      if (typeof data === "object" && data !== null && data.type === "externalDetectWallets") {
+        return;
+      }
+
       console.log("[OnRamp] postMessage received:", JSON.stringify(data, null, 2));
 
       // Try to extract status from various possible payload shapes
@@ -699,7 +707,7 @@ const FiatTabContent = memo(({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "rgba(15, 31, 15, 0.95)",
+            background: "#0f1f0f",
             borderRadius: 1,
             px: 3,
             textAlign: "center",
@@ -782,12 +790,34 @@ const FiatTabContent = memo(({
           <Typography sx={{
             fontSize: 11,
             color: "rgba(255, 255, 255, 0.4)",
-            mt: 1,
             maxWidth: 280,
             lineHeight: 1.4,
           }}>
             This page will update automatically. No action needed here.
           </Typography>
+
+          {/* Fallback button if the new tab didn't open */}
+          <Button
+            variant="outlined"
+            onClick={onDismissOnrampOverlay}
+            sx={{
+              mt: 2,
+              px: 3,
+              py: 1,
+              color: "rgba(208, 201, 141, 0.7)",
+              borderColor: "rgba(208, 201, 141, 0.25)",
+              textTransform: "none",
+              fontSize: 12,
+              letterSpacing: 0.3,
+              "&:hover": {
+                borderColor: "rgba(208, 201, 141, 0.5)",
+                background: "rgba(208, 201, 141, 0.08)",
+                color: "#d0c98d",
+              },
+            }}
+          >
+            The tab didn't open? Go back
+          </Button>
         </Box>
       )}
       <iframe
@@ -1493,6 +1523,7 @@ export default function PaymentOptionsModal({
                           strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
                           isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
+                          onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
                           strkBalance={strkBalance}
                           strkQuoteForGames={strkQuoteForGames}
                           onTriggerSwapMint={swapStrkAndMint}
