@@ -17,6 +17,7 @@ import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
 import { StatisticsProvider } from './contexts/Statistics';
+import { useOnrampWatcher } from '@/hooks/useOnrampWatcher';
 import TermsOfServiceModal from '@/desktop/components/TermsOfServiceModal';
 import TermsOfServiceScreen from '@/mobile/containers/TermsOfServiceScreen';
 
@@ -24,6 +25,9 @@ function AppContent() {
   const { useMobileClient } = useUIStore();
   const { showTermsOfService, acceptTermsOfService, logout } = useController();
   const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+
+  // Global on-ramp watcher: polls STRK balance and auto-triggers swap+mint
+  useOnrampWatcher();
 
   return (
     <>

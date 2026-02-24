@@ -4,7 +4,7 @@ import { useController } from "@/contexts/controller";
 import { useDungeon } from "@/dojo/useDungeon";
 import { OnrampStatus, useSwapStore } from "@/stores/swapStore";
 import { useUIStore } from "@/stores/uiStore";
-import { NETWORKS } from "@/utils/networkConfig";
+import { useDynamicConnector } from "@/contexts/starknet";
 import { formatAmount } from "@/utils/utils";
 import CloseIcon from "@mui/icons-material/Close";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
@@ -32,8 +32,6 @@ import { Contract } from "starknet";
 const MIN_GAMES = 1;
 const MAX_GAMES = 50;
 const FALLBACK_MIN_FIAT_USD = 12; // Fallback if API fetch fails (~$11.72 observed)
-const BALANCE_POLL_INTERVAL = 10_000; // 10 seconds
-const BALANCE_POLL_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const ONRAMPER_TRANSITION_MASK_PX = 68;
 
 // Onramper API key from environment variable
@@ -137,7 +135,13 @@ const buildOnramperUrl = (
   signature: string | null,
   sessionId: string,
 ) => {
-  let url = `${ONRAMPER_BASE_URL}&networkWallets=starknet:${walletAddress}`;
+  let url = ONRAMPER_BASE_URL;
+
+  // Only include networkWallets when we have a valid signature (required by Onramper).
+  // Without signature, the user will enter their wallet address manually in the widget.
+  if (signature) {
+    url += `&networkWallets=starknet:${walletAddress}&signature=${signature}`;
+  }
 
   // partnerContext lets us correlate this session in webhooks
   url += `&partnerContext=${sessionId}`;
@@ -146,10 +150,6 @@ const buildOnramperUrl = (
     // Add ~3% buffer for provider fees + slippage, rounded up
     const amountWithBuffer = Math.ceil(totalUsd * 1.03);
     url += `&defaultFiat=usd&defaultAmount=${amountWithBuffer}`;
-  }
-
-  if (signature) {
-    url += `&signature=${signature}`;
   }
 
   return url;
@@ -302,7 +302,6 @@ const FiatTabContent = memo(({
   onDismissOnrampOverlay,
   strkBalance,
   strkQuoteForGames,
-  onTriggerSwapMint,
 }: {
   walletAddress: string;
   totalFiatUsd: number | null;
@@ -313,7 +312,6 @@ const FiatTabContent = memo(({
   onDismissOnrampOverlay: () => void;
   strkBalance?: number;
   strkQuoteForGames?: number | null;
-  onTriggerSwapMint?: () => void;
 }) => {
   const [signature, setSignature] = useState<string | null>(null);
   const sessionIdRef = useRef(generateSessionId());
@@ -662,8 +660,8 @@ const FiatTabContent = memo(({
           <Button
             variant="contained"
             fullWidth
-            disabled={!hasEnoughStrk || isMinting || !onTriggerSwapMint}
-            onClick={onTriggerSwapMint}
+            disabled={!hasEnoughStrk || isMinting}
+            onClick={() => { /* swap is now handled by useOnrampWatcher */ }}
             sx={{
               ...styles.activateButton,
               background: hasEnoughStrk ? "#FFA500" : "rgba(255, 165, 0, 0.3)",
@@ -831,21 +829,24 @@ export default function PaymentOptionsModal({
 
   const { provider } = useProvider();
   const { address: accountAddress } = useAccount();
+  const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
 
   const routerContract = useMemo(
     () =>
-      new Contract({
-        abi: ROUTER_ABI,
-        address: NETWORKS.SN_MAIN.ekuboRouter,
-        providerOrAccount: provider,
-      }),
-    [provider]
+      currentNetworkConfig.ekuboRouter
+        ? new Contract({
+            abi: ROUTER_ABI,
+            address: currentNetworkConfig.ekuboRouter,
+            providerOrAccount: provider,
+          })
+        : null,
+    [provider, currentNetworkConfig.ekuboRouter]
   );
 
   // --- Derived data ---
 
-  const paymentTokens = useMemo(() => NETWORKS.SN_MAIN.paymentTokens || [], []);
+  const paymentTokens = useMemo(() => currentNetworkConfig.paymentTokens || [], [currentNetworkConfig.paymentTokens]);
 
   const userTokens = useMemo(() => {
     return paymentTokens
@@ -907,30 +908,25 @@ export default function PaymentOptionsModal({
     return parseFloat(ticketPriceUsd) * minFiatGames;
   }, [ticketPriceUsd, minFiatGames]);
 
-  // Refs for polling cleanup and auto-mint tracking
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs for UI tracking
   const fiatTabWasHidden = useRef(false);
   const initialTabSet = useRef(false);
-  const initialStrkBalance = useRef<number | null>(null);
-  const autoMintTriggered = useRef(false);
 
   // --- Initialize view on open ---
 
   useEffect(() => {
     if (!open) {
-      // Reset state on close
+      // Reset local UI state on close
       setSpecialView(null);
       setIsMinting(false);
       setIsFiatCheckoutInProgress(false);
       fiatTabWasHidden.current = false;
       initialTabSet.current = false;
-      initialStrkBalance.current = null;
-      autoMintTriggered.current = false;
-      stopPolling();
-      // Reset swap progress if it was in a non-terminal state
+      // Only reset swap store if no active on-ramp flow (preserve persisted state)
       const swapState = useSwapStore.getState();
-      if (swapState.stage !== "done" && swapState.stage !== "idle") {
+      const hasActiveOnramp = swapState.stage === "waiting_deposit" &&
+        swapState.initialStrkBalance !== null;
+      if (!hasActiveOnramp && swapState.stage !== "done" && swapState.stage !== "idle") {
         swapState.reset();
       }
       return;
@@ -960,7 +956,7 @@ export default function PaymentOptionsModal({
   useEffect(() => {
     const fetchTicketPriceUsd = async () => {
       if (!dungeon.ticketAddress) return;
-      const usdcToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "USDC");
+      const usdcToken = currentNetworkConfig.paymentTokens.find((t: any) => t.name === "USDC");
       if (!usdcToken) return;
 
       try {
@@ -987,7 +983,7 @@ export default function PaymentOptionsModal({
   useEffect(() => {
     const fetchStrkQuote = async () => {
       if (!dungeon.ticketAddress || minFiatGames < 1) return;
-      const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
+      const strkToken = currentNetworkConfig.paymentTokens.find((t: any) => t.name === "STRK");
       if (!strkToken) return;
 
       try {
@@ -1061,109 +1057,40 @@ export default function PaymentOptionsModal({
 
   // --- Balance polling for fiat funded phase ---
 
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-    if (pollTimeoutRef.current) {
-      clearTimeout(pollTimeoutRef.current);
-      pollTimeoutRef.current = null;
-    }
-  }, []);
-
-  // Start polling automatically when fiat tab is shown
+  // Register on-ramp intent when fiat tab opens (persisted — survives page close)
   useEffect(() => {
-    if (activeTab === "fiat" && specialView === null && open && !isMinting) {
-      // Record initial STRK balance
-      if (initialStrkBalance.current === null) {
-        initialStrkBalance.current = strkBalance;
-        console.log("[OnRamp] Initial STRK balance recorded:", strkBalance);
-        console.log("[OnRamp] STRK needed for", minFiatGames, "games:", strkQuoteForGames);
-        // Start the swap progress tracker (shows "Waiting for deposit")
-        const swapState = useSwapStore.getState();
-        if (swapState.stage === "idle") {
-          swapState.startFlow(minFiatGames);
-          console.log("[OnRamp] Flow started, waiting for deposit...");
-        }
-      }
-
-      pollIntervalRef.current = setInterval(() => {
-        refreshTokenBalances();
-      }, BALANCE_POLL_INTERVAL);
-
-      pollTimeoutRef.current = setTimeout(() => {
-        console.log("[OnRamp] Polling timeout reached (30 min), stopping");
-        stopPolling();
-      }, BALANCE_POLL_TIMEOUT);
-
-      // Force refresh when user returns to the tab (browser throttles timers in background)
-      const onVisibilityChange = () => {
-        if (document.visibilityState === "hidden") {
-          fiatTabWasHidden.current = true;
-          return;
-        }
-
-        if (document.visibilityState === "visible") {
-          console.log("[OnRamp] Tab became visible, refreshing balances");
-          refreshTokenBalances();
-
-          if (fiatTabWasHidden.current) {
-            setIsFiatCheckoutInProgress(true);
-            fiatTabWasHidden.current = false;
-          }
-        }
-      };
-      document.addEventListener("visibilitychange", onVisibilityChange);
-
-      return () => {
-        stopPolling();
-        fiatTabWasHidden.current = false;
-        document.removeEventListener("visibilitychange", onVisibilityChange);
-      };
-    } else {
-      stopPolling();
-    }
-  }, [activeTab, specialView, open, isMinting]);
-
-  // Auto-trigger mint when STRK balance increases enough
-  useEffect(() => {
-    // Log balance changes during fiat flow for debugging
-    if (activeTab === "fiat" && initialStrkBalance.current !== null) {
-      const delta = strkBalance - initialStrkBalance.current;
-      if (delta !== 0) {
-        console.log("[OnRamp] STRK balance changed:", {
-          initial: initialStrkBalance.current,
-          current: strkBalance,
-          delta,
-          needed: strkQuoteForGames,
-          threshold: strkQuoteForGames ? strkQuoteForGames * 0.9 : null,
-          meetsThreshold: strkQuoteForGames ? delta >= strkQuoteForGames * 0.9 : false,
-          onrampStatus: useSwapStore.getState().onrampStatus,
+    if (activeTab === "fiat" && specialView === null && open && !isMinting && accountAddress) {
+      const swapState = useSwapStore.getState();
+      if (swapState.stage === "idle" && strkQuoteForGames !== null && strkQuoteForGames > 0) {
+        swapState.startOnramp(strkBalance, strkQuoteForGames, minFiatGames, accountAddress);
+        console.log("[OnRamp] On-ramp intent registered:", {
+          initialStrkBalance: strkBalance,
+          strkToInvest: strkQuoteForGames,
+          gamesRequested: minFiatGames,
         });
       }
     }
+  }, [activeTab, specialView, open, isMinting, accountAddress, strkQuoteForGames, minFiatGames, strkBalance]);
 
-    if (
-      activeTab === "fiat" &&
-      !isMinting &&
-      !autoMintTriggered.current &&
-      initialStrkBalance.current !== null &&
-      strkQuoteForGames !== null &&
-      strkBalance > initialStrkBalance.current &&
-      (strkBalance - initialStrkBalance.current) >= strkQuoteForGames * 0.9 // 90% threshold for slippage
-    ) {
-      autoMintTriggered.current = true;
-      setIsFiatCheckoutInProgress(false);
-      console.log("[OnRamp] STRK deposit detected! Balance delta meets threshold, triggering swap+mint");
-      // Update swap store — deposit has arrived
-      const swapState = useSwapStore.getState();
-      if (swapState.stage === "waiting_deposit") {
-        swapState.setStage("quoting");
+  // Show "checkout in progress" overlay when user returns from provider tab
+  useEffect(() => {
+    if (activeTab !== "fiat" || !open) return;
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        fiatTabWasHidden.current = true;
+      } else if (document.visibilityState === "visible" && fiatTabWasHidden.current) {
+        setIsFiatCheckoutInProgress(true);
+        fiatTabWasHidden.current = false;
       }
-      swapStrkAndMint();
-    }
-  }, [strkBalance, activeTab, isMinting, strkQuoteForGames]);
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      fiatTabWasHidden.current = false;
+    };
+  }, [activeTab, open]);
 
   // --- Actions ---
 
@@ -1172,7 +1099,7 @@ export default function PaymentOptionsModal({
       {
         paymentType: "Golden Pass",
         goldenPass: {
-          address: NETWORKS.SN_MAIN.goldenToken,
+          address: currentNetworkConfig.goldenToken,
           tokenId: goldenPassIds[0],
         },
       },
@@ -1186,7 +1113,7 @@ export default function PaymentOptionsModal({
 
   const buyDungeonTicket = async () => {
     const selectedTokenData = userTokens.find((t: any) => t.symbol === selectedToken);
-    if (!selectedTokenData) return;
+    if (!selectedTokenData || !routerContract) return;
 
     const quote = await getSwapQuote(
       -1e18,
@@ -1203,103 +1130,7 @@ export default function PaymentOptionsModal({
     enterDungeon({ paymentType: "Ticket" }, calls);
   };
 
-  const swapStrkAndMint = async () => {
-    if (!dungeon.ticketAddress) return;
-    const strkToken = NETWORKS.SN_MAIN.paymentTokens.find((t: any) => t.name === "STRK");
-    if (!strkToken) return;
-
-    const swapProgress = useSwapStore.getState();
-    console.log("[OnRamp] swapStrkAndMint started", {
-      strkBalance,
-      minFiatGames,
-      strkQuoteForGames,
-      onrampStatus: swapProgress.onrampStatus,
-      onrampTransactionId: swapProgress.onrampTransactionId,
-    });
-
-    setIsMinting(true);
-    setIsFiatCheckoutInProgress(false);
-    stopPolling();
-
-    // Drive swap progress store
-    if (swapProgress.stage === "idle") {
-      swapProgress.startFlow(minFiatGames);
-    }
-    swapProgress.setStage("quoting");
-
-    try {
-      // Re-evaluate how many games we can actually afford at current prices.
-      // The price may have changed since the on-ramp amount was calculated,
-      // so we use a forward quote to determine the max affordable games.
-      const currentStrkBalance = strkBalance;
-      if (currentStrkBalance <= 0) {
-        throw new Error("No STRK available for swap");
-      }
-
-      // Use 98% of balance to account for the ~1% transfer buffer in generateSwapCalls
-      const safeBalanceWei = Math.floor(currentStrkBalance * 0.98 * 1e18);
-      console.log("[OnRamp] Getting forward quote for max games...", { safeBalanceWei });
-      const forwardQuote = await getSwapQuote(
-        safeBalanceWei,
-        strkToken.address,
-        dungeon.ticketAddress
-      );
-
-      let gamesToBuy = minFiatGames;
-
-      if (forwardQuote && forwardQuote.total !== 0) {
-        const maxAffordableGames = Math.floor(Math.abs(forwardQuote.total) / 1e18);
-        console.log("[OnRamp] Forward quote result:", { maxAffordableGames, minFiatGames });
-        if (maxAffordableGames < 1) {
-          throw new Error(
-            "Insufficient STRK to purchase even 1 game. The price may have changed since your purchase."
-          );
-        }
-        // Never buy more than originally planned; surplus STRK stays in wallet
-        gamesToBuy = Math.min(minFiatGames, maxAffordableGames);
-      }
-
-      if (gamesToBuy !== minFiatGames) {
-        console.log(
-          `[OnRamp] Price changed: adjusted from ${minFiatGames} to ${gamesToBuy} game(s). ` +
-          `Surplus STRK will remain in wallet.`
-        );
-      }
-
-      // Get the exact reverse quote for the determined number of games
-      console.log("[OnRamp] Getting exact reverse quote for", gamesToBuy, "games...");
-      const quote = await getSwapQuote(
-        -gamesToBuy * 1e18,
-        dungeon.ticketAddress,
-        strkToken.address
-      );
-      console.log("[OnRamp] Reverse quote received, proceeding to swap");
-
-      swapProgress.setStage("swapping");
-
-      const tokenSwapData = {
-        tokenAddress: dungeon.ticketAddress!,
-        minimumAmount: gamesToBuy,
-        quote: quote,
-      };
-      const calls = generateSwapCalls(routerContract, strkToken.address, tokenSwapData);
-
-      swapProgress.setStage("minting");
-      purchaseGames(calls, gamesToBuy, () => {
-        console.log("[OnRamp] Games minted successfully:", gamesToBuy);
-        setIsMinting(false);
-        useSwapStore.getState().complete(gamesToBuy);
-        onClose();
-      });
-    } catch (error) {
-      console.error("[OnRamp] Error in swapStrkAndMint:", error);
-      setIsMinting(false);
-      autoMintTriggered.current = false; // Allow retry
-      useSwapStore.getState().setError(
-        error instanceof Error ? error.message : "Swap failed — try again"
-      );
-    }
-  };
+  // swapStrkAndMint logic has been moved to useOnrampWatcher (global hook).
 
   const handleTokenChange = useCallback(
     (tokenSymbol: string) => {
@@ -1496,18 +1327,54 @@ export default function PaymentOptionsModal({
                         />
                       )}
                       {activeTab === "fiat" && (
-                        <FiatTabContent
-                          walletAddress={accountAddress}
-                          totalFiatUsd={totalFiatUsd}
-                          minFiatGames={minFiatGames}
-                          strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
-                          isMinting={isMinting}
-                          isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
-                          onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
-                          strkBalance={strkBalance}
-                          strkQuoteForGames={strkQuoteForGames}
-                          onTriggerSwapMint={swapStrkAndMint}
-                        />
+                        <>
+                          <FiatTabContent
+                            walletAddress={accountAddress}
+                            totalFiatUsd={totalFiatUsd}
+                            minFiatGames={minFiatGames}
+                            strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
+                            isMinting={isMinting}
+                            isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
+                            onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
+                            strkBalance={strkBalance}
+                            strkQuoteForGames={strkQuoteForGames}
+                          />
+                          {/* Dev-only: manually start the on-ramp watcher (bypasses Ekubo quote) */}
+                          {import.meta.env.DEV && accountAddress && (
+                            <Box sx={{ px: 2, pb: 1 }}>
+                              <Button
+                                size="small"
+                                fullWidth
+                                variant="outlined"
+                                onClick={() => {
+                                  const store = useSwapStore.getState();
+                                  if (store.stage !== "idle" && store.stage !== "error" && store.stage !== "done") {
+                                    store.reset();
+                                    return;
+                                  }
+                                  // Use actual strkQuoteForGames if available, otherwise default to 10 STRK / 1 game
+                                  const strkNeeded = strkQuoteForGames ?? 10;
+                                  const games = minFiatGames || 1;
+                                  store.startOnramp(strkBalance, strkNeeded, games, accountAddress);
+                                  console.log("[DEV] Watcher started manually:", { strkBalance, strkNeeded, games });
+                                }}
+                                sx={{
+                                  fontSize: 9, py: 0.5, mt: 0.5,
+                                  borderColor: "rgba(255,165,0,0.4)",
+                                  color: "#FFA500",
+                                  textTransform: "none",
+                                }}
+                              >
+                                {(() => {
+                                  const s = useSwapStore.getState().stage;
+                                  return s !== "idle" && s !== "error" && s !== "done"
+                                    ? `[DEV] Reset watcher (stage: ${s})`
+                                    : "[DEV] Start watcher (bypass quote)";
+                                })()}
+                              </Button>
+                            </Box>
+                          )}
+                        </>
                       )}
                     </motion.div>
                   )}

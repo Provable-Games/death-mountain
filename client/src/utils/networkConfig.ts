@@ -127,7 +127,8 @@ export const NETWORKS = {
       "0x0660e6dc65db95f11bf2e44f3f3c3e376147504ce298cf42958d451ad11da8e6",
     goldenToken:
       "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
-    ekuboRouter: "",
+    ekuboRouter:
+      "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
     paymentTokens: [
       {
         name: "ETH",

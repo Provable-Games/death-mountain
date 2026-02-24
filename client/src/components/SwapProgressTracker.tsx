@@ -1,4 +1,5 @@
 import { Box, Typography } from "@mui/material";
+import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { OnrampStatus, SwapStage, useSwapStore } from "@/stores/swapStore";
 
@@ -56,9 +57,11 @@ function stageMessage(stage: SwapStage, gamesRequested: number): string {
 }
 
 export default function SwapProgressTracker() {
-  const { stage, gamesRequested, errorMessage, onrampStatus, onrampProvider, reset } = useSwapStore();
+  const { stage, gamesRequested, errorMessage, onrampStatus, onrampProvider, walletAddress, reset } = useSwapStore();
+  const { address: accountAddress } = useAccount();
 
-  const isActive = stage !== "idle";
+  // Only show when a flow is active AND the connected wallet matches the persisted flow
+  const isActive = stage !== "idle" && !!accountAddress && walletAddress === accountAddress;
   const currentIdx = stageIndex(stage);
   const isError = stage === "error";
   const isDone = stage === "done";
