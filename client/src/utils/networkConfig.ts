@@ -168,9 +168,9 @@ export function getNativePolicies(networkKey: ChainId): SessionPolicies {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
   if (!network) throw new Error(`Network ${networkKey} not found`);
 
-  const contractPolicies: ContractPolicies = cartridgeNativePresets;
-
-  const policiesWithPayments = contractPolicies as Record<string, ContractPolicy>;
+  const policiesWithPayments: Record<string, ContractPolicy> = {
+    ...cartridgeNativePresets,
+  };
   network.paymentTokens.forEach((token) => {
     policiesWithPayments[token.address] = {
       methods: [
