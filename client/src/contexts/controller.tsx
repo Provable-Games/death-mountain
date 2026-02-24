@@ -148,7 +148,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
         await Browser.close().catch(() => undefined);
 
-        const account = await connector.controller.probe();
+        const _ = await connector.controller.probe();
         connect({connector: connector})
       } catch (error) {
         console.error("Failed to handle deep link", error);

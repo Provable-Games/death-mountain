@@ -21,6 +21,7 @@
     "@capacitor/app": "^8.0.0",
     "@capacitor/browser": "^8.0.0",
     "@capacitor/cli": "^8.0.2",
+    "@capacitor/clipboard": "^8.0.1",
     "@capacitor/core": "^8.0.2",
     "@capacitor/ios": "^8.0.2",
     "@cartridge/connector": "^0.13.9",
@@ -67,11 +68,11 @@
     "vite-plugin-wasm": "^3.4.1"
   },
   "devDependencies": {
+    "@types/node": "^25.2.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-lazy-load-image-component": "^1.6.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "@types/node": "^25.2.2",
     "eslint": "^9.24.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",

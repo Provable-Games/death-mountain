@@ -6,6 +6,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { Button, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import { useAccount } from '@starknet-react/core';
 import {useMemo, useState} from 'react';
+import {Clipboard} from "@capacitor/clipboard";
 
 function WalletConnect() {
   const { isPending, playerName, login, logout, openProfile } = useController();
@@ -20,6 +21,15 @@ function WalletConnect() {
       openProfile();
     }
   };
+
+  const handleClipboardClick = async () => {
+    if (address) {
+      await Clipboard.write({
+        string: address
+      });
+      setMenuAnchor(null);
+    }
+  }
 
   return (
     <>
@@ -44,7 +54,7 @@ function WalletConnect() {
                 onClose={() => setMenuAnchor(null)}
                 slotProps={{ paper: { sx: { padding: '0 !important' } } }}
               >
-                <MenuItem dense sx={{ display: 'flex', justifyContent: 'space-between' }} onClick={() => { address && navigator.clipboard.writeText(address); setMenuAnchor(null); }}>
+                <MenuItem dense sx={{ display: 'flex', justifyContent: 'space-between' }} onClick={() => handleClipboardClick()}>
                   {address && ellipseAddress(address, 6, 4)}
                   <ListItemIcon sx={{ minWidth: 0, justifyContent: 'flex-end' }}>
                     <ContentCopyIcon fontSize="small" />

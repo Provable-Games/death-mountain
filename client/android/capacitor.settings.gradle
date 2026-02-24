@@ -7,3 +7,6 @@ project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacito
 
 include ':capacitor-browser'
 project(':capacitor-browser').projectDir = new File('../node_modules/.pnpm/@capacitor+browser@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/browser/android')
+
+include ':capacitor-clipboard'
+project(':capacitor-clipboard').projectDir = new File('../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/clipboard/android')
