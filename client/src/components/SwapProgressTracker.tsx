@@ -1,4 +1,5 @@
-import { Box, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { Box, IconButton, Typography } from "@mui/material";
 import { useAccount } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { OnrampStatus, SwapStage, useSwapStore } from "@/stores/swapStore";
@@ -6,6 +7,7 @@ import { OnrampStatus, SwapStage, useSwapStore } from "@/stores/swapStore";
 /** Ordered stages for the progress display (excludes idle) */
 const STAGES: { key: SwapStage; label: string }[] = [
   { key: "waiting_deposit", label: "Deposit" },
+  { key: "deposit_detected", label: "Confirm" },
   { key: "quoting", label: "Quote" },
   { key: "swapping", label: "Swap" },
   { key: "minting", label: "Mint" },
@@ -37,18 +39,20 @@ function onrampSubMessage(onrampStatus: OnrampStatus): string | null {
   }
 }
 
-function stageMessage(stage: SwapStage, gamesRequested: number): string {
+function stageMessage(stage: SwapStage, gamesMinted: number): string {
   switch (stage) {
     case "waiting_deposit":
       return "Waiting for STRK deposit...";
+    case "deposit_detected":
+      return "STRK received — confirm swap";
     case "quoting":
       return "Getting swap quote...";
     case "swapping":
       return "Swapping STRK for tickets...";
     case "minting":
-      return `Minting ${gamesRequested} game${gamesRequested > 1 ? "s" : ""}...`;
+      return "Minting games...";
     case "done":
-      return `${gamesRequested} game${gamesRequested > 1 ? "s" : ""} ready!`;
+      return `${gamesMinted} game${gamesMinted > 1 ? "s" : ""} ready!`;
     case "error":
       return "Something went wrong";
     default:
@@ -57,7 +61,7 @@ function stageMessage(stage: SwapStage, gamesRequested: number): string {
 }
 
 export default function SwapProgressTracker() {
-  const { stage, gamesRequested, errorMessage, onrampStatus, onrampProvider, walletAddress, reset } = useSwapStore();
+  const { stage, gamesMinted, errorMessage, onrampStatus, onrampProvider, walletAddress, reset } = useSwapStore();
   const { address: accountAddress } = useAccount();
 
   // Only show when a flow is active AND the connected wallet matches the persisted flow
@@ -65,6 +69,13 @@ export default function SwapProgressTracker() {
   const currentIdx = stageIndex(stage);
   const isError = stage === "error";
   const isDone = stage === "done";
+
+  // Allow full-stop dismiss during early stages (before on-chain tx starts)
+  const canDismiss =
+    stage === "waiting_deposit" ||
+    stage === "deposit_detected" ||
+    isDone ||
+    isError;
 
   return (
     <AnimatePresence>
@@ -77,6 +88,18 @@ export default function SwapProgressTracker() {
           style={{ overflow: "hidden", width: "100%" }}
         >
           <Box sx={styles.container}>
+            {/* Header row: title + dismiss */}
+            <Box sx={styles.headerRow}>
+              <Typography sx={styles.headerTitle}>
+                {isDone ? "Complete" : isError ? "Error" : "On-ramp"}
+              </Typography>
+              {canDismiss && (
+                <IconButton onClick={reset} sx={styles.dismissBtn} size="small">
+                  <CloseIcon sx={{ fontSize: 12 }} />
+                </IconButton>
+              )}
+            </Box>
+
             {/* Stage dots */}
             <Box sx={styles.dotsRow}>
               {STAGES.map((s, i) => {
@@ -127,8 +150,8 @@ export default function SwapProgressTracker() {
                           ? "#d0c98d"
                           : isError
                             ? "rgba(244, 67, 54, 0.7)"
-                            : "rgba(208, 201, 141, 0.35)",
-                        fontWeight: isCurrent ? 700 : 400,
+                            : "rgba(208, 201, 141, 0.4)",
+                        fontWeight: isCurrent ? 700 : 500,
                       }}
                     >
                       {s.label}
@@ -155,7 +178,7 @@ export default function SwapProgressTracker() {
                 >
                   {isError && errorMessage
                     ? errorMessage
-                    : stageMessage(stage, gamesRequested)}
+                    : stageMessage(stage, gamesMinted)}
                 </Typography>
 
                 {/* Onramp sub-status: shown during the deposit phase */}
@@ -181,22 +204,6 @@ export default function SwapProgressTracker() {
                 )}
               </motion.div>
             </AnimatePresence>
-
-            {/* Dismiss / retry for done and error states */}
-            {(isDone || isError) && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Typography
-                  onClick={reset}
-                  sx={styles.dismissLink}
-                >
-                  {isError ? "Dismiss" : "Close"}
-                </Typography>
-              </motion.div>
-            )}
           </Box>
         </motion.div>
       )}
@@ -209,14 +216,35 @@ const styles = {
     width: "100%",
     boxSizing: "border-box" as const,
     px: 1.5,
-    py: 1.5,
-    background: "rgba(24, 40, 24, 0.8)",
+    py: 1,
+    background: "rgba(24, 40, 24, 0.85)",
     border: "1px solid rgba(208, 201, 141, 0.25)",
     borderRadius: "8px",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
-    gap: 1,
+    gap: 0.75,
+  },
+  headerRow: {
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    fontSize: 9,
+    fontWeight: 600,
+    letterSpacing: 1,
+    color: "rgba(208, 201, 141, 0.5)",
+    textTransform: "uppercase" as const,
+  },
+  dismissBtn: {
+    padding: "2px",
+    color: "rgba(208, 201, 141, 0.4)",
+    "&:hover": {
+      color: "#d0c98d",
+      background: "rgba(208, 201, 141, 0.1)",
+    },
   },
   dotsRow: {
     display: "flex",
@@ -234,7 +262,7 @@ const styles = {
   },
   connector: {
     position: "absolute" as const,
-    top: 8,
+    top: 11,
     right: "50%",
     width: "100%",
     height: 2,
@@ -242,8 +270,8 @@ const styles = {
     transition: "background 0.3s ease",
   },
   dot: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -263,14 +291,14 @@ const styles = {
   },
   dotPending: {
     background: "rgba(208, 201, 141, 0.05)",
-    border: "2px solid rgba(208, 201, 141, 0.2)",
+    border: "2px solid rgba(208, 201, 141, 0.25)",
   },
   dotError: {
     background: "rgba(244, 67, 54, 0.15)",
     border: "2px solid rgba(244, 67, 54, 0.5)",
   },
   checkmark: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 1,
     color: "#80FF00",
     fontWeight: 700,
@@ -300,15 +328,5 @@ const styles = {
     letterSpacing: 0.5,
     textAlign: "center" as const,
     fontFamily: "Cinzel, Georgia, serif",
-  },
-  dismissLink: {
-    fontSize: 10,
-    color: "rgba(208, 201, 141, 0.6)",
-    cursor: "pointer",
-    textDecoration: "underline",
-    letterSpacing: 0.3,
-    "&:hover": {
-      color: "#d0c98d",
-    },
   },
 };

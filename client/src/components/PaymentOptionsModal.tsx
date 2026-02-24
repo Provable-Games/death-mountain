@@ -1061,16 +1061,14 @@ export default function PaymentOptionsModal({
   useEffect(() => {
     if (activeTab === "fiat" && specialView === null && open && !isMinting && accountAddress) {
       const swapState = useSwapStore.getState();
-      if (swapState.stage === "idle" && strkQuoteForGames !== null && strkQuoteForGames > 0) {
-        swapState.startOnramp(strkBalance, strkQuoteForGames, minFiatGames, accountAddress);
+      if (swapState.stage === "idle") {
+        swapState.startOnramp(strkBalance, accountAddress);
         console.log("[OnRamp] On-ramp intent registered:", {
           initialStrkBalance: strkBalance,
-          strkToInvest: strkQuoteForGames,
-          gamesRequested: minFiatGames,
         });
       }
     }
-  }, [activeTab, specialView, open, isMinting, accountAddress, strkQuoteForGames, minFiatGames, strkBalance]);
+  }, [activeTab, specialView, open, isMinting, accountAddress, strkBalance]);
 
   // Show "checkout in progress" overlay when user returns from provider tab
   useEffect(() => {
@@ -1327,54 +1325,17 @@ export default function PaymentOptionsModal({
                         />
                       )}
                       {activeTab === "fiat" && (
-                        <>
-                          <FiatTabContent
-                            walletAddress={accountAddress}
-                            totalFiatUsd={totalFiatUsd}
-                            minFiatGames={minFiatGames}
-                            strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
-                            isMinting={isMinting}
-                            isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
-                            onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
-                            strkBalance={strkBalance}
-                            strkQuoteForGames={strkQuoteForGames}
-                          />
-                          {/* Dev-only: manually start the on-ramp watcher (bypasses Ekubo quote) */}
-                          {import.meta.env.DEV && accountAddress && (
-                            <Box sx={{ px: 2, pb: 1 }}>
-                              <Button
-                                size="small"
-                                fullWidth
-                                variant="outlined"
-                                onClick={() => {
-                                  const store = useSwapStore.getState();
-                                  if (store.stage !== "idle" && store.stage !== "error" && store.stage !== "done") {
-                                    store.reset();
-                                    return;
-                                  }
-                                  // Use actual strkQuoteForGames if available, otherwise default to 10 STRK / 1 game
-                                  const strkNeeded = strkQuoteForGames ?? 10;
-                                  const games = minFiatGames || 1;
-                                  store.startOnramp(strkBalance, strkNeeded, games, accountAddress);
-                                  console.log("[DEV] Watcher started manually:", { strkBalance, strkNeeded, games });
-                                }}
-                                sx={{
-                                  fontSize: 9, py: 0.5, mt: 0.5,
-                                  borderColor: "rgba(255,165,0,0.4)",
-                                  color: "#FFA500",
-                                  textTransform: "none",
-                                }}
-                              >
-                                {(() => {
-                                  const s = useSwapStore.getState().stage;
-                                  return s !== "idle" && s !== "error" && s !== "done"
-                                    ? `[DEV] Reset watcher (stage: ${s})`
-                                    : "[DEV] Start watcher (bypass quote)";
-                                })()}
-                              </Button>
-                            </Box>
-                          )}
-                        </>
+                        <FiatTabContent
+                          walletAddress={accountAddress}
+                          totalFiatUsd={totalFiatUsd}
+                          minFiatGames={minFiatGames}
+                          strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
+                          isMinting={isMinting}
+                          isOnrampInProgress={isFiatCheckoutInProgress && !isMinting}
+                          onDismissOnrampOverlay={() => setIsFiatCheckoutInProgress(false)}
+                          strkBalance={strkBalance}
+                          strkQuoteForGames={strkQuoteForGames}
+                        />
                       )}
                     </motion.div>
                   )}

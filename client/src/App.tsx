@@ -4,6 +4,7 @@ import { SnackbarProvider } from 'notistack';
 import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
 import SwapCompletePopup from '@/components/SwapCompletePopup';
+import SwapConfirmationModal from '@/components/SwapConfirmationModal';
 import { ControllerProvider, useController } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
 import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
@@ -26,7 +27,7 @@ function AppContent() {
   const { showTermsOfService, acceptTermsOfService, logout } = useController();
   const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
 
-  // Global on-ramp watcher: polls STRK balance and auto-triggers swap+mint
+  // Global on-ramp watcher: polls STRK balance and detects incoming deposits
   useOnrampWatcher();
 
   return (
@@ -79,6 +80,8 @@ function AppContent() {
           </MobileSoundProvider>
         </ThemeProvider>
       )}
+
+      <SwapConfirmationModal />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export type SwapStage =
   | "idle"
   | "waiting_deposit"  // Waiting for STRK to arrive from Onramper
+  | "deposit_detected" // STRK deposit detected — waiting for user confirmation
   | "quoting"          // Fetching swap quote from Ekubo
   | "swapping"         // Executing STRK -> TICKET swap on-chain
   | "minting"          // Minting game tokens from tickets
@@ -22,7 +23,6 @@ export type OnrampStatus =
 
 interface SwapState {
   stage: SwapStage;
-  gamesRequested: number;
   gamesMinted: number;
   errorMessage: string | null;
   /** Timestamp (ms) when the current flow started */
@@ -38,16 +38,19 @@ interface SwapState {
 
   /** Persisted on-ramp intent — survives page close */
   initialStrkBalance: number | null;
-  strkToInvest: number | null;
   walletAddress: string | null;
+
+  /** Amount of STRK deposited (detected by watcher) */
+  depositAmount: number | null;
 
   /** Guard: true while the swap+mint tx is being executed */
   isSwapping: boolean;
 
   // Actions
-  startFlow: (games: number) => void;
   /** Register the on-ramp intent (called when fiat tab opens) */
-  startOnramp: (initialBalance: number, strkNeeded: number, games: number, wallet: string) => void;
+  startOnramp: (initialBalance: number, wallet: string) => void;
+  /** Called by watcher when STRK deposit is detected */
+  depositDetected: (amount: number) => void;
   setStage: (stage: SwapStage) => void;
   setError: (message: string) => void;
   complete: (gamesMinted: number) => void;
@@ -68,7 +71,6 @@ interface SwapState {
 
 const INITIAL_STATE = {
   stage: "idle" as SwapStage,
-  gamesRequested: 0,
   gamesMinted: 0,
   errorMessage: null,
   startedAt: null,
@@ -78,8 +80,8 @@ const INITIAL_STATE = {
   onrampProvider: null,
   onrampPaymentMethod: null,
   initialStrkBalance: null,
-  strkToInvest: null,
   walletAddress: null,
+  depositAmount: null,
   isSwapping: false,
 };
 
@@ -88,36 +90,27 @@ export const useSwapStore = create<SwapState>()(
     (set) => ({
       ...INITIAL_STATE,
 
-      startFlow: (games: number) =>
+      startOnramp: (initialBalance, wallet) =>
         set({
           stage: "waiting_deposit",
-          gamesRequested: games,
           gamesMinted: 0,
           errorMessage: null,
           startedAt: Date.now(),
           popupDismissed: false,
+          initialStrkBalance: initialBalance,
+          walletAddress: wallet,
+          depositAmount: null,
+          isSwapping: false,
           onrampStatus: "idle",
           onrampTransactionId: null,
           onrampProvider: null,
           onrampPaymentMethod: null,
         }),
 
-      startOnramp: (initialBalance, strkNeeded, games, wallet) =>
+      depositDetected: (amount: number) =>
         set({
-          stage: "waiting_deposit",
-          gamesRequested: games,
-          gamesMinted: 0,
-          errorMessage: null,
-          startedAt: Date.now(),
-          popupDismissed: false,
-          initialStrkBalance: initialBalance,
-          strkToInvest: strkNeeded,
-          walletAddress: wallet,
-          isSwapping: false,
-          onrampStatus: "idle",
-          onrampTransactionId: null,
-          onrampProvider: null,
-          onrampPaymentMethod: null,
+          stage: "deposit_detected",
+          depositAmount: amount,
         }),
 
       setStage: (stage: SwapStage) => set({ stage, errorMessage: null }),
@@ -162,24 +155,24 @@ export const useSwapStore = create<SwapState>()(
       name: "death-mountain-swap-flow",
       partialize: (state) => ({
         stage: state.stage,
-        gamesRequested: state.gamesRequested,
         startedAt: state.startedAt,
         onrampStatus: state.onrampStatus,
         onrampTransactionId: state.onrampTransactionId,
         initialStrkBalance: state.initialStrkBalance,
-        strkToInvest: state.strkToInvest,
         walletAddress: state.walletAddress,
+        depositAmount: state.depositAmount,
       }),
       merge: (persistedState, currentState) => {
         const state = persistedState as Partial<SwapState>;
 
-        // If the persisted flow was interrupted mid-tx, fall back to waiting_deposit
-        // so the watcher can re-evaluate from a clean state
+        // If the persisted flow was interrupted mid-tx, fall back to a safe stage.
+        // Prefer deposit_detected when we have a known deposit amount; otherwise
+        // resume waiting_deposit so the watcher can detect the next balance change.
         const stage = state.stage;
-        const safeStage =
-          stage === "quoting" || stage === "swapping" || stage === "minting"
-            ? "waiting_deposit"
-            : stage;
+        const isInterrupted = stage === "quoting" || stage === "swapping" || stage === "minting";
+        const safeStage = isInterrupted
+          ? (state.depositAmount && state.depositAmount > 0 ? "deposit_detected" : "waiting_deposit")
+          : stage;
 
         // Don't resume canceled/failed flows
         const onrampStatus = state.onrampStatus;
