@@ -291,7 +291,7 @@ const CryptoTabContent = memo(({
 });
 CryptoTabContent.displayName = "CryptoTabContent";
 
-// Fiat tab — Onramper iframe with automatic STRK detection + auto-mint
+// Fiat tab — Onramper iframe. Deposit detection is handled globally by watcher.
 const FiatTabContent = memo(({
   walletAddress,
   totalFiatUsd,
@@ -318,7 +318,6 @@ const FiatTabContent = memo(({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const onrampStatus = useSwapStore((s) => s.onrampStatus);
   const onrampProvider = useSwapStore((s) => s.onrampProvider);
-  const swapStage = useSwapStore((s) => s.stage);
 
   useEffect(() => {
     if (walletAddress && !IS_DEV_MOCK) {
@@ -692,7 +691,7 @@ const FiatTabContent = memo(({
       {mintingOverlay}
       {onrampOverlay}
       {infoBanner}
-      {/* Full overlay when onramp checkout is in progress in another tab */}
+      {/* Full overlay when checkout continues in another tab */}
       {isOnrampInProgress && (
         <Box
           sx={{
@@ -708,42 +707,47 @@ const FiatTabContent = memo(({
             borderRadius: 1,
           }}
         >
-          {/* Centered content */}
-          <Box sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            px: 3,
-            textAlign: "center",
-            gap: 2,
-          }}>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              px: 3,
+              textAlign: "center",
+              gap: 2,
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box sx={{ position: "relative", width: 40, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <CircularProgress size={40} thickness={2.5} sx={{ color: "#d0c98d" }} />
                 <CreditCardIcon sx={{ fontSize: 18, color: "#d0c98d", position: "absolute" }} />
               </Box>
               <Box sx={{ textAlign: "left" }}>
-                <Typography sx={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "#d0c98d",
-                  fontFamily: "Cinzel, Georgia, serif",
-                  lineHeight: 1.2,
-                }}>
-                  {swapStage === "quoting" || swapStage === "swapping" || swapStage === "minting"
-                    ? "Almost there..."
-                    : "Payment in progress"}
+                <Typography
+                  sx={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: "#d0c98d",
+                    fontFamily: "Cinzel, Georgia, serif",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  Payment in progress
                 </Typography>
                 <Typography sx={{ fontSize: 12, color: "rgba(255, 255, 255, 0.6)", lineHeight: 1.4, mt: 0.25 }}>
-                  {swapStage === "quoting"
-                    ? "We received your funds. Preparing your games..."
-                    : swapStage === "swapping"
-                      ? "Converting your payment into game tokens..."
-                      : swapStage === "minting"
-                        ? "Minting your games, hang tight..."
-                        : "Complete your payment in the other tab."}
+                  Finish checkout in the opened tab.
                 </Typography>
               </Box>
             </Box>
@@ -768,12 +772,11 @@ const FiatTabContent = memo(({
               ))}
             </Box>
 
-            <Typography sx={{ fontSize: 11, color: "rgba(255, 255, 255, 0.45)", lineHeight: 1.5, maxWidth: 300 }}>
-              This can take a few minutes. Stay on this page — once your payment is confirmed, we'll handle everything and your games will be ready to play.
+            <Typography sx={{ fontSize: 11, color: "rgba(255, 255, 255, 0.45)", lineHeight: 1.5, maxWidth: 320 }}>
+              You can close this window now — we keep tracking your deposit and will notify you here when STRK arrives.
             </Typography>
           </Box>
 
-          {/* Bottom dismiss button */}
           <Box sx={{ px: 3, pb: 2, textAlign: "center" }}>
             <Button
               variant="outlined"
@@ -911,6 +914,7 @@ export default function PaymentOptionsModal({
   // Refs for UI tracking
   const fiatTabWasHidden = useRef(false);
   const initialTabSet = useRef(false);
+  const registeringOnrampIntent = useRef(false);
 
   // --- Initialize view on open ---
 
@@ -922,6 +926,7 @@ export default function PaymentOptionsModal({
       setIsFiatCheckoutInProgress(false);
       fiatTabWasHidden.current = false;
       initialTabSet.current = false;
+      registeringOnrampIntent.current = false;
       // Only reset swap store if no active on-ramp flow (preserve persisted state)
       const swapState = useSwapStore.getState();
       const hasActiveOnramp = swapState.stage === "waiting_deposit" &&
@@ -1059,18 +1064,49 @@ export default function PaymentOptionsModal({
 
   // Register on-ramp intent when fiat tab opens (persisted — survives page close)
   useEffect(() => {
-    if (activeTab === "fiat" && specialView === null && open && !isMinting && accountAddress) {
-      const swapState = useSwapStore.getState();
-      if (swapState.stage === "idle") {
-        swapState.startOnramp(strkBalance, accountAddress);
-        console.log("[OnRamp] On-ramp intent registered:", {
-          initialStrkBalance: strkBalance,
-        });
-      }
+    if (!(activeTab === "fiat" && specialView === null && open && !isMinting && accountAddress)) {
+      return;
     }
-  }, [activeTab, specialView, open, isMinting, accountAddress, strkBalance]);
 
-  // Show "checkout in progress" overlay when user returns from provider tab
+    const swapState = useSwapStore.getState();
+    if (swapState.stage !== "idle" || registeringOnrampIntent.current) {
+      return;
+    }
+
+    registeringOnrampIntent.current = true;
+
+    const registerOnrampIntent = async () => {
+      let initialBalance = strkBalance;
+      let source: "cached" | "refreshed" = "cached";
+
+      try {
+        const refreshedBalances = await refreshTokenBalances();
+        const refreshedStrk = Number(refreshedBalances["STRK"] ?? NaN);
+        if (Number.isFinite(refreshedStrk)) {
+          initialBalance = refreshedStrk;
+          source = "refreshed";
+        }
+      } catch (error) {
+        console.warn("[OnRamp] Failed to refresh STRK balance before intent registration", error);
+      }
+
+      const latestSwapState = useSwapStore.getState();
+      if (latestSwapState.stage !== "idle") return;
+
+      latestSwapState.startOnramp(initialBalance, accountAddress);
+      console.log("[OnRamp] On-ramp intent registered:", {
+        initialStrkBalance: initialBalance,
+        source,
+      });
+    };
+
+    registerOnrampIntent().finally(() => {
+      registeringOnrampIntent.current = false;
+    });
+  }, [activeTab, specialView, open, isMinting, accountAddress, strkBalance, refreshTokenBalances]);
+
+  // Show checkout overlay after returning from the provider tab.
+  // This keeps users informed while we keep tracking in the background.
   useEffect(() => {
     if (activeTab !== "fiat" || !open) return;
 

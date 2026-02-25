@@ -37,7 +37,7 @@ export interface ControllerContext {
   openBuyTicket: () => void;
   bulkMintGames: (amount: number, callback: () => void) => void;
   purchaseGames: (txs: any[], amount: number, callback: () => void) => void;
-  refreshTokenBalances: () => Promise<void>;
+  refreshTokenBalances: () => Promise<Record<string, string>>;
 }
 
 // Create a context
@@ -216,16 +216,37 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
-  async function fetchTokenBalances() {
-    let balances = await getTokenBalances(NETWORKS.SN_MAIN.paymentTokens);
-    setTokenBalances(balances);
+  async function fetchTokenBalances(): Promise<Record<string, string>> {
+    if (!address) {
+      setTokenBalances({});
+      setGoldenPassIds([]);
+      return {};
+    }
 
-    let goldenTokenAddress = NETWORKS.SN_MAIN.goldenToken;
-    const allTokens = await getGameTokens(address!, goldenTokenAddress);
+    try {
+      const balances = await getTokenBalances(currentNetworkConfig.paymentTokens);
+      setTokenBalances(balances);
 
-    if (allTokens.length > 0) {
-      const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
-      setGoldenPassIds(cooldowns);
+      const goldenTokenAddress = currentNetworkConfig.goldenToken;
+      if (goldenTokenAddress) {
+        const allTokens = await getGameTokens(address, goldenTokenAddress);
+
+        if (allTokens.length > 0) {
+          const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
+          setGoldenPassIds(cooldowns);
+        } else {
+          setGoldenPassIds([]);
+        }
+      } else {
+        setGoldenPassIds([]);
+      }
+
+      return balances;
+    } catch (error) {
+      console.error("Failed to fetch token balances:", error);
+      setTokenBalances({});
+      setGoldenPassIds([]);
+      return {};
     }
   }
 
