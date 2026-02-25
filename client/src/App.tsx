@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
 import SwapCompletePopup from '@/components/SwapCompletePopup';
 import SwapConfirmationModal from '@/components/SwapConfirmationModal';
+import SwapProgressTracker from '@/components/SwapProgressTracker';
 import { ControllerProvider, useController } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
 import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
@@ -76,6 +77,20 @@ function AppContent() {
                   <CustomizeGame />
                 </Box>
               </MobileGameDirector>
+              {/* Fixed bottom-bar tracker: persists across all mobile routes */}
+              <Box sx={{
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 1200,
+                px: 1,
+                pb: "env(safe-area-inset-bottom, 8px)",
+                pointerEvents: "auto",
+              }}>
+                <SwapProgressTracker />
+              </Box>
+              <SwapCompletePopup />
             </Box>
           </MobileSoundProvider>
         </ThemeProvider>

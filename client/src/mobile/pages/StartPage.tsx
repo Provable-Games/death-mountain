@@ -1,6 +1,5 @@
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import PriceIndicator from "@/components/PriceIndicator";
-import SwapProgressTracker from "@/components/SwapProgressTracker";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
@@ -299,8 +298,6 @@ export default function LandingPage() {
               )}
 
               {dungeon.ticketAddress && <PriceIndicator />}
-
-              <SwapProgressTracker />
             </>
           )}
 

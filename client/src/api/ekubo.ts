@@ -50,8 +50,13 @@ export const getPriceChart = async (token: string, otherToken: string) => {
   }
 }
 
-export const getSwapQuote = async (amount: number, token: string, otherToken: string): Promise<SwapQuote> => {
-  const response = await fetch(`https://prod-api-quoter.ekubo.org/23448594291968334/${amount}/${token}/${otherToken}`)
+export const getSwapQuote = async (
+  amount: number | string | bigint,
+  token: string,
+  otherToken: string
+): Promise<SwapQuote> => {
+  const normalizedAmount = String(amount);
+  const response = await fetch(`https://prod-api-quoter.ekubo.org/23448594291968334/${normalizedAmount}/${token}/${otherToken}`)
 
   const data = await response.json()
 

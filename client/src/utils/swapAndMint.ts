@@ -14,6 +14,24 @@ interface SwapAndMintParams {
   purchaseGames: (calls: any[], gameCount: number, onSuccess: () => void) => void;
 }
 
+const WEI = 10n ** 18n;
+const MAX_GAMES_PER_BATCH = 50;
+
+function toBufferedWeiFromStrk(amount: number): bigint {
+  // Keep 4 decimals of STRK precision, then apply 98% buffer with integer math.
+  const scaled = BigInt(Math.max(0, Math.floor(amount * 10_000)));
+  return (scaled * 98n * WEI) / 1_000_000n;
+}
+
+function toAbsoluteBigInt(value: unknown): bigint {
+  try {
+    const parsed = BigInt(value as any);
+    return parsed < 0n ? -parsed : parsed;
+  } catch {
+    return 0n;
+  }
+}
+
 /**
  * Standalone swap+mint function.
  *
@@ -53,9 +71,13 @@ export async function executeSwapAndMint({
     }
 
     // Use 98% of deposit to leave a small buffer for fees
-    const depositWei = Math.floor(depositAmount * 0.98 * 1e18);
+    const depositWei = toBufferedWeiFromStrk(depositAmount);
 
-    console.log("[SwapAndMint] Getting forward quote...", { depositWei });
+    if (depositWei <= 0n) {
+      throw new Error("No STRK available for swap");
+    }
+
+    console.log("[SwapAndMint] Getting forward quote...", { depositWei: depositWei.toString() });
 
     const forwardQuote = await getSwapQuote(
       depositWei,
@@ -63,11 +85,32 @@ export async function executeSwapAndMint({
       ticketAddress
     );
 
-    let gamesToBuy = 0;
+    const quotedGames = Number(toAbsoluteBigInt(forwardQuote?.total) / WEI);
+    let gamesToBuy = Math.min(MAX_GAMES_PER_BATCH, quotedGames);
 
-    if (forwardQuote && forwardQuote.total !== 0) {
-      gamesToBuy = Math.floor(Math.abs(forwardQuote.total) / 1e18);
-      console.log("[SwapAndMint] Forward quote result:", { gamesToBuy });
+    console.log("[SwapAndMint] Forward quote result:", {
+      quotedGames,
+      gamesToBuy,
+      maxPerBatch: MAX_GAMES_PER_BATCH,
+    });
+
+    if (gamesToBuy < 1) {
+      throw new Error("Not enough STRK to purchase even 1 game. Try with a larger amount.");
+    }
+
+    // Re-quote to capture the latest price right before execution
+    const freshQuote = await getSwapQuote(depositWei, strkTokenAddress, ticketAddress);
+    const freshGames = Number(toAbsoluteBigInt(freshQuote?.total) / WEI);
+
+    if (freshGames < gamesToBuy) {
+      console.warn("[SwapAndMint] Slippage detected: quote dropped from", gamesToBuy, "to", freshGames);
+      gamesToBuy = freshGames;
+    }
+
+    // Safety margin: buy 1 less game to absorb residual slippage between quote and on-chain execution
+    if (gamesToBuy > 1) {
+      gamesToBuy -= 1;
+      console.log("[SwapAndMint] Applied safety margin, buying", gamesToBuy, "games");
     }
 
     if (gamesToBuy < 1) {
@@ -75,8 +118,9 @@ export async function executeSwapAndMint({
     }
 
     console.log("[SwapAndMint] Getting reverse quote for", gamesToBuy, "games...");
+    const reverseAmount = -(BigInt(gamesToBuy) * WEI);
     const quote = await getSwapQuote(
-      -gamesToBuy * 1e18,
+      reverseAmount,
       ticketAddress,
       strkTokenAddress
     );
@@ -112,11 +156,10 @@ export async function estimateGamesForDeposit(
   strkTokenAddress: string,
   ticketAddress: string
 ): Promise<number> {
-  const depositWei = Math.floor(depositAmount * 0.98 * 1e18);
-  const forwardQuote = await getSwapQuote(depositWei, strkTokenAddress, ticketAddress);
+  const depositWei = toBufferedWeiFromStrk(depositAmount);
+  if (depositWei <= 0n) return 0;
 
-  if (forwardQuote && forwardQuote.total !== 0) {
-    return Math.floor(Math.abs(forwardQuote.total) / 1e18);
-  }
-  return 0;
+  const forwardQuote = await getSwapQuote(depositWei, strkTokenAddress, ticketAddress);
+  const quotedGames = Number(toAbsoluteBigInt(forwardQuote?.total) / WEI);
+  return Math.min(MAX_GAMES_PER_BATCH, quotedGames);
 }
