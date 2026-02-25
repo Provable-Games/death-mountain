@@ -6,6 +6,9 @@ import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 
 // https://vitejs.dev/config/
+// mkcert is required — Cartridge Controller needs HTTPS for WebAuthn.
+// On WSL + Windows browser: import the mkcert root CA into Windows cert store.
+// See: mkcert -CAROOT to find the CA path, then import rootCA.pem into Windows.
 export default defineConfig({
     plugins: [react(), wasm(), topLevelAwait(), mkcert()],
     resolve: {

@@ -36,6 +36,8 @@ export interface ControllerContext {
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
   bulkMintGames: (amount: number, callback: () => void) => void;
+  purchaseGames: (txs: any[], amount: number, callback: () => void) => void;
+  refreshTokenBalances: () => Promise<Record<string, string>>;
 }
 
 // Create a context
@@ -86,7 +88,10 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     }
   }, [account]);
 
+  // Only create/restore burner for the Katana slot network — not needed on mainnet
   useEffect(() => {
+    if (currentNetworkConfig.chainId !== ChainId.WP_PG_SLOT) return;
+
     if (
       localStorage.getItem("burner") &&
       localStorage.getItem("burner_version") === "6"
@@ -102,7 +107,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     } else {
       createBurner();
     }
-  }, []);
+  }, [currentNetworkConfig.chainId]);
 
   // Get username when connector changes
   useEffect(() => {
@@ -178,26 +183,70 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     );
   };
 
-  const createBurner = async () => {
-    setCreatingBurner(true);
-    let account = await createBurnerAccount(demoRpcProvider);
+  // Buy multiple games with prepended swap calls (e.g. STRK → tickets + mint all)
+  const purchaseGames = async (txs: any[], amount: number, callback: () => void) => {
+    if (!account) return;
+    amount = Math.min(amount, 50);
+    const resolvedName = resolvePlayerName();
 
-    if (account) {
-      setBurner(account);
-    }
-    setCreatingBurner(false);
+    await buyGame(
+      account,
+      { paymentType: "Ticket" },
+      resolvedName,
+      txs,
+      amount,
+      () => {
+        fetchTokenBalances();
+        callback();
+      }
+    );
   };
 
-  async function fetchTokenBalances() {
-    let balances = await getTokenBalances(NETWORKS.SN_MAIN.paymentTokens);
-    setTokenBalances(balances);
+  const createBurner = async () => {
+    setCreatingBurner(true);
+    try {
+      let account = await createBurnerAccount(demoRpcProvider);
+      if (account) {
+        setBurner(account);
+      }
+    } catch (error) {
+      console.error("Failed to create burner account:", error);
+    } finally {
+      setCreatingBurner(false);
+    }
+  };
 
-    let goldenTokenAddress = NETWORKS.SN_MAIN.goldenToken;
-    const allTokens = await getGameTokens(address!, goldenTokenAddress);
+  async function fetchTokenBalances(): Promise<Record<string, string>> {
+    if (!address) {
+      setTokenBalances({});
+      setGoldenPassIds([]);
+      return {};
+    }
 
-    if (allTokens.length > 0) {
-      const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
-      setGoldenPassIds(cooldowns);
+    try {
+      const balances = await getTokenBalances(currentNetworkConfig.paymentTokens);
+      setTokenBalances(balances);
+
+      const goldenTokenAddress = currentNetworkConfig.goldenToken;
+      if (goldenTokenAddress) {
+        const allTokens = await getGameTokens(address, goldenTokenAddress);
+
+        if (allTokens.length > 0) {
+          const cooldowns = await goldenPassReady(goldenTokenAddress, allTokens);
+          setGoldenPassIds(cooldowns);
+        } else {
+          setGoldenPassIds([]);
+        }
+      } else {
+        setGoldenPassIds([]);
+      }
+
+      return balances;
+    } catch (error) {
+      console.error("Failed to fetch token balances:", error);
+      setTokenBalances({});
+      setGoldenPassIds([]);
+      return {};
     }
   }
 
@@ -225,13 +274,26 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         openBuyTicket: () => (connector as any)?.controller?.openStarterPack(3),
-        login: () =>
-          connect({
-            connector: connectors.find((conn) => conn.id === "controller"),
-          }),
+        login: async () => {
+          const controllerConnector = connectors.find(
+            (conn) => conn.id === "controller"
+          );
+          // On non-mainnet networks, clear stale mainnet session from the
+          // Controller iframe before connecting on the target chain.
+          if (currentNetworkConfig.chainId !== ChainId.SN_MAIN && controllerConnector) {
+            try {
+              await (controllerConnector as any).controller?.disconnect();
+            } catch (_) {
+              // Ignore — might not be connected yet
+            }
+          }
+          connect({ connector: controllerConnector });
+        },
         logout: () => disconnect(),
         enterDungeon,
         bulkMintGames,
+        purchaseGames,
+        refreshTokenBalances: fetchTokenBalances,
       }}
     >
       {children}

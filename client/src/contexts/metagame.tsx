@@ -7,6 +7,7 @@ import { useDynamicConnector } from "@/contexts/starknet.tsx";
 
 export const MetagameProvider = ({ children }: { children: ReactNode }) => {
   const [metagameClient, setMetagameClient] = useState<any>(undefined);
+  const [initFailed, setInitFailed] = useState(false);
   const { currentNetworkConfig } = useDynamicConnector();
 
   useEffect(() => {
@@ -14,6 +15,8 @@ export const MetagameProvider = ({ children }: { children: ReactNode }) => {
       setMetagameClient(undefined);
       return;
     }
+
+    setInitFailed(false);
 
     // Initialize Metagame SDK
     initMetagame({
@@ -27,8 +30,15 @@ export const MetagameProvider = ({ children }: { children: ReactNode }) => {
           error
         );
         setMetagameClient(undefined);
+        setInitFailed(true);
       });
   }, [currentNetworkConfig]);
+
+  // If init failed (e.g. no Torii), render children anyway so the app is usable
+  // for flows that don't need indexed data (payments, swaps, etc.)
+  if (initFailed) {
+    return <>{children}</>;
+  }
 
   if (!metagameClient) {
     return (

@@ -3,6 +3,8 @@ import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
 import { BrowserRouter, Route, Routes, } from "react-router-dom";
 
+import SwapCompletePopup from '@/components/SwapCompletePopup';
+import SwapConfirmationModal from '@/components/SwapConfirmationModal';
 import { ControllerProvider, useController } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
 import { SoundProvider as MobileSoundProvider } from '@/mobile/contexts/Sound';
@@ -16,6 +18,7 @@ import Header from './mobile/components/Header';
 import { desktopRoutes, mobileRoutes } from './utils/routes';
 import { desktopTheme, mobileTheme } from './utils/themes';
 import { StatisticsProvider } from './contexts/Statistics';
+import { useOnrampWatcher } from '@/hooks/useOnrampWatcher';
 import TermsOfServiceModal from '@/desktop/components/TermsOfServiceModal';
 import TermsOfServiceScreen from '@/mobile/containers/TermsOfServiceScreen';
 
@@ -23,6 +26,9 @@ function AppContent() {
   const { useMobileClient } = useUIStore();
   const { showTermsOfService, acceptTermsOfService, logout } = useController();
   const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+
+  // Global on-ramp watcher: polls STRK balance and detects incoming deposits
+  useOnrampWatcher();
 
   return (
     <>
@@ -46,6 +52,7 @@ function AppContent() {
                 </Routes>
 
               </Box>
+              <SwapCompletePopup />
             </GameDirector>
           </SoundProvider>
         </ThemeProvider>
@@ -73,6 +80,8 @@ function AppContent() {
           </MobileSoundProvider>
         </ThemeProvider>
       )}
+
+      <SwapConfirmationModal />
     </>
   );
 }

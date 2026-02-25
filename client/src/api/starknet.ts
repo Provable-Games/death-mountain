@@ -2,7 +2,6 @@ import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES } from "@/constants/beast";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { Beast, Metadata } from "@/types/game";
-import { NETWORKS } from "@/utils/networkConfig";
 import { decodeHexByteArray, parseBalances } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { hexToAscii } from "@dojoengine/utils";
@@ -15,6 +14,10 @@ export const useStarknetApi = () => {
   const { address } = useAccount();
 
   const getTokenBalances = async (tokens: any[]): Promise<Record<string, string>> => {
+    if (!address || !Array.isArray(tokens) || tokens.length === 0) {
+      return {};
+    }
+
     const calls = tokens.map((token, i) => ({
       id: i + 1,
       jsonrpc: "2.0",
@@ -29,7 +32,7 @@ export const useStarknetApi = () => {
       ]
     }));
 
-    const response = await fetch(NETWORKS.SN_MAIN.rpcUrl, {
+    const response = await fetch(currentNetworkConfig.rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(calls),
