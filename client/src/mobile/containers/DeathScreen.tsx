@@ -54,9 +54,9 @@ export default function DeathScreen() {
   const shareMessage =
     finalBattleEvent?.type === "obstacle"
       ? `I got a score of ${adventurer?.xp
-      } in Loot Survivor 2: ${dungeon.name}. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
+      } in Loot Survivor: ${dungeon.name}. \n\n💀 ${OBSTACLE_NAMES[finalBattleEvent.obstacle?.id!]
       } ended my journey. \n\n@provablegames @lootsurvivor`
-      : `I got a score of ${adventurer?.xp} in Loot Survivor 2: ${dungeon.name}. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
+      : `I got a score of ${adventurer?.xp} in Loot Survivor: ${dungeon.name}. \n\n💀 A ${beast?.name} ended my journey. \n\n@provablegames @lootsurvivor`;
 
   const backToMenu = () => {
     navigate(`/${dungeon.id}`, { replace: true });

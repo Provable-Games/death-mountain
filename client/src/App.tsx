@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
@@ -19,10 +20,27 @@ import { StatisticsProvider } from './contexts/Statistics';
 import TermsOfServiceModal from '@/desktop/components/TermsOfServiceModal';
 import TermsOfServiceScreen from '@/mobile/containers/TermsOfServiceScreen';
 
+const MOBILE_BREAKPOINT = 1125;
+
+function useIsSmallViewport() {
+  const [isSmall, setIsSmall] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmall(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isSmall;
+}
+
 function AppContent() {
   const { useMobileClient } = useUIStore();
   const { showTermsOfService, acceptTermsOfService, logout } = useController();
-  const shouldShowMobile = isMobile || (isBrowser && useMobileClient);
+  const isSmallViewport = useIsSmallViewport();
+  const shouldShowMobile = isMobile || isSmallViewport || (isBrowser && useMobileClient);
 
   return (
     <>
