@@ -20,7 +20,7 @@ import { StatisticsProvider } from './contexts/Statistics';
 import TermsOfServiceModal from '@/desktop/components/TermsOfServiceModal';
 import TermsOfServiceScreen from '@/mobile/containers/TermsOfServiceScreen';
 
-const MOBILE_BREAKPOINT = 1125;
+const MOBILE_BREAKPOINT = 1215;
 
 function useIsSmallViewport() {
   const [isSmall, setIsSmall] = useState(() => window.innerWidth < MOBILE_BREAKPOINT);
