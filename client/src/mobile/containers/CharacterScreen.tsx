@@ -328,7 +328,8 @@ const styles = {
     overflowY: 'auto',
   },
   characterContainer: {
-    height: '100%',
+    height: 'calc(100% - 85px)',
+    overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
     padding: '10px',

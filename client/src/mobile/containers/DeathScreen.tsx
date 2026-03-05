@@ -170,12 +170,14 @@ export default function DeathScreen() {
 const styles = {
   container: {
     width: "100%",
-    height: "100dvh",
+    height: "100%",
     display: "flex",
     flexDirection: "column" as const,
     background: "rgba(17, 17, 17, 0.95)",
   },
   content: {
+    height: 'calc(100% - 85px)',
+    overflowY: 'auto',
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
