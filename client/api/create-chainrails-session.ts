@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { Chainrails, crapi } from "@chainrails/sdk";
+
+const CHAINRAILS_API_BASE = process.env.CHAINRAILS_API_BASE_URL || "https://api.chainrails.io/api/v1";
+const STRK_MAINNET_ADDRESS = "0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D";
 
 /**
  * Vercel serverless function to create a Chainrails payment session.
@@ -11,7 +13,7 @@ import { Chainrails, crapi } from "@chainrails/sdk";
  *   - recipient: Starknet wallet address to receive STRK
  *   - amount:    (optional) Amount in STRK. If omitted or "0", user picks amount in the modal.
  *
- * Returns: the session object from Chainrails SDK (includes sessionToken).
+ * Returns: { sessionToken, amount } compatible with usePaymentSession.
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
@@ -31,20 +33,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const amount = (req.query.amount as string) || "0";
 
   try {
-    Chainrails.config({ api_key: apiKey });
-
-    // Use Chain alias "STARKNET" (not InternalChain "STARKNET_MAINNET").
-    // STRK as destination so users receive STRK (needed for gas on Starknet).
-    const session = await crapi.auth.getSessionToken({
+    // Explicit low-level session payload to force STRK output on Starknet.
+    // This avoids any SDK-side fallback to USDC when token mapping fails.
+    const payload = {
       amount,
       recipient,
-      destinationChain: "STARKNET",
-      token: "STRK" as "USDC", // Cast: SDK type says "USDC" but API supports STRK on Starknet
+      destinationChain: "STARKNET_MAINNET",
+      tokenOut: STRK_MAINNET_ADDRESS,
+    };
+
+    const response = await fetch(`${CHAINRAILS_API_BASE}/modal/sessions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
+
+    const bodyText = await response.text();
+    let data: any = {};
+    try {
+      data = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      data = { raw: bodyText };
+    }
+
+    if (!response.ok) {
+      return res.status(502).json({
+        error: "Failed to create Chainrails session",
+        upstreamStatus: response.status,
+        upstreamBody: data,
+      });
+    }
+
+    if (!data?.sessionToken) {
+      return res.status(502).json({
+        error: "Chainrails session response missing sessionToken",
+        upstreamBody: data,
+      });
+    }
 
     // Short cache: same wallet + amount = same session for 60s
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=120");
-    return res.status(200).json(session);
+    return res.status(200).json({
+      sessionToken: data.sessionToken,
+      amount,
+    });
   } catch (error) {
     console.error("[Chainrails] Session creation failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
