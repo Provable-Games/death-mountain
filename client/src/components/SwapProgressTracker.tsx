@@ -61,7 +61,7 @@ function stageMessage(stage: SwapStage, gamesMinted: number): string {
 }
 
 export default function SwapProgressTracker() {
-  const { stage, gamesMinted, errorMessage, onrampStatus, onrampProvider, walletAddress, reset } = useSwapStore();
+  const { stage, gamesMinted, errorMessage, onrampStatus, onrampProvider, walletAddress, depositSource, reset } = useSwapStore();
   const { address: accountAddress } = useAccount();
 
   // Only show when a flow is active AND the connected wallet matches the persisted flow
@@ -91,7 +91,7 @@ export default function SwapProgressTracker() {
             {/* Header row: title + dismiss */}
             <Box sx={styles.headerRow}>
               <Typography sx={styles.headerTitle}>
-                {isDone ? "Complete" : isError ? "Error" : "On-ramp"}
+                {isDone ? "Complete" : isError ? "Error" : depositSource === "chainrails" ? "Cross-chain" : "On-ramp"}
               </Typography>
               {canDismiss && (
                 <IconButton onClick={reset} sx={styles.dismissBtn} size="small">
