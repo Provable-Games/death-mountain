@@ -5,7 +5,7 @@ import { Chainrails, crapi } from "@chainrails/sdk";
  * Vercel serverless function to create a Chainrails payment session.
  *
  * Chainrails requires a server-side session token to protect the API key.
- * The frontend calls this endpoint before opening the PaymentModal.
+ * The frontend passes this URL as session_url to usePaymentSession.
  *
  * Query params:
  *   - recipient: Starknet wallet address to receive STRK
@@ -33,11 +33,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     Chainrails.config({ api_key: apiKey });
 
+    // Use Chain alias "STARKNET" (not InternalChain "STARKNET_MAINNET").
+    // STRK as destination so users receive STRK (needed for gas on Starknet).
     const session = await crapi.auth.getSessionToken({
       amount,
       recipient,
-      destinationChain: "STARKNET_MAINNET",
-      token: "STRK",
+      destinationChain: "STARKNET",
+      token: "STRK" as "USDC", // Cast: SDK type says "USDC" but API supports STRK on Starknet
     });
 
     // Short cache: same wallet + amount = same session for 60s

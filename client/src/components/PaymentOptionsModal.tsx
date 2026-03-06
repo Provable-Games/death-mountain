@@ -1,4 +1,4 @@
-import { PaymentModal, usePaymentModal } from "@chainrails/react";
+import { PaymentModal, usePaymentSession } from "@chainrails/react";
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
@@ -841,12 +841,15 @@ const ChainrailsTabContent = memo(({
   strkQuoteForGames?: number | null;
   onPaymentSuccess: () => void;
 }) => {
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Build session URL with recipient and optional STRK amount
+  const sessionUrl = useMemo(() => {
+    if (!walletAddress) return "";
+    const amount = strkQuoteForGames ? String(Math.ceil(strkQuoteForGames * 1.05)) : "0";
+    return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}`;
+  }, [walletAddress, strkQuoteForGames]);
 
-  const cr = usePaymentModal({
-    sessionToken: sessionToken,
+  const cr = usePaymentSession({
+    session_url: sessionUrl,
     onSuccess: () => {
       console.log("[Chainrails] Payment successful");
       onPaymentSuccess();
@@ -855,32 +858,6 @@ const ChainrailsTabContent = memo(({
       console.log("[Chainrails] Payment cancelled");
     },
   });
-
-  const fetchSession = useCallback(async () => {
-    if (!walletAddress) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const amount = strkQuoteForGames ? String(Math.ceil(strkQuoteForGames * 1.05)) : "0";
-      const res = await fetch(
-        `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}`
-      );
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Failed to create session");
-      }
-      const data = await res.json();
-      setSessionToken(data.sessionToken || data.token || data);
-      cr.open();
-    } catch (err) {
-      console.error("[Chainrails] Session error:", err);
-      setError(err instanceof Error ? err.message : "Failed to initialize payment");
-    } finally {
-      setLoading(false);
-    }
-  }, [walletAddress, strkQuoteForGames, cr]);
 
   // Minting overlay
   const mintingOverlay = isMinting && (
@@ -921,9 +898,9 @@ const ChainrailsTabContent = memo(({
       </Box>
 
       {/* Error message */}
-      {error && (
+      {cr.error && (
         <Box sx={{ mx: 2, mb: 1, px: 2, py: 1, background: "rgba(244, 67, 54, 0.1)", border: "1px solid rgba(244, 67, 54, 0.3)", borderRadius: 1 }}>
-          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{error}</Typography>
+          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{cr.error}</Typography>
         </Box>
       )}
 
@@ -932,18 +909,18 @@ const ChainrailsTabContent = memo(({
         <Button
           variant="contained"
           sx={styles.activateButton}
-          onClick={fetchSession}
+          onClick={cr.open}
           fullWidth
-          disabled={loading || isMinting}
+          disabled={cr.isPending || isMinting || !sessionUrl}
         >
           <Typography sx={styles.buttonText}>
-            {loading ? "Initializing..." : "Pay Cross-Chain"}
+            {cr.isPending ? "Initializing..." : "Pay Cross-Chain"}
           </Typography>
         </Button>
       </Box>
 
       {/* Chainrails PaymentModal */}
-      <PaymentModal {...cr} styles={{ accentColor: "#d0c98d", theme: "dark" }} />
+      <PaymentModal {...cr} styles={{ accentColor: "#d0c98d", theme: "dark" }} excludeChains={["STARKNET" as any]} />
     </Box>
   );
 });
