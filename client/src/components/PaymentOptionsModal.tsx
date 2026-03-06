@@ -1,4 +1,3 @@
-import { PaymentModal, usePaymentModal } from "@chainrails/react";
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
@@ -21,6 +20,7 @@ import {
   Menu,
   MenuItem,
   Tab,
+  TextField,
   Tabs,
   Typography,
 } from "@mui/material";
@@ -821,7 +821,7 @@ const FiatTabContent = memo(({
 });
 FiatTabContent.displayName = "FiatTabContent";
 
-// Cross-chain tab — Chainrails PaymentModal
+// Cross-chain tab — Chainrails intent flow (STRK-targeted)
 const ChainrailsTabContent = memo(({
   walletAddress,
   totalFiatUsd,
@@ -841,67 +841,97 @@ const ChainrailsTabContent = memo(({
   strkQuoteForGames?: number | null;
   onPaymentSuccess: () => void;
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [sessionError, setSessionError] = useState<string | null>(null);
-
-  // Build session URL with recipient; amount is left open for user input
-  const sessionUrl = useMemo(() => {
-    if (!walletAddress) return "";
-    const amount = "0"; // Let user choose amount in Chainrails modal
-    const debug = import.meta.env.DEV ? "&debug=1" : "";
-    return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}&strict=1${debug}`;
-  }, [walletAddress]);
-
-  const cr = usePaymentModal({
-    sessionToken: null,
-    onSuccess: () => {
-      console.log("[Chainrails] Payment successful");
-      onPaymentSuccess();
-    },
-    onCancel: () => {
-      console.log("[Chainrails] Payment cancelled");
-    },
+  const [targetStrkAmount, setTargetStrkAmount] = useState(() => {
+    if (strkPerGame && Number.isFinite(strkPerGame) && strkPerGame > 0) {
+      return Math.ceil(strkPerGame).toString();
+    }
+    return "1";
   });
 
-  const openChainrails = useCallback(async () => {
-    if (!sessionUrl) return;
+  const [loading, setLoading] = useState(false);
+  const [intentError, setIntentError] = useState<string | null>(null);
+  const [intentData, setIntentData] = useState<{
+    intentAddress: string;
+    requestedAmountStrk: string;
+    sourceChain: string;
+    sourceTokenSymbol: string;
+    sourceTokenAddress: string;
+    depositAmount?: string;
+    depositAmountFormatted?: string;
+    totalFeeFormatted?: string;
+    bridge?: string | null;
+  } | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const createIntent = useCallback(async () => {
+    if (!walletAddress) return;
+
+    const normalizedAmount = targetStrkAmount.replace(",", ".").trim();
+    const parsedAmount = Number(normalizedAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setIntentError("Enter a valid STRK amount");
+      return;
+    }
 
     setLoading(true);
-    setSessionError(null);
+    setIntentError(null);
+    setCopySuccess(false);
 
     try {
-      const res = await fetch(sessionUrl, {
+      const res = await fetch("/api/create-chainrails-intent", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          recipient: walletAddress,
+          amount: normalizedAmount,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const errorMessage = data?.error || "Failed to create Chainrails session";
-        const resolvedTokenOut = data?.resolvedTokenOut;
-        const tokenHint = resolvedTokenOut ? ` (resolved token: ${resolvedTokenOut})` : "";
-        throw new Error(`${errorMessage}${tokenHint}`);
+        throw new Error(data?.error || "Failed to create Chainrails intent");
       }
 
-      if (!data?.sessionToken) {
-        throw new Error("Session created without token");
+      if (!data?.intentAddress) {
+        throw new Error("Intent created without address");
       }
 
-      cr.updateSession({
-        sessionToken: data.sessionToken,
-        amount: data.amount,
+      setIntentData({
+        intentAddress: data.intentAddress,
+        requestedAmountStrk: data.requestedAmountStrk,
+        sourceChain: data.sourceChain,
+        sourceTokenSymbol: data.sourceTokenSymbol,
+        sourceTokenAddress: data.sourceTokenAddress,
+        depositAmount: data.depositAmount,
+        depositAmountFormatted: data.depositAmountFormatted,
+        totalFeeFormatted: data.totalFeeFormatted,
+        bridge: data.bridge,
       });
-      cr.open();
+
+      onPaymentSuccess();
     } catch (error) {
-      console.error("[Chainrails] Session error:", error);
-      const message = error instanceof Error ? error.message : "Failed to initialize payment";
-      setSessionError(message);
+      console.error("[Chainrails] Intent creation error:", error);
+      const message = error instanceof Error ? error.message : "Failed to create intent";
+      setIntentError(message);
     } finally {
       setLoading(false);
     }
-  }, [sessionUrl, cr]);
+  }, [walletAddress, targetStrkAmount, onPaymentSuccess]);
+
+  const copyIntentAddress = useCallback(async () => {
+    if (!intentData?.intentAddress) return;
+
+    try {
+      await navigator.clipboard.writeText(intentData.intentAddress);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch {
+      setIntentError("Could not copy intent address");
+    }
+  }, [intentData]);
 
   // Minting overlay
   const mintingOverlay = isMinting && (
@@ -937,14 +967,43 @@ const ChainrailsTabContent = memo(({
           </Typography>
         )}
         <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
-          Pay from any chain & token — delivered as STRK on Starknet
+          Creates a Chainrails intent that targets STRK on Starknet
         </Typography>
       </Box>
 
+      {/* Target amount */}
+      <Box sx={{ mx: 2, mt: 1, mb: 1 }}>
+        <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.65)", mb: 0.75 }}>
+          Target STRK to receive
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          value={targetStrkAmount}
+          onChange={(e) => setTargetStrkAmount(e.target.value)}
+          placeholder="1"
+          disabled={loading || isMinting}
+          inputProps={{ inputMode: "decimal" }}
+          sx={{
+            "& .MuiInputBase-root": {
+              color: "#fff",
+              backgroundColor: "rgba(255,255,255,0.03)",
+              borderRadius: 1,
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgba(208, 201, 141, 0.25)",
+            },
+            "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgba(208, 201, 141, 0.5)",
+            },
+          }}
+        />
+      </Box>
+
       {/* Error message */}
-      {sessionError && (
+      {intentError && (
         <Box sx={{ mx: 2, mb: 1, px: 2, py: 1, background: "rgba(244, 67, 54, 0.1)", border: "1px solid rgba(244, 67, 54, 0.3)", borderRadius: 1 }}>
-          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{sessionError}</Typography>
+          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{intentError}</Typography>
         </Box>
       )}
 
@@ -953,18 +1012,45 @@ const ChainrailsTabContent = memo(({
         <Button
           variant="contained"
           sx={styles.activateButton}
-          onClick={openChainrails}
+          onClick={createIntent}
           fullWidth
-          disabled={loading || isMinting || !sessionUrl}
+          disabled={loading || isMinting || !walletAddress}
         >
           <Typography sx={styles.buttonText}>
-            {loading ? "Initializing..." : "Pay Cross-Chain"}
+            {loading ? "Creating intent..." : "Create STRK Intent"}
           </Typography>
         </Button>
       </Box>
 
-      {/* Chainrails PaymentModal */}
-      <PaymentModal {...cr} styles={{ accentColor: "#d0c98d", theme: "dark" }} excludeChains={["STARKNET" as any]} />
+      {intentData && (
+        <Box sx={{ mx: 2, mb: 2, px: 2, py: 1.5, background: "rgba(208, 201, 141, 0.08)", border: "1px solid rgba(208, 201, 141, 0.25)", borderRadius: 1 }}>
+          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.65)", mb: 0.5 }}>
+            Send
+            {" "}
+            <strong>{intentData.depositAmountFormatted || intentData.depositAmount || "(see wallet)"}</strong>
+            {" "}
+            <strong>{intentData.sourceTokenSymbol}</strong>
+            {" "}
+            on
+            {" "}
+            <strong>{intentData.sourceChain}</strong>
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.65)", mb: 0.75 }}>
+            To this one-time intent address:
+          </Typography>
+          <Typography sx={{ fontSize: 11, fontFamily: "monospace", color: "#d0c98d", wordBreak: "break-all", mb: 1 }}>
+            {intentData.intentAddress}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Button size="small" variant="outlined" onClick={copyIntentAddress} sx={{ borderColor: "rgba(208, 201, 141, 0.4)", color: "#d0c98d" }}>
+              Copy address
+            </Button>
+            {copySuccess && (
+              <Typography sx={{ fontSize: 11, color: "#80FF00" }}>Copied</Typography>
+            )}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 });
