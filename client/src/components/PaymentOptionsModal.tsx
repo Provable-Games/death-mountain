@@ -1,4 +1,4 @@
-import { PaymentModal, usePaymentSession } from "@chainrails/react";
+import { PaymentModal, usePaymentModal } from "@chainrails/react";
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
@@ -841,15 +841,19 @@ const ChainrailsTabContent = memo(({
   strkQuoteForGames?: number | null;
   onPaymentSuccess: () => void;
 }) => {
+  const [loading, setLoading] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
   // Build session URL with recipient; amount is left open for user input
   const sessionUrl = useMemo(() => {
     if (!walletAddress) return "";
     const amount = "0"; // Let user choose amount in Chainrails modal
-    return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}`;
+    const debug = import.meta.env.DEV ? "&debug=1" : "";
+    return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}&strict=1${debug}`;
   }, [walletAddress]);
 
-  const cr = usePaymentSession({
-    session_url: sessionUrl,
+  const cr = usePaymentModal({
+    sessionToken: null,
     onSuccess: () => {
       console.log("[Chainrails] Payment successful");
       onPaymentSuccess();
@@ -858,6 +862,46 @@ const ChainrailsTabContent = memo(({
       console.log("[Chainrails] Payment cancelled");
     },
   });
+
+  const openChainrails = useCallback(async () => {
+    if (!sessionUrl) return;
+
+    setLoading(true);
+    setSessionError(null);
+
+    try {
+      const res = await fetch(sessionUrl, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMessage = data?.error || "Failed to create Chainrails session";
+        const resolvedTokenOut = data?.resolvedTokenOut;
+        const tokenHint = resolvedTokenOut ? ` (resolved token: ${resolvedTokenOut})` : "";
+        throw new Error(`${errorMessage}${tokenHint}`);
+      }
+
+      if (!data?.sessionToken) {
+        throw new Error("Session created without token");
+      }
+
+      cr.updateSession({
+        sessionToken: data.sessionToken,
+        amount: data.amount,
+      });
+      cr.open();
+    } catch (error) {
+      console.error("[Chainrails] Session error:", error);
+      const message = error instanceof Error ? error.message : "Failed to initialize payment";
+      setSessionError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionUrl, cr]);
 
   // Minting overlay
   const mintingOverlay = isMinting && (
@@ -898,9 +942,9 @@ const ChainrailsTabContent = memo(({
       </Box>
 
       {/* Error message */}
-      {cr.error && (
+      {sessionError && (
         <Box sx={{ mx: 2, mb: 1, px: 2, py: 1, background: "rgba(244, 67, 54, 0.1)", border: "1px solid rgba(244, 67, 54, 0.3)", borderRadius: 1 }}>
-          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{cr.error}</Typography>
+          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{sessionError}</Typography>
         </Box>
       )}
 
@@ -909,12 +953,12 @@ const ChainrailsTabContent = memo(({
         <Button
           variant="contained"
           sx={styles.activateButton}
-          onClick={cr.open}
+          onClick={openChainrails}
           fullWidth
-          disabled={cr.isPending || isMinting || !sessionUrl}
+          disabled={loading || isMinting || !sessionUrl}
         >
           <Typography sx={styles.buttonText}>
-            {cr.isPending ? "Initializing..." : "Pay Cross-Chain"}
+            {loading ? "Initializing..." : "Pay Cross-Chain"}
           </Typography>
         </Button>
       </Box>

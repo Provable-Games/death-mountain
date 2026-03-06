@@ -3,6 +3,29 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const CHAINRAILS_API_BASE = process.env.CHAINRAILS_API_BASE_URL || "https://api.chainrails.io/api/v1";
 const STRK_MAINNET_ADDRESS = "0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D";
 
+function normalizeHex(value: string | null | undefined): string {
+  if (!value) return "";
+  return value.trim().toLowerCase();
+}
+
+function findValueDeep(obj: any, keys: string[]): string | undefined {
+  if (!obj || typeof obj !== "object") return undefined;
+
+  for (const key of keys) {
+    const direct = obj[key];
+    if (typeof direct === "string") return direct;
+  }
+
+  for (const value of Object.values(obj)) {
+    if (value && typeof value === "object") {
+      const nested = findValueDeep(value, keys);
+      if (nested) return nested;
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * Vercel serverless function to create a Chainrails payment session.
  *
@@ -31,6 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const amount = (req.query.amount as string) || "0";
+  const debug = req.query.debug === "1";
+  const strict = req.query.strict !== "0";
 
   try {
     // Explicit low-level session payload to force STRK output on Starknet.
@@ -74,12 +99,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    let sessionClient: any = null;
+    if (strict || debug) {
+      const sessionClientRes = await fetch(`${CHAINRAILS_API_BASE}/modal/sessions/client`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${data.sessionToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const sessionClientText = await sessionClientRes.text();
+      try {
+        sessionClient = sessionClientText ? JSON.parse(sessionClientText) : {};
+      } catch {
+        sessionClient = { raw: sessionClientText };
+      }
+
+      if (!sessionClientRes.ok && strict) {
+        return res.status(502).json({
+          error: "Failed to inspect Chainrails session",
+          upstreamStatus: sessionClientRes.status,
+          upstreamBody: sessionClient,
+        });
+      }
+    }
+
+    if (strict && sessionClient) {
+      const resolvedTokenOut =
+        findValueDeep(sessionClient, ["tokenOut", "token_out", "assetTokenAddress", "asset_token_address"]) ||
+        findValueDeep(data, ["tokenOut", "token_out", "assetTokenAddress", "asset_token_address"]);
+
+      const resolvedDestinationChain =
+        findValueDeep(sessionClient, ["destinationChain", "destination_chain"]) ||
+        findValueDeep(data, ["destinationChain", "destination_chain"]);
+
+      if (resolvedTokenOut && normalizeHex(resolvedTokenOut) !== normalizeHex(STRK_MAINNET_ADDRESS)) {
+        return res.status(502).json({
+          error: "Chainrails session resolved to a non-STRK output token",
+          expectedTokenOut: STRK_MAINNET_ADDRESS,
+          resolvedTokenOut,
+          resolvedDestinationChain,
+          note: "This usually means your Chainrails account/session is configured for USDC settlement.",
+          debug: debug ? { requestedPayload: payload, upstream: data, sessionClient } : undefined,
+        });
+      }
+    }
+
     // Short cache: same wallet + amount = same session for 60s
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=120");
-    return res.status(200).json({
+    const responseBody = {
       sessionToken: data.sessionToken,
       amount,
-    });
+    } as any;
+
+    if (debug) {
+      responseBody.debug = {
+        requestedPayload: payload,
+        upstream: data,
+        sessionClient,
+      };
+    }
+
+    return res.status(200).json(responseBody);
   } catch (error) {
     console.error("[Chainrails] Session creation failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
