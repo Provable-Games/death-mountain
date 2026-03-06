@@ -841,12 +841,12 @@ const ChainrailsTabContent = memo(({
   strkQuoteForGames?: number | null;
   onPaymentSuccess: () => void;
 }) => {
-  // Build session URL with recipient and optional STRK amount
+  // Build session URL with recipient; amount is left open for user input
   const sessionUrl = useMemo(() => {
     if (!walletAddress) return "";
-    const amount = strkQuoteForGames ? String(Math.ceil(strkQuoteForGames * 1.05)) : "0";
+    const amount = "0"; // Let user choose amount in Chainrails modal
     return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=${amount}`;
-  }, [walletAddress, strkQuoteForGames]);
+  }, [walletAddress]);
 
   const cr = usePaymentSession({
     session_url: sessionUrl,
