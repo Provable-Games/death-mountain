@@ -46,6 +46,11 @@ function normalizeHex(value: string | null | undefined): string {
   return value.trim().toLowerCase();
 }
 
+function zeroAddressForChain(chain: string | undefined): string {
+  if (!chain) return "0x0";
+  return chain.startsWith("STARKNET") ? "0x0" : "0x0000000000000000000000000000000000000000";
+}
+
 function pickBestQuote(quotes: MultiSourceQuote[]): MultiSourceQuote | null {
   if (!Array.isArray(quotes) || quotes.length === 0) return null;
 
@@ -170,6 +175,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const preferredAmount = selectedOption.depositAmount || toBaseUnits(amountHuman, 18);
     const preferredSymbol = (selectedOption.token || "USDC").toUpperCase();
+    const fallbackSender = sender || zeroAddressForChain(bestQuote.sourceChain);
+    const fallbackRefund = refundAddress || fallbackSender;
 
     const attemptPayloads: Array<{ label: string; payload: Record<string, any> }> = [
       {
@@ -210,6 +217,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tokenIn: selectedOption.tokenAddress,
         },
       },
+      {
+        label: "deposit-denominated-with-fallback-sender",
+        payload: {
+          ...basePayload,
+          sender: fallbackSender,
+          refund_address: fallbackRefund,
+          amount: preferredAmount,
+          amountSymbol: preferredSymbol,
+          tokenIn: selectedOption.tokenAddress,
+        },
+      },
+      {
+        label: "strk-denominated-with-fallback-sender",
+        payload: {
+          ...basePayload,
+          sender: fallbackSender,
+          refund_address: fallbackRefund,
+          amount: toBaseUnits(amountHuman, 18),
+          amountSymbol: "STRK",
+          tokenIn: selectedOption.tokenAddress,
+        },
+      },
     ];
 
     let intentResult: { ok: boolean; status: number; data: any } | null = null;
@@ -243,8 +272,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!intentResult) {
       const firstError = attemptErrors[0];
       const upstreamMessage = firstError?.message || "";
+      const combinedAttemptSummary = attemptErrors
+        .map((attempt) => `${attempt.label}: ${attempt.message || `HTTP ${attempt.status}`}`)
+        .join(" | ");
       return res.status(502).json({
-        error: upstreamMessage ? `Failed to create Chainrails intent: ${upstreamMessage}` : "Failed to create Chainrails intent",
+        error: combinedAttemptSummary || (upstreamMessage ? `Failed to create Chainrails intent: ${upstreamMessage}` : "Failed to create Chainrails intent"),
         upstreamStatus: firstError?.status || 502,
         upstreamBody: firstError?.data || {},
         selectedRoute: bestQuote,
