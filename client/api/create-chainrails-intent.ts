@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const CHAINRAILS_API_BASE = process.env.CHAINRAILS_API_BASE_URL || "https://api.chainrails.io/api/v1";
-const STARKNET_STRK_MAINNET = "0x04718f5a0Fc34cC1AF16A1cdee98fFB20C31f5cD61D6Ab07201858f4287c938D";
+const STARKNET_STRK_MAINNET = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
 
 type QuotePaymentOption = {
   token?: string;
@@ -17,6 +17,16 @@ type MultiSourceQuote = {
   bridge?: string | null;
   paymentOptions?: QuotePaymentOption[];
 };
+
+function extractUpstreamMessage(data: any): string {
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (typeof data?.message === "string") return data.message;
+  if (Array.isArray(data?.message)) return data.message.join("; ");
+  if (typeof data?.error === "string") return data.error;
+  if (typeof data?.details === "string") return data.details;
+  return "";
+}
 
 function toBaseUnits(amount: string, decimals: number): string {
   const trimmed = amount.trim();
@@ -83,6 +93,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const recipient = String(req.body?.recipient || "").trim();
+  const sender = String(req.body?.sender || "").trim();
+  const refundAddress = String(req.body?.refundAddress || "").trim();
   const amountHuman = String(req.body?.amount || "0").trim();
 
   if (!recipient) {
@@ -98,8 +110,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const quoteUrl = new URL(`${CHAINRAILS_API_BASE}/quotes/multi-source`);
     quoteUrl.searchParams.set("destinationChain", "STARKNET_MAINNET");
     quoteUrl.searchParams.set("amount", amountHuman);
+    // multi-source quotes are USDC-denominated by default; request STRK-denominated amount explicitly
+    quoteUrl.searchParams.set("amountSymbol", "STRK");
     quoteUrl.searchParams.set("tokenOut", STARKNET_STRK_MAINNET);
     quoteUrl.searchParams.set("recipient", recipient);
+    // Cross-chain tab should not return same-chain Starknet routes (Crypto tab already covers that)
+    quoteUrl.searchParams.set("excludeChains", "STARKNET_MAINNET");
 
     const quotesResult = await fetchJson(quoteUrl.toString(), {
       method: "GET",
@@ -110,8 +126,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!quotesResult.ok) {
+      const upstreamMessage = extractUpstreamMessage(quotesResult.data);
       return res.status(502).json({
-        error: "Failed to fetch Chainrails routes",
+        error: upstreamMessage ? `Failed to fetch Chainrails routes: ${upstreamMessage}` : "Failed to fetch Chainrails routes",
         upstreamStatus: quotesResult.status,
         upstreamBody: quotesResult.data,
       });
@@ -134,10 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const createIntentPayload = {
-      amount: toBaseUnits(amountHuman, 18),
-      amountSymbol: "STRK",
-      tokenIn: selectedOption.tokenAddress,
+    const basePayload: Record<string, any> = {
       source_chain: bestQuote.sourceChain,
       destination_chain: "STARKNET_MAINNET",
       recipient,
@@ -147,21 +161,95 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     };
 
-    const intentResult = await fetchJson(`${CHAINRAILS_API_BASE}/intents`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(createIntentPayload),
-    });
+    if (sender) {
+      basePayload.sender = sender;
+    }
+    if (refundAddress) {
+      basePayload.refund_address = refundAddress;
+    }
 
-    if (!intentResult.ok) {
+    const preferredAmount = selectedOption.depositAmount || toBaseUnits(amountHuman, 18);
+    const preferredSymbol = (selectedOption.token || "USDC").toUpperCase();
+
+    const attemptPayloads: Array<{ label: string; payload: Record<string, any> }> = [
+      {
+        label: "deposit-denominated-with-tokenOut",
+        payload: {
+          ...basePayload,
+          amount: preferredAmount,
+          amountSymbol: preferredSymbol,
+          tokenIn: selectedOption.tokenAddress,
+          tokenOut: STARKNET_STRK_MAINNET,
+        },
+      },
+      {
+        label: "deposit-denominated-no-tokenOut",
+        payload: {
+          ...basePayload,
+          amount: preferredAmount,
+          amountSymbol: preferredSymbol,
+          tokenIn: selectedOption.tokenAddress,
+        },
+      },
+      {
+        label: "strk-denominated-with-tokenOut",
+        payload: {
+          ...basePayload,
+          amount: toBaseUnits(amountHuman, 18),
+          amountSymbol: "STRK",
+          tokenIn: selectedOption.tokenAddress,
+          tokenOut: STARKNET_STRK_MAINNET,
+        },
+      },
+      {
+        label: "strk-denominated-no-tokenOut",
+        payload: {
+          ...basePayload,
+          amount: toBaseUnits(amountHuman, 18),
+          amountSymbol: "STRK",
+          tokenIn: selectedOption.tokenAddress,
+        },
+      },
+    ];
+
+    let intentResult: { ok: boolean; status: number; data: any } | null = null;
+    let successfulAttempt: string | null = null;
+    const attemptErrors: Array<{ label: string; status: number; message: string; data: any }> = [];
+
+    for (const attempt of attemptPayloads) {
+      const result = await fetchJson(`${CHAINRAILS_API_BASE}/intents`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(attempt.payload),
+      });
+
+      if (result.ok) {
+        intentResult = result;
+        successfulAttempt = attempt.label;
+        break;
+      }
+
+      attemptErrors.push({
+        label: attempt.label,
+        status: result.status,
+        message: extractUpstreamMessage(result.data),
+        data: result.data,
+      });
+    }
+
+    if (!intentResult) {
+      const firstError = attemptErrors[0];
+      const upstreamMessage = firstError?.message || "";
       return res.status(502).json({
-        error: "Failed to create Chainrails intent",
-        upstreamStatus: intentResult.status,
-        upstreamBody: intentResult.data,
+        error: upstreamMessage ? `Failed to create Chainrails intent: ${upstreamMessage}` : "Failed to create Chainrails intent",
+        upstreamStatus: firstError?.status || 502,
+        upstreamBody: firstError?.data || {},
         selectedRoute: bestQuote,
+        attemptsTried: attemptPayloads.map((a) => a.label),
+        attemptErrors,
       });
     }
 
@@ -216,6 +304,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       depositAmountFormatted: selectedOption.depositAmountFormatted,
       totalFeeFormatted: bestQuote.totalFeeFormatted,
       bridge: bestQuote.bridge,
+      strategy: successfulAttempt,
       intent: intentResult.data,
     });
   } catch (error) {

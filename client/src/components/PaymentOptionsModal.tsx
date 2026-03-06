@@ -892,7 +892,12 @@ const ChainrailsTabContent = memo(({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data?.error || "Failed to create Chainrails intent");
+        const upstreamMessage =
+          data?.upstreamBody?.message ||
+          data?.upstreamBody?.error ||
+          data?.details ||
+          data?.error;
+        throw new Error(upstreamMessage || "Failed to create Chainrails intent");
       }
 
       if (!data?.intentAddress) {
