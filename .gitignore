@@ -11,3 +11,4 @@ veo-client/tsconfig.tsbuildinfo
 .env.local
 *.env.bak
 argent_account_*.json
+.idea/
