@@ -4,6 +4,7 @@ import { useController } from "@/contexts/controller";
 import { useDungeon } from "@/dojo/useDungeon";
 import { NETWORKS } from "@/utils/networkConfig";
 import { formatAmount } from "@/utils/utils";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import SportsEsportsOutlinedIcon from "@mui/icons-material/SportsEsportsOutlined";
@@ -21,6 +22,16 @@ import { useProvider } from "@starknet-react/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Contract } from "starknet";
+import { PaymentModal } from "@chainrails/react";
+import { useChainrailsPayment } from "@/hooks/useChainrailsPayment";
+
+const PAYMENT_FLOW = {
+  INITIAL: "initial",
+  CONTROLLER: "controller",
+  CHAINRAILS: "chainrails",
+} as const;
+
+type PaymentFlow = typeof PAYMENT_FLOW[keyof typeof PAYMENT_FLOW];
 
 interface PaymentOptionsModalProps {
   open: boolean;
@@ -33,7 +44,14 @@ interface TokenSelectionProps {
   tokenQuote: { amount: string; loading: boolean; error?: string };
   onTokenChange: (tokenSymbol: string) => void;
   styles: any;
-  buyDungeonTicket: () => void;
+  buyDungeonTicket: (isChainrails?: boolean ) => void;
+  onClose: () => void;
+  paymentFlow: PaymentFlow;
+  onPaymentFlowChange: (flow: PaymentFlow) => void;
+  controllerAddress: string;
+  usdcAmount: string | null;
+  usdcLoading: boolean;
+  usdcError: string | null;
 }
 
 // Memoized token selection component
@@ -45,6 +63,13 @@ const TokenSelectionContent = memo(
     onTokenChange,
     buyDungeonTicket,
     styles,
+    onClose,
+    paymentFlow,
+    onPaymentFlowChange,
+    controllerAddress,
+    usdcAmount,
+    usdcLoading,
+    usdcError,
   }: TokenSelectionProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const selectedTokenData = userTokens.find(
@@ -64,11 +89,42 @@ const TokenSelectionContent = memo(
       handleClose();
     };
 
+    const handleStarknetSelect = () => {
+      onPaymentFlowChange(PAYMENT_FLOW.CONTROLLER);
+    };
+
+    const handleOtherChainSelect = () => {
+      onPaymentFlowChange(PAYMENT_FLOW.CHAINRAILS);
+    };
+
     const hasEnoughBalance = useMemo(() => {
       return Number(selectedTokenData.balance) >= Number(tokenQuote.amount);
     }, [selectedTokenData, tokenQuote]);
 
+    const handleChainrailsSuccess = useCallback(() => {
+      buyDungeonTicket(true);
+    }, [buyDungeonTicket]);
+
+    const { paymentSession } = useChainrailsPayment({
+      controllerAddress: controllerAddress || "",
+      onSuccess: handleChainrailsSuccess,
+    });
+
+    const getPaymentSubtitle = (flow: PaymentFlow): string => {
+      switch (flow) {
+        case PAYMENT_FLOW.INITIAL:
+          return "Select how you want to pay for access";
+        case PAYMENT_FLOW.CONTROLLER:
+          return "Select any token in your controller wallet";
+        case PAYMENT_FLOW.CHAINRAILS:
+          return "Pay with a token on another chain";
+        default:
+          return "Select any token in your controller wallet";
+      }
+    };
+
     return (
+      <>
       <Box
         sx={{
           ...styles.paymentCard,
@@ -83,130 +139,220 @@ const TokenSelectionContent = memo(
           <Box sx={{ flex: 1 }}>
             <Typography sx={styles.paymentTitle}>Pay with Crypto</Typography>
             <Typography sx={styles.paymentSubtitle}>
-              Select any token in your controller wallet
+              {getPaymentSubtitle(paymentFlow)}
             </Typography>
           </Box>
         </Box>
 
         <Box sx={styles.sectionContainer} pb={2} mt={1}>
-          <Button
-            variant="outlined"
-            onClick={handleClick}
-            fullWidth
-            sx={styles.mobileSelectButton}
-          >
-            <Box
-              sx={{
-                fontSize: "0.6rem",
-                color: "text.primary",
-                marginLeft: "-5px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              ▼
-            </Box>
-            <Box sx={styles.tokenRow}>
-              <Box sx={styles.tokenLeft}>
+          {paymentFlow === PAYMENT_FLOW.INITIAL ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Button
+                variant="outlined"
+                onClick={handleStarknetSelect}
+                fullWidth
+                sx={styles.mobileSelectButton}
+              >
                 <Typography sx={styles.tokenName}>
-                  {selectedTokenData
-                    ? selectedTokenData.symbol
-                    : "Select token"}
+                  Pay from Controller
                 </Typography>
-              </Box>
-              {selectedTokenData && (
-                <Typography sx={styles.tokenBalance}>
-                  {selectedTokenData.balance}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleOtherChainSelect}
+                fullWidth
+                sx={styles.mobileSelectButton}
+              >
+                <Typography sx={styles.tokenName}>
+                  Pay from other chains
                 </Typography>
-              )}
+              </Button>
             </Box>
-          </Button>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            slotProps={{
-              paper: {
-                sx: {
-                  mt: 0.5,
-                  width: "260px",
-                  maxHeight: 300,
-                  background: "rgba(24, 40, 24, 1)",
-                  border: "1px solid rgba(208, 201, 141, 0.3)",
-                  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-                  zIndex: 9999,
-                },
-              },
-            }}
-            sx={{
-              zIndex: 9999,
-            }}
-          >
-            {userTokens.map((token: any) => (
-              <MenuItem
-                key={token.symbol}
-                onClick={() => handleTokenSelect(token.symbol)}
+            ) : paymentFlow === PAYMENT_FLOW.CHAINRAILS ? (
+            <>
+              <Button
+                variant="outlined"
+                fullWidth
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                  backgroundColor:
-                    token.symbol === selectedToken
-                      ? "rgba(208, 201, 141, 0.2)"
-                      : "transparent",
+                  ...styles.mobileSelectButton,
+                  cursor: "default",
+                  justifyContent: "center",
                   "&:hover": {
-                    backgroundColor:
-                      token.symbol === selectedToken
-                        ? "rgba(208, 201, 141, 0.3)"
-                        : "rgba(208, 201, 141, 0.1)",
+                    borderColor: "rgba(208, 201, 141, 0.3)",
+                    background: "rgba(0, 0, 0, 0.4)",
                   },
                 }}
+                disabled
               >
+                <Typography sx={styles.tokenName}>
+                  Pay from another chain
+                </Typography>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outlined"
+                onClick={handleClick}
+                fullWidth
+                sx={styles.mobileSelectButton}
+              >
+                <Box
+                  sx={{
+                    fontSize: "0.6rem",
+                    color: "text.primary",
+                    marginLeft: "-5px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  ▼
+                </Box>
                 <Box sx={styles.tokenRow}>
                   <Box sx={styles.tokenLeft}>
                     <Typography sx={styles.tokenName}>
-                      {token.symbol}
+                      {selectedTokenData
+                        ? selectedTokenData.symbol
+                        : "Select token"}
                     </Typography>
                   </Box>
-                  <Typography sx={styles.tokenBalance}>
-                    {token.balance}
-                  </Typography>
+                  {selectedTokenData && (
+                    <Typography sx={styles.tokenBalance}>
+                      {selectedTokenData.balance}
+                    </Typography>
+                  )}
                 </Box>
-              </MenuItem>
-            ))}
-          </Menu>
+              </Button>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      mt: 0.5,
+                      width: "260px",
+                      maxHeight: 300,
+                      background: "rgba(24, 40, 24, 1)",
+                      border: "1px solid rgba(208, 201, 141, 0.3)",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                      zIndex: 9999,
+                    },
+                  },
+                }}
+                sx={{
+                  zIndex: 9999,
+                }}
+              >
+                {userTokens.map((token: any) => (
+                  <MenuItem
+                    key={token.symbol}
+                    onClick={() => handleTokenSelect(token.symbol)}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 1,
+                      backgroundColor:
+                        token.symbol === selectedToken
+                          ? "rgba(208, 201, 141, 0.2)"
+                          : "transparent",
+                      "&:hover": {
+                        backgroundColor:
+                          token.symbol === selectedToken
+                            ? "rgba(208, 201, 141, 0.3)"
+                            : "rgba(208, 201, 141, 0.1)",
+                      },
+                    }}
+                  >
+                    <Box sx={styles.tokenRow}>
+                      <Box sx={styles.tokenLeft}>
+                        <Typography sx={styles.tokenName}>
+                          {token.symbol}
+                        </Typography>
+                      </Box>
+                      <Typography sx={styles.tokenBalance}>
+                        {token.balance}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Menu>
+            </>
+          )}
         </Box>
 
-        <Box sx={styles.costDisplay}>
-          <Typography sx={styles.costText}>
-            {tokenQuote.loading
-              ? "Loading quote..."
-              : tokenQuote.error
-                ? `Error: ${tokenQuote.error}`
-                : tokenQuote.amount
-                  ? `Cost: ${tokenQuote.amount} ${selectedToken}`
-                  : "Loading..."}
-          </Typography>
-        </Box>
+        {paymentFlow === PAYMENT_FLOW.CONTROLLER && (
+          <>
+            <Box sx={styles.costDisplay}>
+              <Typography sx={styles.costText}>
+                {tokenQuote.loading
+                  ? "Loading quote..."
+                  : tokenQuote.error
+                    ? `Error: ${tokenQuote.error}`
+                    : tokenQuote.amount
+                      ? `Cost: ${tokenQuote.amount} ${selectedToken}`
+                      : "Loading..."}
+              </Typography>
+            </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "center", px: 2, mb: 2 }}>
-          <Button
-            variant="contained"
-            sx={styles.activateButton}
-            onClick={buyDungeonTicket}
-            fullWidth
-            disabled={
-              tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance
-            }
-          >
-            <Typography sx={styles.buttonText}>
-              {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
-            </Typography>
-          </Button>
-        </Box>
+            <Box sx={{ display: "flex", justifyContent: "center", px: 2, mb: 2 }}>
+              <Button
+                variant="contained"
+                sx={styles.activateButton}
+                onClick={() => buyDungeonTicket()}
+                fullWidth
+                disabled={
+                  tokenQuote.loading || !!tokenQuote.error || !hasEnoughBalance
+                }
+              >
+                <Typography sx={styles.buttonText}>
+                  {hasEnoughBalance ? "Enter Dungeon" : "Insufficient Balance"}
+                </Typography>
+              </Button>
+            </Box>
+          </>
+        )}
+
+        {paymentFlow === PAYMENT_FLOW.CHAINRAILS && (
+          <>
+            <Box sx={styles.costDisplay}>
+              <Typography sx={styles.costText}>
+                {usdcLoading
+                  ? "Loading quote..."
+                  : usdcError
+                    ? `Error: ${usdcError}`
+                    : usdcAmount
+                      ? `Cost: ${usdcAmount} USDC`
+                      : "Loading..."}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", justifyContent: "center", px: 2, mb: 2 }}>
+              <Button
+                variant="contained"
+                sx={styles.activateButton}
+                onClick={() => paymentSession.open()}
+                fullWidth
+                disabled={usdcLoading || !!usdcError || !usdcAmount}
+              >
+                <Typography sx={styles.buttonText}>
+                  Enter Dungeon
+                </Typography>
+              </Button>
+            </Box>
+          </>
+        )}
       </Box>
+
+        <PaymentModal
+        {...paymentSession}
+        amount={usdcAmount || "0"}
+        styles={{ theme: "loot-survivor-e697da73" }}
+        className="chainrails-payment-modal"
+      />
+      </>
     );
   }
 );
@@ -215,7 +361,7 @@ export default function PaymentOptionsModal({
   open,
   onClose,
 }: PaymentOptionsModalProps) {
-  const { tokenBalances, goldenPassIds, enterDungeon, openBuyTicket, bulkMintGames } =
+  const { tokenBalances, goldenPassIds, enterDungeon, openBuyTicket, bulkMintGames, address: controllerAddress } =
     useController();
 
   // Use the provider from StarknetConfig
@@ -275,6 +421,10 @@ export default function PaymentOptionsModal({
     amount: "",
     loading: false,
   });
+  const [paymentFlow, setPaymentFlow] = useState<PaymentFlow>(PAYMENT_FLOW.INITIAL);
+  const [usdcAmount, setUsdcAmount] = useState<string | null>(null);
+  const [usdcLoading, setUsdcLoading] = useState(false);
+  const [usdcError, setUsdcError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userTokens.length > 0 && !selectedToken) {
@@ -359,14 +509,36 @@ export default function PaymentOptionsModal({
     enterDungeon({ paymentType: "Ticket" }, []);
   };
 
-  const buyDungeonTicket = async () => {
-    const selectedTokenData = userTokens.find(
-      (t: any) => t.symbol === selectedToken
-    );
+  const buyDungeonTicket = async (isChainrails = false) => {
+    let selectedTokenData;
+    
+    if (isChainrails) {
+      const usdcToken = paymentTokens.find((token: any) => token.name === "USDC");
+      if (!usdcToken) {
+        console.error("USDC token not found");
+        return;
+      }
+      selectedTokenData = {
+        symbol: usdcToken.name,
+        balance: tokenBalances[usdcToken.name] || 0,
+        address: usdcToken.address,
+        decimals: usdcToken.decimals || 18,
+        displayDecimals: usdcToken.displayDecimals || 4,
+      };
+    } else {
+      selectedTokenData = userTokens.find(
+        (t: any) => t.symbol === selectedToken
+      );
+      if (!selectedTokenData) {
+        console.error("Token not found:", selectedToken);
+        return;
+      }
+    }
+    
     const quote = await getSwapQuote(
       -1e18,
       dungeon.ticketAddress!,
-      selectedTokenData!.address
+      selectedTokenData.address
     );
 
     let tokenSwapData = {
@@ -376,7 +548,7 @@ export default function PaymentOptionsModal({
     };
     const calls = generateSwapCalls(
       routerContract,
-      selectedTokenData!.address,
+      selectedTokenData.address,
       tokenSwapData
     );
 
@@ -391,6 +563,41 @@ export default function PaymentOptionsModal({
     },
     [fetchTokenQuote]
   );
+
+  const usdcToken = useMemo(() => {
+    return paymentTokens.find((token: any) => token.name === "USDC");
+  }, [paymentTokens]);
+
+  const USDC = usdcToken?.address;
+
+  const fetchUSDCAmount = useCallback(async () => {
+    if (!dungeon.ticketAddress || !USDC || !usdcToken) {
+      return;
+    }
+
+    setUsdcLoading(true);
+    setUsdcError(null);
+
+    try {
+      const quote = await getSwapQuote(-1e18, dungeon.ticketAddress, USDC);
+      if (quote) {
+        const usdcDecimals = usdcToken.decimals || 6;
+        const usdcAmountValue = ((quote.total * -1) / Math.pow(10, usdcDecimals)).toFixed(2);
+        setUsdcAmount(usdcAmountValue);
+      } else {
+        setUsdcError("No quote available");
+      }
+    } catch (err) {
+      console.error("Error fetching USDC amount:", err);
+      setUsdcError("Failed to get quote");
+    } finally {
+      setUsdcLoading(false);
+    }
+  }, [dungeon.ticketAddress, USDC, usdcToken]);
+
+  useEffect(() => {
+      fetchUSDCAmount();
+  }, []);
 
   // Reusable motion wrapper component - only animates on view changes, not token changes
   const MotionWrapper = ({
@@ -477,6 +684,15 @@ export default function PaymentOptionsModal({
           >
             <Box sx={styles.modal}>
               <Box sx={styles.modalGlow} />
+              {paymentFlow !== PAYMENT_FLOW.INITIAL && currentView === "token" && (
+                <IconButton
+                  onClick={() => setPaymentFlow(PAYMENT_FLOW.INITIAL)}
+                  sx={styles.backBtn}
+                  size="small"
+                >
+                  <ArrowBackIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
               <IconButton onClick={onClose} sx={styles.closeBtn} size="small">
                 <CloseIcon sx={{ fontSize: 20 }} />
               </IconButton>
@@ -622,6 +838,13 @@ export default function PaymentOptionsModal({
                         onTokenChange={handleTokenChange}
                         styles={styles}
                         buyDungeonTicket={buyDungeonTicket}
+                        onClose={onClose}
+                        paymentFlow={paymentFlow}
+                        onPaymentFlowChange={setPaymentFlow}
+                        controllerAddress={controllerAddress || ""}
+                        usdcAmount={usdcAmount}
+                        usdcLoading={usdcLoading}
+                        usdcError={usdcError}
                       />
                     </motion.div>
                   )}
@@ -825,6 +1048,20 @@ const styles = {
     background:
       "linear-gradient(45deg, transparent 30%, rgba(208, 201, 141, 0.02) 50%, transparent 70%)",
     pointerEvents: "none",
+  },
+  backBtn: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    color: "#d0c98d",
+    background: "rgba(208, 201, 141, 0.1)",
+    border: "1px solid rgba(208, 201, 141, 0.2)",
+    "&:hover": {
+      background: "rgba(208, 201, 141, 0.2)",
+      transform: "scale(1.1)",
+    },
+    transition: "all 0.2s ease",
+    zIndex: 10,
   },
   closeBtn: {
     position: "absolute",
