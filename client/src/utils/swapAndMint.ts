@@ -2,25 +2,34 @@ import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useSwapStore } from "@/stores/swapStore";
 
 interface SwapAndMintParams {
-  /** Amount of STRK deposited (human-readable, e.g. 1113.5) */
+  /** Amount of deposited input token (human-readable) */
   depositAmount: number;
-  /** STRK token address on the current network */
-  strkTokenAddress: string;
+  /** Input token address on the current network */
+  inputTokenAddress: string;
+  /** Input token symbol for logs/errors */
+  inputTokenSymbol?: string;
+  /** Input token decimals (defaults to 18) */
+  inputTokenDecimals?: number;
   /** Dungeon ticket token address */
   ticketAddress: string;
   /** Ekubo router contract instance (from starknet.js) */
   routerContract: { address: string; populate: (method: string, params: any[]) => any };
   /** purchaseGames from ControllerContext */
-  purchaseGames: (calls: any[], gameCount: number, onSuccess: () => void) => void;
+  purchaseGames: (calls: any[], gameCount: number, onSuccess: () => void, gasTokenAddress?: string) => void;
+  /** Optional gas token for paymaster execution */
+  gasTokenAddress?: string;
 }
 
 const WEI = 10n ** 18n;
 const MAX_GAMES_PER_BATCH = 50;
 
-function toBufferedWeiFromStrk(amount: number): bigint {
-  // Keep 4 decimals of STRK precision, then apply 98% buffer with integer math.
-  const scaled = BigInt(Math.max(0, Math.floor(amount * 10_000)));
-  return (scaled * 98n * WEI) / 1_000_000n;
+function toBufferedUnits(amount: number, decimals: number): bigint {
+  const safeDecimals = Math.max(0, decimals);
+  const precision = Math.min(safeDecimals, 6);
+  const multiplier = 10 ** precision;
+  const scaled = BigInt(Math.max(0, Math.floor(amount * multiplier)));
+  const units = scaled * 10n ** BigInt(safeDecimals - precision);
+  return (units * 98n) / 100n;
 }
 
 function toAbsoluteBigInt(value: unknown): bigint {
@@ -35,8 +44,8 @@ function toAbsoluteBigInt(value: unknown): bigint {
 /**
  * Standalone swap+mint function.
  *
- * 1. Forward quote: how many tickets can `depositAmount` STRK buy?
- * 2. Reverse quote: exact STRK cost for that many tickets
+ * 1. Forward quote: how many tickets can `depositAmount` input token buy?
+ * 2. Reverse quote: exact input token cost for that many tickets
  * 3. Generate swap calls via Ekubo router
  * 4. Execute purchaseGames (swap + mint in one multicall)
  *
@@ -44,10 +53,13 @@ function toAbsoluteBigInt(value: unknown): bigint {
  */
 export async function executeSwapAndMint({
   depositAmount,
-  strkTokenAddress,
+  inputTokenAddress,
+  inputTokenSymbol = "STRK",
+  inputTokenDecimals = 18,
   ticketAddress,
   routerContract,
   purchaseGames,
+  gasTokenAddress,
 }: SwapAndMintParams): Promise<void> {
   const store = useSwapStore.getState();
 
@@ -61,27 +73,32 @@ export async function executeSwapAndMint({
 
   console.log("[SwapAndMint] Starting swap+mint", {
     depositAmount,
-    strkTokenAddress: strkTokenAddress.slice(0, 10) + "...",
+    inputTokenSymbol,
+    inputTokenAddress: inputTokenAddress.slice(0, 10) + "...",
     ticketAddress: ticketAddress.slice(0, 10) + "...",
+    gasTokenAddress: gasTokenAddress ? gasTokenAddress.slice(0, 10) + "..." : null,
   });
 
   try {
     if (depositAmount <= 0) {
-      throw new Error("No STRK available for swap");
+      throw new Error(`No ${inputTokenSymbol} available for swap`);
     }
 
     // Use 98% of deposit to leave a small buffer for fees
-    const depositWei = toBufferedWeiFromStrk(depositAmount);
+    const depositUnits = toBufferedUnits(depositAmount, inputTokenDecimals);
 
-    if (depositWei <= 0n) {
-      throw new Error("No STRK available for swap");
+    if (depositUnits <= 0n) {
+      throw new Error(`No ${inputTokenSymbol} available for swap`);
     }
 
-    console.log("[SwapAndMint] Getting forward quote...", { depositWei: depositWei.toString() });
+    console.log("[SwapAndMint] Getting forward quote...", {
+      depositUnits: depositUnits.toString(),
+      inputTokenSymbol,
+    });
 
     const forwardQuote = await getSwapQuote(
-      depositWei,
-      strkTokenAddress,
+      depositUnits,
+      inputTokenAddress,
       ticketAddress
     );
 
@@ -95,11 +112,11 @@ export async function executeSwapAndMint({
     });
 
     if (gamesToBuy < 1) {
-      throw new Error("Not enough STRK to purchase even 1 game. Try with a larger amount.");
+      throw new Error(`Not enough ${inputTokenSymbol} to purchase even 1 game. Try with a larger amount.`);
     }
 
     // Re-quote to capture the latest price right before execution
-    const freshQuote = await getSwapQuote(depositWei, strkTokenAddress, ticketAddress);
+    const freshQuote = await getSwapQuote(depositUnits, inputTokenAddress, ticketAddress);
     const freshGames = Number(toAbsoluteBigInt(freshQuote?.total) / WEI);
 
     if (freshGames < gamesToBuy) {
@@ -114,7 +131,7 @@ export async function executeSwapAndMint({
     }
 
     if (gamesToBuy < 1) {
-      throw new Error("Not enough STRK to purchase even 1 game. Try with a larger amount.");
+      throw new Error(`Not enough ${inputTokenSymbol} to purchase even 1 game. Try with a larger amount.`);
     }
 
     console.log("[SwapAndMint] Getting reverse quote for", gamesToBuy, "games...");
@@ -122,7 +139,7 @@ export async function executeSwapAndMint({
     const quote = await getSwapQuote(
       reverseAmount,
       ticketAddress,
-      strkTokenAddress
+      inputTokenAddress
     );
 
     store.setStage("swapping");
@@ -132,13 +149,13 @@ export async function executeSwapAndMint({
       minimumAmount: gamesToBuy,
       quote,
     };
-    const calls = generateSwapCalls(routerContract, strkTokenAddress, tokenSwapData);
+    const calls = generateSwapCalls(routerContract, inputTokenAddress, tokenSwapData);
 
     store.setStage("minting");
     purchaseGames(calls, gamesToBuy, () => {
       console.log("[SwapAndMint] Games minted successfully:", gamesToBuy);
       useSwapStore.getState().complete(gamesToBuy);
-    });
+    }, gasTokenAddress);
   } catch (error) {
     console.error("[SwapAndMint] Error:", error);
     useSwapStore.getState().setError(
@@ -148,18 +165,19 @@ export async function executeSwapAndMint({
 }
 
 /**
- * Get the estimated number of games for a given STRK deposit amount.
+ * Get the estimated number of games for a given deposited token amount.
  * Used by SwapConfirmationModal to show the user how many games they'll get.
  */
 export async function estimateGamesForDeposit(
   depositAmount: number,
-  strkTokenAddress: string,
-  ticketAddress: string
+  inputTokenAddress: string,
+  ticketAddress: string,
+  inputTokenDecimals = 18
 ): Promise<number> {
-  const depositWei = toBufferedWeiFromStrk(depositAmount);
-  if (depositWei <= 0n) return 0;
+  const depositUnits = toBufferedUnits(depositAmount, inputTokenDecimals);
+  if (depositUnits <= 0n) return 0;
 
-  const forwardQuote = await getSwapQuote(depositWei, strkTokenAddress, ticketAddress);
+  const forwardQuote = await getSwapQuote(depositUnits, inputTokenAddress, ticketAddress);
   const quotedGames = Number(toAbsoluteBigInt(forwardQuote?.total) / WEI);
   return Math.min(MAX_GAMES_PER_BATCH, quotedGames);
 }

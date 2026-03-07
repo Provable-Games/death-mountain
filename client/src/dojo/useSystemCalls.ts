@@ -17,10 +17,11 @@ import { translateGameEvent } from "@/utils/translation";
 import { delay, stringToFelt } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
-import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
+import { CairoOption, CairoOptionVariant, CallData, PaymasterRpc, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
 
 const TICKET_PRICE_WEI = BigInt("1000000000000000000");
+const AVNU_PAYMASTER_URL = "https://starknet.paymaster.avnu.fi";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -46,6 +47,39 @@ export const useSystemCalls = () => {
     namespace,
     "game_token_systems"
   )?.address;
+
+  const executeCalls = async (account: any, calls: any[], gasTokenAddress?: string) => {
+    if (!gasTokenAddress) {
+      return account.execute(calls);
+    }
+
+    if (typeof account.executePaymasterTransaction !== "function" || typeof account.estimatePaymasterTransactionFee !== "function") {
+      throw new Error("This wallet does not support paymaster transactions");
+    }
+
+    if (!account.paymaster || typeof account.paymaster.getSupportedTokens !== "function") {
+      account.paymaster = new PaymasterRpc({ nodeUrl: AVNU_PAYMASTER_URL });
+    }
+
+    const paymasterDetails = {
+      feeMode: {
+        mode: "default",
+        gasToken: gasTokenAddress,
+      },
+    } as any;
+
+    try {
+      const feeEstimation = await account.estimatePaymasterTransactionFee(calls, paymasterDetails);
+      return await account.executePaymasterTransaction(
+        calls,
+        paymasterDetails,
+        feeEstimation?.suggested_max_fee_in_gas_token
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${message}. If the wallet is not deployed yet, deploy it first before using USDC gasless swap.`);
+    }
+  };
   const SETTINGS_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,
     namespace,
@@ -196,7 +230,8 @@ export const useSystemCalls = () => {
     preCalls: any[],
     amount: number,
     callback: () => void,
-    recipientAddress?: string
+    recipientAddress?: string,
+    gasTokenAddress?: string
   ) => {
     let paymentData =
       payment.paymentType === "Ticket"
@@ -213,21 +248,21 @@ export const useSystemCalls = () => {
     }
 
     try {
-      let tx = await account!.execute(
-        [
-          ...preCalls,
-          ...Array.from({ length: amount }, () => ({
-              contractAddress: DUNGEON_ADDRESS,
-              entrypoint: "buy_game",
-              calldata: CallData.compile([
-                ...paymentData,
-                new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
-                recipient, // send game to this address
-                false, // soulbound
-              ]),
-            })),
-        ]
-      );
+      const calls = [
+        ...preCalls,
+        ...Array.from({ length: amount }, () => ({
+            contractAddress: DUNGEON_ADDRESS,
+            entrypoint: "buy_game",
+            calldata: CallData.compile([
+              ...paymentData,
+              new CairoOption(CairoOptionVariant.Some, stringToFelt(name)),
+              recipient, // send game to this address
+              false, // soulbound
+            ]),
+          })),
+      ];
+
+      const tx = await executeCalls(account, calls, gasTokenAddress);
 
       callback();
 

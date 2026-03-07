@@ -42,13 +42,13 @@ function onrampSubMessage(onrampStatus: OnrampStatus): string | null {
 function stageMessage(stage: SwapStage, gamesMinted: number): string {
   switch (stage) {
     case "waiting_deposit":
-      return "Waiting for STRK deposit...";
+      return "Waiting for deposit...";
     case "deposit_detected":
-      return "STRK received — confirm swap";
+      return "Deposit received — confirm swap";
     case "quoting":
       return "Getting swap quote...";
     case "swapping":
-      return "Swapping STRK for tickets...";
+      return "Swapping tokens for tickets...";
     case "minting":
       return "Minting games...";
     case "done":

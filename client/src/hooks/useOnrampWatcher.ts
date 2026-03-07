@@ -3,15 +3,16 @@ import { useAccount } from "@starknet-react/core";
 import { useController } from "@/contexts/controller";
 import { useSwapStore } from "@/stores/swapStore";
 
-/** How often to poll STRK balance (ms) */
+/** How often to poll deposit balances (ms) */
 const POLL_INTERVAL = 10_000;
 
-/** Minimum STRK deposit to trigger detection */
-const MIN_DEPOSIT_THRESHOLD = 1;
+/** Minimum deposit deltas to trigger detection */
+const MIN_STRK_DEPOSIT_THRESHOLD = 1;
+const MIN_USDC_DEPOSIT_THRESHOLD = 0.01;
 
 /**
- * Global watcher: polls the STRK balance when an on-ramp flow is pending,
- * and sets stage to "deposit_detected" when STRK arrives.
+ * Global watcher: polls balances when a funded flow is pending,
+ * and sets stage to "deposit_detected" when the expected token arrives.
  *
  * Does NOT execute the swap — that is triggered by user confirmation
  * via SwapConfirmationModal.
@@ -23,6 +24,8 @@ export function useOnrampWatcher() {
   const { address: accountAddress } = useAccount();
   const stage = useSwapStore((s) => s.stage);
   const initialStrkBalance = useSwapStore((s) => s.initialStrkBalance);
+  const initialUsdcBalance = useSwapStore((s) => s.initialUsdcBalance);
+  const depositSource = useSwapStore((s) => s.depositSource);
   const walletAddress = useSwapStore((s) => s.walletAddress);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -30,6 +33,11 @@ export function useOnrampWatcher() {
   // Current STRK balance (human-readable number)
   const strkBalance = useMemo(() => {
     return Number(tokenBalances["STRK"] || 0);
+  }, [tokenBalances]);
+
+  // Current USDC balance (human-readable number)
+  const usdcBalance = useMemo(() => {
+    return Number(tokenBalances["USDC"] || 0);
   }, [tokenBalances]);
 
   const stopPolling = useCallback(() => {
@@ -44,7 +52,8 @@ export function useOnrampWatcher() {
     // Only poll when we have a pending on-ramp for the current wallet
     const shouldPoll =
       stage === "waiting_deposit" &&
-      initialStrkBalance !== null &&
+      initialStrkBalance != null &&
+      initialUsdcBalance != null &&
       walletAddress !== null &&
       accountAddress !== undefined &&
       walletAddress === accountAddress;
@@ -53,7 +62,9 @@ export function useOnrampWatcher() {
       if (stage === "waiting_deposit") {
         console.log("[OnRamp:Watcher] Not polling:", {
           stage,
-          hasInitialBalance: initialStrkBalance !== null,
+          hasInitialBalance: initialStrkBalance != null,
+          hasInitialUsdcBalance: initialUsdcBalance != null,
+          depositSource,
           hasWallet: walletAddress !== null,
           hasAccount: accountAddress !== undefined,
           walletMatch: walletAddress === accountAddress,
@@ -64,19 +75,29 @@ export function useOnrampWatcher() {
     }
 
     // Check for deposit on every balance change
-    const delta = strkBalance - initialStrkBalance;
+    const deltaStrk = strkBalance - initialStrkBalance;
+    const deltaUsdc = usdcBalance - initialUsdcBalance;
     console.log("[OnRamp:Watcher] Poll check:", {
+      depositSource,
       strkBalance,
       initialStrkBalance,
-      delta: delta.toFixed(4),
-      threshold: MIN_DEPOSIT_THRESHOLD,
-      meetsThreshold: delta >= MIN_DEPOSIT_THRESHOLD,
+      deltaStrk: deltaStrk.toFixed(4),
+      usdcBalance,
+      initialUsdcBalance,
+      deltaUsdc: deltaUsdc.toFixed(4),
     });
 
-    if (delta >= MIN_DEPOSIT_THRESHOLD) {
-      console.log("[OnRamp:Watcher] STRK deposit detected! Delta:", delta.toFixed(4));
+    if (depositSource === "chainrails") {
+      if (deltaUsdc >= MIN_USDC_DEPOSIT_THRESHOLD) {
+        console.log("[OnRamp:Watcher] USDC deposit detected! Delta:", deltaUsdc.toFixed(4));
+        stopPolling();
+        useSwapStore.getState().depositDetected(deltaUsdc, "USDC");
+        return;
+      }
+    } else if (deltaStrk >= MIN_STRK_DEPOSIT_THRESHOLD) {
+      console.log("[OnRamp:Watcher] STRK deposit detected! Delta:", deltaStrk.toFixed(4));
       stopPolling();
-      useSwapStore.getState().depositDetected(delta);
+      useSwapStore.getState().depositDetected(deltaStrk, "STRK");
       return;
     }
 
@@ -84,7 +105,9 @@ export function useOnrampWatcher() {
     if (!pollRef.current) {
       console.log("[OnRamp:Watcher] Starting balance polling (every", POLL_INTERVAL / 1000, "s)", {
         wallet: accountAddress?.slice(0, 10) + "...",
+        depositSource,
         currentBalance: strkBalance.toFixed(4) + " STRK",
+        currentUsdcBalance: usdcBalance.toFixed(4) + " USDC",
       });
       pollRef.current = setInterval(() => {
         console.log("[OnRamp:Watcher] Polling... refreshing token balances");
@@ -95,7 +118,18 @@ export function useOnrampWatcher() {
     return () => {
       stopPolling();
     };
-  }, [stage, initialStrkBalance, walletAddress, strkBalance, accountAddress, stopPolling, refreshTokenBalances]);
+  }, [
+    stage,
+    initialStrkBalance,
+    initialUsdcBalance,
+    depositSource,
+    walletAddress,
+    strkBalance,
+    usdcBalance,
+    accountAddress,
+    stopPolling,
+    refreshTokenBalances,
+  ]);
 
   // Also refresh on tab visibility change (browser throttles timers in background)
   useEffect(() => {

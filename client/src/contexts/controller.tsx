@@ -36,7 +36,7 @@ export interface ControllerContext {
   acceptTermsOfService: () => void;
   openBuyTicket: () => void;
   bulkMintGames: (amount: number, callback: () => void) => void;
-  purchaseGames: (txs: any[], amount: number, callback: () => void) => void;
+  purchaseGames: (txs: any[], amount: number, callback: () => void, gasTokenAddress?: string) => void;
   refreshTokenBalances: () => Promise<Record<string, string>>;
 }
 
@@ -184,7 +184,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   };
 
   // Buy multiple games with prepended swap calls (e.g. STRK → tickets + mint all)
-  const purchaseGames = async (txs: any[], amount: number, callback: () => void) => {
+  const purchaseGames = async (txs: any[], amount: number, callback: () => void, gasTokenAddress?: string) => {
     if (!account) return;
     amount = Math.min(amount, 50);
     const resolvedName = resolvePlayerName();
@@ -198,7 +198,9 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
       () => {
         fetchTokenBalances();
         callback();
-      }
+      },
+      undefined,
+      gasTokenAddress
     );
   };
 

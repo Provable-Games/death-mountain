@@ -1,3 +1,4 @@
+import { PaymentModal, usePaymentSession } from "@chainrails/react";
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
@@ -20,7 +21,6 @@ import {
   Menu,
   MenuItem,
   Tab,
-  TextField,
   Tabs,
   Typography,
 } from "@mui/material";
@@ -821,122 +821,33 @@ const FiatTabContent = memo(({
 });
 FiatTabContent.displayName = "FiatTabContent";
 
-// Cross-chain tab — Chainrails intent flow (STRK-targeted)
+// Cross-chain tab — Chainrails modal flow (USDC on Starknet)
 const ChainrailsTabContent = memo(({
   walletAddress,
-  totalFiatUsd,
-  minFiatGames,
   strkPerGame,
   isMinting,
-  strkBalance,
-  strkQuoteForGames,
   onPaymentSuccess,
 }: {
   walletAddress: string;
-  totalFiatUsd: number | null;
-  minFiatGames: number;
   strkPerGame: number | null;
   isMinting: boolean;
-  strkBalance?: number;
-  strkQuoteForGames?: number | null;
   onPaymentSuccess: () => void;
 }) => {
-  const [targetStrkAmount, setTargetStrkAmount] = useState(() => {
-    if (strkPerGame && Number.isFinite(strkPerGame) && strkPerGame > 0) {
-      return Math.ceil(strkPerGame).toString();
-    }
-    return "1";
-  });
+  const sessionUrl = useMemo(() => {
+    if (!walletAddress) return "";
+    return `/api/create-chainrails-session?recipient=${encodeURIComponent(walletAddress)}&amount=0`;
+  }, [walletAddress]);
 
-  const [loading, setLoading] = useState(false);
-  const [intentError, setIntentError] = useState<string | null>(null);
-  const [intentData, setIntentData] = useState<{
-    intentAddress: string;
-    requestedAmountStrk: string;
-    sourceChain: string;
-    sourceTokenSymbol: string;
-    sourceTokenAddress: string;
-    depositAmount?: string;
-    depositAmountFormatted?: string;
-    totalFeeFormatted?: string;
-    bridge?: string | null;
-  } | null>(null);
-  const [copySuccess, setCopySuccess] = useState(false);
-
-  const createIntent = useCallback(async () => {
-    if (!walletAddress) return;
-
-    const normalizedAmount = targetStrkAmount.replace(",", ".").trim();
-    const parsedAmount = Number(normalizedAmount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setIntentError("Enter a valid STRK amount");
-      return;
-    }
-
-    setLoading(true);
-    setIntentError(null);
-    setCopySuccess(false);
-
-    try {
-      const res = await fetch("/api/create-chainrails-intent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipient: walletAddress,
-          amount: normalizedAmount,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const upstreamMessage =
-          data?.upstreamBody?.message ||
-          data?.upstreamBody?.error ||
-          data?.details ||
-          data?.error;
-        throw new Error(upstreamMessage || "Failed to create Chainrails intent");
-      }
-
-      if (!data?.intentAddress) {
-        throw new Error("Intent created without address");
-      }
-
-      setIntentData({
-        intentAddress: data.intentAddress,
-        requestedAmountStrk: data.requestedAmountStrk,
-        sourceChain: data.sourceChain,
-        sourceTokenSymbol: data.sourceTokenSymbol,
-        sourceTokenAddress: data.sourceTokenAddress,
-        depositAmount: data.depositAmount,
-        depositAmountFormatted: data.depositAmountFormatted,
-        totalFeeFormatted: data.totalFeeFormatted,
-        bridge: data.bridge,
-      });
-
+  const cr = usePaymentSession({
+    session_url: sessionUrl,
+    onSuccess: () => {
+      console.log("[Chainrails] Payment successful");
       onPaymentSuccess();
-    } catch (error) {
-      console.error("[Chainrails] Intent creation error:", error);
-      const message = error instanceof Error ? error.message : "Failed to create intent";
-      setIntentError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [walletAddress, targetStrkAmount, onPaymentSuccess]);
-
-  const copyIntentAddress = useCallback(async () => {
-    if (!intentData?.intentAddress) return;
-
-    try {
-      await navigator.clipboard.writeText(intentData.intentAddress);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch {
-      setIntentError("Could not copy intent address");
-    }
-  }, [intentData]);
+    },
+    onCancel: () => {
+      console.log("[Chainrails] Payment cancelled");
+    },
+  });
 
   // Minting overlay
   const mintingOverlay = isMinting && (
@@ -947,7 +858,7 @@ const ChainrailsTabContent = memo(({
     }}>
       <CircularProgress size={40} sx={{ color: "#d0c98d", mb: 2 }} />
       <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1 }}>
-        Minting {minFiatGames} game{minFiatGames > 1 ? "s" : ""}...
+        Finishing your purchase...
       </Typography>
       <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
         Confirm the transaction in your wallet
@@ -972,43 +883,14 @@ const ChainrailsTabContent = memo(({
           </Typography>
         )}
         <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
-          Creates a Chainrails intent that targets STRK on Starknet
+          Pay from any chain and receive USDC on Starknet. The final swap uses gasless USDC fees.
         </Typography>
-      </Box>
-
-      {/* Target amount */}
-      <Box sx={{ mx: 2, mt: 1, mb: 1 }}>
-        <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.65)", mb: 0.75 }}>
-          Target STRK to receive
-        </Typography>
-        <TextField
-          fullWidth
-          size="small"
-          value={targetStrkAmount}
-          onChange={(e) => setTargetStrkAmount(e.target.value)}
-          placeholder="1"
-          disabled={loading || isMinting}
-          inputProps={{ inputMode: "decimal" }}
-          sx={{
-            "& .MuiInputBase-root": {
-              color: "#fff",
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderRadius: 1,
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(208, 201, 141, 0.25)",
-            },
-            "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(208, 201, 141, 0.5)",
-            },
-          }}
-        />
       </Box>
 
       {/* Error message */}
-      {intentError && (
+      {cr.error && (
         <Box sx={{ mx: 2, mb: 1, px: 2, py: 1, background: "rgba(244, 67, 54, 0.1)", border: "1px solid rgba(244, 67, 54, 0.3)", borderRadius: 1 }}>
-          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{intentError}</Typography>
+          <Typography sx={{ fontSize: 12, color: "#f44336", textAlign: "center" }}>{cr.error}</Typography>
         </Box>
       )}
 
@@ -1017,45 +899,17 @@ const ChainrailsTabContent = memo(({
         <Button
           variant="contained"
           sx={styles.activateButton}
-          onClick={createIntent}
+          onClick={cr.open}
           fullWidth
-          disabled={loading || isMinting || !walletAddress}
+          disabled={cr.isPending || isMinting || !sessionUrl}
         >
           <Typography sx={styles.buttonText}>
-            {loading ? "Creating intent..." : "Create STRK Intent"}
+            {cr.isPending ? "Initializing..." : "Pay Cross-Chain"}
           </Typography>
         </Button>
       </Box>
 
-      {intentData && (
-        <Box sx={{ mx: 2, mb: 2, px: 2, py: 1.5, background: "rgba(208, 201, 141, 0.08)", border: "1px solid rgba(208, 201, 141, 0.25)", borderRadius: 1 }}>
-          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.65)", mb: 0.5 }}>
-            Send
-            {" "}
-            <strong>{intentData.depositAmountFormatted || intentData.depositAmount || "(see wallet)"}</strong>
-            {" "}
-            <strong>{intentData.sourceTokenSymbol}</strong>
-            {" "}
-            on
-            {" "}
-            <strong>{intentData.sourceChain}</strong>
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.65)", mb: 0.75 }}>
-            To this one-time intent address:
-          </Typography>
-          <Typography sx={{ fontSize: 11, fontFamily: "monospace", color: "#d0c98d", wordBreak: "break-all", mb: 1 }}>
-            {intentData.intentAddress}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <Button size="small" variant="outlined" onClick={copyIntentAddress} sx={{ borderColor: "rgba(208, 201, 141, 0.4)", color: "#d0c98d" }}>
-              Copy address
-            </Button>
-            {copySuccess && (
-              <Typography sx={{ fontSize: 11, color: "#80FF00" }}>Copied</Typography>
-            )}
-          </Box>
-        </Box>
-      )}
+      <PaymentModal {...cr} styles={{ accentColor: "#d0c98d", theme: "dark" }} excludeChains={["STARKNET" as any]} />
     </Box>
   );
 });
@@ -1120,6 +974,10 @@ export default function PaymentOptionsModal({
   // Current STRK balance (for fiat funded phase)
   const strkBalance = useMemo(() => {
     return Number(tokenBalances["STRK"] || 0);
+  }, [tokenBalances]);
+
+  const usdcBalance = useMemo(() => {
+    return Number(tokenBalances["USDC"] || 0);
   }, [tokenBalances]);
 
   // --- State ---
@@ -1319,14 +1177,19 @@ export default function PaymentOptionsModal({
 
     const registerOnrampIntent = async () => {
       let initialBalance = strkBalance;
+      let initialUsdc = usdcBalance;
       let source: "cached" | "refreshed" = "cached";
 
       try {
         const refreshedBalances = await refreshTokenBalances();
         const refreshedStrk = Number(refreshedBalances["STRK"] ?? NaN);
+        const refreshedUsdc = Number(refreshedBalances["USDC"] ?? NaN);
         if (Number.isFinite(refreshedStrk)) {
           initialBalance = refreshedStrk;
           source = "refreshed";
+        }
+        if (Number.isFinite(refreshedUsdc)) {
+          initialUsdc = refreshedUsdc;
         }
       } catch (error) {
         console.warn("[OnRamp] Failed to refresh STRK balance before intent registration", error);
@@ -1335,9 +1198,15 @@ export default function PaymentOptionsModal({
       const latestSwapState = useSwapStore.getState();
       if (latestSwapState.stage !== "idle") return;
 
-      latestSwapState.startOnramp(initialBalance, accountAddress, activeTab === "crosschain" ? "chainrails" : "onramper");
+      latestSwapState.startOnramp(
+        initialBalance,
+        accountAddress,
+        activeTab === "crosschain" ? "chainrails" : "onramper",
+        initialUsdc
+      );
       console.log("[OnRamp] On-ramp intent registered:", {
         initialStrkBalance: initialBalance,
+        initialUsdcBalance: initialUsdc,
         source,
       });
     };
@@ -1345,7 +1214,7 @@ export default function PaymentOptionsModal({
     registerOnrampIntent().finally(() => {
       registeringOnrampIntent.current = false;
     });
-  }, [activeTab, specialView, open, isMinting, accountAddress, strkBalance, refreshTokenBalances]);
+  }, [activeTab, specialView, open, isMinting, accountAddress, strkBalance, usdcBalance, refreshTokenBalances]);
 
   // Show checkout overlay after returning from the provider tab.
   // This keeps users informed while we keep tracking in the background.
@@ -1628,16 +1497,12 @@ export default function PaymentOptionsModal({
                       {activeTab === "crosschain" && (
                         <ChainrailsTabContent
                           walletAddress={accountAddress}
-                          totalFiatUsd={totalFiatUsd}
-                          minFiatGames={minFiatGames}
                           strkPerGame={strkQuoteForGames && minFiatGames > 0 ? strkQuoteForGames / minFiatGames : null}
                           isMinting={isMinting}
-                          strkBalance={strkBalance}
-                          strkQuoteForGames={strkQuoteForGames}
                           onPaymentSuccess={() => {
                             const swapState = useSwapStore.getState();
                             if (swapState.stage === "idle") {
-                              swapState.startOnramp(strkBalance, accountAddress!, "chainrails");
+                              swapState.startOnramp(strkBalance, accountAddress!, "chainrails", usdcBalance);
                             }
                           }}
                         />

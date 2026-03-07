@@ -3,10 +3,10 @@ import { persist } from "zustand/middleware";
 
 export type SwapStage =
   | "idle"
-  | "waiting_deposit"  // Waiting for STRK to arrive
-  | "deposit_detected" // STRK deposit detected
+  | "waiting_deposit"  // Waiting for funded token to arrive
+  | "deposit_detected" // Deposit detected
   | "quoting"          // Fetching swap quote from Ekubo
-  | "swapping"         // Executing STRK -> TICKET swap
+  | "swapping"         // Executing token -> TICKET swap
   | "minting"          // Minting game tokens
   | "done"             // All complete
   | "error";           // Something failed
@@ -16,6 +16,8 @@ export type OnrampStatus =
 
 /** Which provider initiated the deposit flow */
 export type DepositSource = "onramper" | "chainrails";
+export type DepositTokenSymbol = "STRK" | "USDC";
+
 interface SwapState {
   stage: SwapStage;
   gamesMinted: number;
@@ -27,13 +29,15 @@ interface SwapState {
   onrampProvider: string | null;
   onrampPaymentMethod: string | null;
   initialStrkBalance: number | null;
+  initialUsdcBalance: number | null;
   walletAddress: string | null;
   depositAmount: number | null;
+  depositTokenSymbol: DepositTokenSymbol | null;
   isSwapping: boolean;
   depositSource: DepositSource | null;
 
-  startOnramp: (initialBalance: number, wallet: string, source?: DepositSource) => void;
-  depositDetected: (amount: number) => void;
+  startOnramp: (initialStrkBalance: number, wallet: string, source?: DepositSource, initialUsdcBalance?: number) => void;
+  depositDetected: (amount: number, tokenSymbol?: DepositTokenSymbol) => void;
   setStage: (stage: SwapStage) => void;
   setError: (message: string) => void;
   complete: (gamesMinted: number) => void;
@@ -62,8 +66,10 @@ const INITIAL_STATE = {
   onrampProvider: null,
   onrampPaymentMethod: null,
   initialStrkBalance: null,
+  initialUsdcBalance: null,
   walletAddress: null,
   depositAmount: null,
+  depositTokenSymbol: null,
   isSwapping: false,
   depositSource: null,
 };
@@ -73,16 +79,18 @@ export const useSwapStore = create<SwapState>()(
     (set) => ({
       ...INITIAL_STATE,
 
-      startOnramp: (initialBalance, wallet, source) =>
+      startOnramp: (initialStrkBalance, wallet, source, initialUsdcBalance = 0) =>
         set({
           stage: "waiting_deposit",
           gamesMinted: 0,
           errorMessage: null,
           startedAt: Date.now(),
           popupDismissed: false,
-          initialStrkBalance: initialBalance,
+          initialStrkBalance,
+          initialUsdcBalance,
           walletAddress: wallet,
           depositAmount: null,
+          depositTokenSymbol: null,
           isSwapping: false,
           onrampStatus: "idle",
           onrampTransactionId: null,
@@ -91,8 +99,8 @@ export const useSwapStore = create<SwapState>()(
           depositSource: source || "onramper",
         }),
 
-      depositDetected: (amount: number) =>
-        set({ stage: "deposit_detected", depositAmount: amount }),
+      depositDetected: (amount: number, tokenSymbol: DepositTokenSymbol = "STRK") =>
+        set({ stage: "deposit_detected", depositAmount: amount, depositTokenSymbol: tokenSymbol }),
 
       setStage: (stage: SwapStage) => set({ stage, errorMessage: null }),
 
@@ -140,8 +148,10 @@ export const useSwapStore = create<SwapState>()(
         onrampStatus: state.onrampStatus,
         onrampTransactionId: state.onrampTransactionId,
         initialStrkBalance: state.initialStrkBalance,
+        initialUsdcBalance: state.initialUsdcBalance,
         walletAddress: state.walletAddress,
         depositAmount: state.depositAmount,
+        depositTokenSymbol: state.depositTokenSymbol,
         depositSource: state.depositSource,
       }),
       merge: (persistedState, currentState) => {

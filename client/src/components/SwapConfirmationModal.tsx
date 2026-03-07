@@ -12,14 +12,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Contract } from "starknet";
 
 /**
- * Confirmation modal shown when STRK deposit is detected.
- * Displays how much STRK arrived and estimated games, lets user
+ * Confirmation modal shown when a supported deposit is detected.
+ * Displays how much token arrived and estimated games, lets user
  * confirm the swap or dismiss.
  *
  * Style: centered card, Loot Survivor design (dark green, gold accents).
  */
 export default function SwapConfirmationModal() {
-  const { stage, depositAmount, walletAddress, isSwapping, reset } = useSwapStore();
+  const { stage, depositAmount, depositTokenSymbol, walletAddress, isSwapping, reset } = useSwapStore();
   const { purchaseGames } = useController();
   const { provider } = useProvider();
   const { address: accountAddress } = useAccount();
@@ -42,9 +42,9 @@ export default function SwapConfirmationModal() {
     [provider, currentNetworkConfig.ekuboRouter]
   );
 
-  const strkToken = useMemo(
-    () => currentNetworkConfig.paymentTokens.find((t: any) => t.name === "STRK"),
-    [currentNetworkConfig.paymentTokens]
+  const depositToken = useMemo(
+    () => currentNetworkConfig.paymentTokens.find((t: any) => t.name === (depositTokenSymbol || "STRK")),
+    [currentNetworkConfig.paymentTokens, depositTokenSymbol]
   );
 
   const show =
@@ -57,14 +57,19 @@ export default function SwapConfirmationModal() {
 
   // Fetch estimated games when modal becomes visible
   useEffect(() => {
-    if (!show || !strkToken || !dungeon.ticketAddress || !depositAmount) return;
+    if (!show || !depositToken || !dungeon.ticketAddress || !depositAmount) return;
 
     let cancelled = false;
     setQuoteLoading(true);
     setQuoteError(null);
     setEstimatedGames(null);
 
-    estimateGamesForDeposit(depositAmount, strkToken.address, dungeon.ticketAddress)
+    estimateGamesForDeposit(
+      depositAmount,
+      depositToken.address,
+      dungeon.ticketAddress,
+      depositToken.decimals || 18
+    )
       .then((games) => {
         if (!cancelled) {
           setEstimatedGames(games);
@@ -82,19 +87,24 @@ export default function SwapConfirmationModal() {
     return () => {
       cancelled = true;
     };
-  }, [show, depositAmount, strkToken, dungeon.ticketAddress]);
+  }, [show, depositAmount, depositToken, dungeon.ticketAddress]);
 
   const handleConfirm = useCallback(() => {
-    if (!depositAmount || !strkToken || !dungeon.ticketAddress || !routerContract) return;
+    if (!depositAmount || !depositToken || !dungeon.ticketAddress || !routerContract) return;
+
+    const gasTokenAddress = depositToken.name === "USDC" ? depositToken.address : undefined;
 
     executeSwapAndMint({
       depositAmount,
-      strkTokenAddress: strkToken.address,
+      inputTokenAddress: depositToken.address,
+      inputTokenSymbol: depositToken.name || depositTokenSymbol || "STRK",
+      inputTokenDecimals: depositToken.decimals || 18,
       ticketAddress: dungeon.ticketAddress,
       routerContract,
       purchaseGames,
+      gasTokenAddress,
     });
-  }, [depositAmount, strkToken, dungeon.ticketAddress, routerContract, purchaseGames]);
+  }, [depositAmount, depositToken, depositTokenSymbol, dungeon.ticketAddress, routerContract, purchaseGames]);
 
   const handleDismiss = useCallback(() => {
     reset();
@@ -119,7 +129,7 @@ export default function SwapConfirmationModal() {
 
               {/* Title */}
               <Box sx={styles.titleContainer}>
-                <Typography sx={styles.title}>STRK RECEIVED</Typography>
+                <Typography sx={styles.title}>{depositTokenSymbol || "STRK"} RECEIVED</Typography>
                 <Box sx={styles.titleUnderline} />
               </Box>
 
@@ -130,7 +140,7 @@ export default function SwapConfirmationModal() {
               {/* Deposit info */}
               <Box sx={styles.infoCard}>
                 <Typography sx={styles.depositAmount}>
-                  +{depositAmount.toLocaleString(undefined, { maximumFractionDigits: 1 })} STRK
+                  +{depositAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {depositTokenSymbol || "STRK"}
                 </Typography>
 
                 {quoteLoading && (
