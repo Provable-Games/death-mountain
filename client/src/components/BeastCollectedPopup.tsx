@@ -112,6 +112,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingRight: 'env(safe-area-inset-right, 0px)',
+    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+    paddingLeft: 'env(safe-area-inset-left, 0px)',
+    boxSizing: 'border-box',
   },
   card: {
     width: 370,

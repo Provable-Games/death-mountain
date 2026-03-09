@@ -298,7 +298,7 @@ export default function WatchPage() {
           <>
             <Box />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
               <VisibilityIcon sx={styles.visibilityIcon} />
               <Typography sx={styles.text}>
                 Spectating
@@ -397,6 +397,7 @@ const styles = {
     '&:hover': {
       color: 'rgba(255, 0, 0, 0.6)',
     },
+    marginBottom: '24px',
   },
   text: {
     color: 'rgba(128, 255, 0, 1)',
