@@ -239,6 +239,34 @@ export default function SettingsOverlay() {
                 </Button>
               </Box>
 
+              {/* Legal Links (free-to-play only) */}
+              {dungeon.hideController && (
+                <Box sx={styles.section}>
+                  <Typography sx={styles.sectionTitle}>Legal</Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Typography
+                      component="a"
+                      href="https://provable.games/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={styles.legalLink}
+                    >
+                      Terms of Service
+                    </Typography>
+                    <Typography sx={{ color: 'rgba(208, 201, 141, 0.3)' }}>|</Typography>
+                    <Typography
+                      component="a"
+                      href="https://provable.games/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={styles.legalLink}
+                    >
+                      Privacy Policy
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
               <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
               {/* Client Section */}
@@ -470,6 +498,16 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 0.75,
+  },
+  legalLink: {
+    color: '#d0c98d',
+    fontSize: '12px',
+    textDecoration: 'none',
+    opacity: 0.7,
+    '&:hover': {
+      opacity: 1,
+      textDecoration: 'underline',
+    },
   },
   switch: {
     '& .MuiSwitch-switchBase.Mui-checked': {

@@ -435,7 +435,8 @@ const styles = {
     paddingBottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
   },
   characterContainer: {
-    height: 'auto',
+    height: 'calc(100% - 85px)',
+    overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
     padding: '10px',

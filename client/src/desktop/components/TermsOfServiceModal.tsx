@@ -71,7 +71,7 @@ const TermsOfServiceModal = ({
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1.1rem", color: "white" }}>
-          Loot Survivor 2 - Terms of Service
+          Loot Survivor - Terms of Service
         </Typography>
       </Box>
 
@@ -131,7 +131,7 @@ const TermsOfServiceModal = ({
             }}
           >
             These Terms of Service ("Terms") govern your access to and use of
-            the Loot Survivor 2 game ("Game"), including any related websites,
+            the Loot Survivor game ("Game"), including any related websites,
             smart contracts, tokens, and services (collectively, the
             "Services"). The Game is created and operated by Provable Labs Ltd.,
             a company incorporated in the British Virgin Islands ("Provable
@@ -151,7 +151,7 @@ const TermsOfServiceModal = ({
               </li>
               <li>
                 You are solely responsible for ensuring that your participation
-                in Loot Survivor 2 complies with all laws and regulations in
+                in Loot Survivor complies with all laws and regulations in
                 your jurisdiction.
               </li>
               <li>
@@ -163,7 +163,7 @@ const TermsOfServiceModal = ({
             <strong>2. Game Mechanics</strong>
             <ul>
               <li>
-                Loot Survivor 2 operates entirely on blockchain-based immutable
+                Loot Survivor operates entirely on blockchain-based immutable
                 smart contracts.
               </li>
               <li>
@@ -177,7 +177,7 @@ const TermsOfServiceModal = ({
             </ul>
             <strong>3. Risk of Loss</strong>
             <br />
-            All transactions and gameplay actions in Loot Survivor 2 are final
+            All transactions and gameplay actions in Loot Survivor are final
             and irreversible.
             <br />
             <br />
@@ -212,7 +212,7 @@ const TermsOfServiceModal = ({
             <strong>5. No Recourse</strong>
             <ul>
               <li>
-                By participating in Loot Survivor 2, you waive all rights to
+                By participating in Loot Survivor, you waive all rights to
                 claims or recourse against Provable Labs, the DAO, or any
                 associated entities or individuals.
               </li>
@@ -243,17 +243,17 @@ const TermsOfServiceModal = ({
             <strong>7. Intellectual Property (CC0)</strong>
             <ul>
               <li>
-                Loot Survivor 2 and its related creative works are released
+                Loot Survivor and its related creative works are released
                 under the Creative Commons CC0 Public Domain Dedication.
               </li>
               <li>
                 This means you are free to copy, modify, distribute, and use the
-                content of Loot Survivor 2, even for commercial purposes,
+                content of Loot Survivor, even for commercial purposes,
                 without asking permission.
               </li>
               <li>
                 Provable Labs makes no claim of copyright, trademark, or other
-                intellectual property rights over the Loot Survivor 2 creative
+                intellectual property rights over the Loot Survivor creative
                 works.
               </li>
               <li>
@@ -298,13 +298,13 @@ const TermsOfServiceModal = ({
                 revised version.
               </li>
               <li>
-                Continued participation in Loot Survivor 2 after updates
+                Continued participation in Loot Survivor after updates
                 constitutes acceptance of the new Terms.
               </li>
             </ul>
             <strong>11. Acknowledgment</strong>
             <br />
-            By participating in Loot Survivor 2, you confirm that you have read,
+            By participating in Loot Survivor, you confirm that you have read,
             understood, and agreed to these Terms, and that you accept all risks
             and responsibilities associated with participation.
           </Typography>

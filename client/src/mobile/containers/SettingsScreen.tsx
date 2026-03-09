@@ -183,6 +183,36 @@ export default function SettingsScreen() {
         </Box>
       </Box>
 
+      {/* Legal Section (free-to-play only) */}
+      {dungeon.hideController && (
+        <Box sx={styles.section}>
+          <Box sx={styles.sectionHeader}>
+            <Typography sx={styles.sectionTitle}>Legal</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <Typography
+              component="a"
+              href="https://provable.games/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={styles.legalLink}
+            >
+              Terms of Service
+            </Typography>
+            <Typography sx={{ color: 'rgba(128, 255, 0, 0.3)' }}>|</Typography>
+            <Typography
+              component="a"
+              href="https://provable.games/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={styles.legalLink}
+            >
+              Privacy Policy
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Actions Section */}
       <Box sx={styles.section}>
         <Box sx={styles.sectionHeader}>
@@ -342,6 +372,17 @@ const styles = {
     },
     '&:hover': {
       backgroundColor: 'rgba(128, 255, 0, 0.08)',
+    },
+  },
+  legalLink: {
+    color: '#80FF00',
+    fontSize: '0.85rem',
+    textDecoration: 'none',
+    fontFamily: 'VT323, monospace',
+    opacity: 0.7,
+    '&:hover': {
+      opacity: 1,
+      textDecoration: 'underline',
     },
   },
   checkboxLabel: {

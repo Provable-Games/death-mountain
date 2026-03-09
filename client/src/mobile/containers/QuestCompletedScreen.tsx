@@ -10,8 +10,6 @@ export default function QuestCompletedScreen() {
   const navigate = useNavigate();
   const dungeon = useDungeon();
 
-  const shareMessage = `I completed Quest ${quest?.id} in Loot Survivor 2! Want to see how I did it? Watch my replay here: lootsurvivor.io/watch/${gameId} 🗡️⚔️ @provablegames @lootsurvivor`;
-
   const backToCampaign = () => {
     // Store completed quest in localStorage
     if (quest) {

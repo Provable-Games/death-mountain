@@ -182,7 +182,7 @@ export default function MainMenu() {
           {!showGames && !showSettings && !showLeaderboard && (
             <>
               <Box sx={styles.headerBox}>
-                <Typography sx={styles.gameTitle}>LOOT SURVIVOR 2</Typography>
+                <Typography sx={styles.gameTitle}>LOOT SURVIVOR</Typography>
                 <Typography color="secondary" sx={styles.modeTitle}>
                   {dungeon.name}
                 </Typography>
