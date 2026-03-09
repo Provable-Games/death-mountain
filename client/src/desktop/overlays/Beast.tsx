@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { JACKPOT_BEASTS } from '@/constants/beast';
 import { useDynamicConnector } from '@/contexts/starknet';
 import { useGameStore } from '@/stores/gameStore';
@@ -56,7 +57,7 @@ export default function Beast() {
               left: '50%',
               transform: 'translate(-50%, -50%)'
             }} />
-        </Box> : <img src="/images/beast.png" alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
+        </Box> : <img src={assetUrl("/images/beast.png")} alt="Beast" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />}
 
         <Box sx={[styles.beastLevelCircle, { left: -4 }, collectable && styles.collectableLevelCircle]}>
           <WeaponTooltip beastId={beast!.id} />
@@ -124,7 +125,7 @@ export default function Beast() {
               {calculateGoldReward(beast!, adventurer!.equipment.ring)}
             </Typography>
             <img
-              src="/images/mobile/gold.png"
+              src={assetUrl("/images/mobile/gold.png")}
               alt="Gold"
               style={{ width: '11px', height: '11px', marginLeft: '2px', paddingBottom: '1px' }}
             />

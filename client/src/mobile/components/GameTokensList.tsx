@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
@@ -164,7 +165,7 @@ export default function GameTokensList() {
                   }}
                 >
                   <img
-                    src={"/images/mobile/adventurer.png"}
+                    src={assetUrl("/images/mobile/adventurer.png")}
                     alt="Adventurer"
                     style={{ width: "32px", height: "32px" }}
                   />

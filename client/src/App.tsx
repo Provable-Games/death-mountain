@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { SnackbarProvider } from 'notistack';
-import { BrowserRouter, Route, Routes, } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes, } from "react-router-dom";
 
 import { ControllerProvider, useController } from '@/contexts/controller';
 import { SoundProvider } from '@/desktop/contexts/Sound';
@@ -96,8 +96,10 @@ function AppContent() {
 }
 
 function App() {
+  const Router = import.meta.env.VITE_ITCH === 'true' ? HashRouter : BrowserRouter;
+
   return (
-    <BrowserRouter>
+    <Router>
       <StyledEngineProvider injectFirst>
         <SnackbarProvider anchorOrigin={{ vertical: 'top', horizontal: 'center' }} preventDuplicate autoHideDuration={3000}>
           <ControllerProvider>
@@ -107,7 +109,7 @@ function App() {
           </ControllerProvider>
         </SnackbarProvider>
       </StyledEngineProvider>
-    </BrowserRouter >
+    </Router>
   );
 }
 

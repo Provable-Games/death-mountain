@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import Countdown from '@/desktop/overlays/Countdown';
 import MainMenu from '@/desktop/overlays/MainMenu';
 import { gameAssets, prefetchStream, preloadAssets } from '@/utils/assetLoader';
@@ -11,7 +12,7 @@ export default function LandingPage() {
   useEffect(() => {
     // Load landing page image
     const img = new Image();
-    img.src = '/images/start.png';
+    img.src = assetUrl('/images/start.png');
     img.onload = () => {
       setImageLoaded(true);
       // Start preloading game assets after landing page is loaded
@@ -29,7 +30,7 @@ export default function LandingPage() {
         transition={{ duration: 0.8 }}
         className="imageContainer"
         style={{
-          backgroundImage: `url('/images/start.png')`,
+          backgroundImage: `url('${assetUrl('/images/start.png')}')`,
           backgroundColor: '#000', // Fallback color while loading
         }}
       >

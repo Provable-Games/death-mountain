@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
@@ -596,7 +597,7 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
           ...styles.buttonWrapper,
           ...(newMarket && styles.buttonWrapperHighlighted)
         }} onClick={handleOpen}>
-          <img src={'/images/market.png'} alt="Market" style={{ width: '90%', height: '90%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(50deg) brightness(0.93) saturate(1.05)' }} />
+          <img src={assetUrl('/images/market.png')} alt="Market" style={{ width: '90%', height: '90%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(50deg) brightness(0.93) saturate(1.05)' }} />
           {newMarket && marketAvailable && (
             <Box sx={styles.newIndicator}>!</Box>
           )}
@@ -654,7 +655,7 @@ export default function MarketOverlay({ disabledPurchase }: { disabledPurchase: 
                     <Box sx={styles.potionsSection}>
                       <Box sx={styles.potionSliderContainer}>
                         <Box sx={styles.potionLeftSection}>
-                          <Box component="img" src={'/images/health.png'} alt="Health Icon" sx={styles.potionImage} />
+                          <Box component="img" src={assetUrl('/images/health.png')} alt="Health Icon" sx={styles.potionImage} />
                           <Box sx={styles.potionInfo}>
                             <Typography>Potions</Typography>
                             <Typography sx={styles.potionHelperText}>+10 Health</Typography>

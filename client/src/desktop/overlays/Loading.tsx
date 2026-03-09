@@ -1,9 +1,10 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { Box, Typography } from '@mui/material';
 
 export default function LoadingOverlay() {
   return (
     <Box sx={styles.container}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/start.png')` }]} />
+      <Box sx={[styles.imageContainer, { backgroundImage: `url('${assetUrl('/images/start.png')}')` }]} />
       <Box sx={styles.loadingText}>
         <Typography sx={{ fontSize: '24px', fontWeight: '600' }}>Loading</Typography>
       </Box>

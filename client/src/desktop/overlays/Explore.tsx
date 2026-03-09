@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useExplorationWorker } from '@/hooks/useExplorationWorker';
 import { useGameStore } from '@/stores/gameStore';
@@ -100,7 +101,7 @@ export default function ExploreOverlay() {
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/game.png')` }]} />
+      <Box sx={[styles.imageContainer, { backgroundImage: `url('${assetUrl('/images/game.png')}')` }]} />
 
       {/* Adventurer Overlay */}
       <Adventurer />

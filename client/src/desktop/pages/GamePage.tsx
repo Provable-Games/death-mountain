@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import VideoPlayer from "@/desktop/components/VideoPlayer";
@@ -154,7 +155,7 @@ export default function GamePage() {
       {!showOverlay && (
         <Box
           className="imageContainer"
-          sx={{ backgroundImage: `url('/images/game.png')`, zIndex: 0 }}
+          sx={{ backgroundImage: `url('${assetUrl('/images/game.png')}')`, zIndex: 0 }}
         />
       )}
 

@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { BEAST_NAMES } from '@/constants/beast';
 import { useGameStore } from '@/stores/gameStore';
 import { screenVariants } from '@/utils/animations';
@@ -122,7 +123,7 @@ export default function BeastSlainScreen() {
                 <Box sx={styles.adventurerImageContainer}>
                   <Box
                     component="img"
-                    src={'/images/mobile/adventurer.png'}
+                    src={assetUrl('/images/mobile/adventurer.png')}
                     alt="Adventurer"
                     sx={styles.adventurerImage}
                   />
@@ -155,7 +156,7 @@ export default function BeastSlainScreen() {
 
                             <Box
                               component="img"
-                              src={'/images/mobile/gold.png'}
+                              src={assetUrl('/images/mobile/gold.png')}
                               alt="Gold"
                               sx={{ width: '20px', height: '20px', mr: '2px' }}
                             />

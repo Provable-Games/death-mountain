@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import {
   BEAST_NAME_PREFIXES,
   BEAST_NAME_SUFFIXES,
@@ -6,9 +7,9 @@ import {
 } from "@/constants/beast";
 
 export const beastTypeIcons = {
-  Brute: '/images/types/brute.svg',
-  Hunter: '/images/types/hunter.svg',
-  Magic: '/images/types/magic.svg',
+  Brute: assetUrl('/images/types/brute.svg'),
+  Hunter: assetUrl('/images/types/hunter.svg'),
+  Magic: assetUrl('/images/types/magic.svg'),
 };
 
 /**
@@ -118,12 +119,12 @@ export function getBeastName(id: number, level: number, special2: number, specia
 }
 
 export const getBeastImage = (name: string) => {
-  return `/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`
+  return assetUrl(`/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`)
 }
 
 export const getBeastImageById = (id: number) => {
   const name = BEAST_NAMES[id]
-  return `/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`
+  return assetUrl(`/images/beasts/${name.replace(" ", "_").toLowerCase()}.png`)
 }
 
 export const getTierGlowColor = (tier: string): string => {
@@ -273,12 +274,12 @@ export const getCollectableTraits = (seed: bigint) => {
 
 export const collectableImage = (name: string, traits: { shiny: boolean, animated: boolean }) => {
   if (traits.shiny && traits.animated) {
-    return `/images/nfts/animated/shiny/${name.toLowerCase()}.gif`;
+    return assetUrl(`/images/nfts/animated/shiny/${name.toLowerCase()}.gif`);
   } else if (traits.animated) {
-    return `/images/nfts/animated/regular/${name.toLowerCase()}.gif`;
+    return assetUrl(`/images/nfts/animated/regular/${name.toLowerCase()}.gif`);
   } else if (traits.shiny) {
-    return `/images/nfts/shiny/${name.toLowerCase()}.png`;
+    return assetUrl(`/images/nfts/shiny/${name.toLowerCase()}.png`);
   } else {
-    return `/images/nfts/regular/${name.toLowerCase()}.png`;
+    return assetUrl(`/images/nfts/regular/${name.toLowerCase()}.png`);
   }
 };

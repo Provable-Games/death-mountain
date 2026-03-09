@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { BEAST_MIN_DAMAGE } from '@/constants/beast';
 import AdventurerStats from '@/desktop/components/AdventurerStats';
 import ItemTooltip from '@/desktop/components/ItemTooltip';
@@ -17,14 +18,14 @@ import { useCallback, useEffect, useState } from 'react';
 type EquipmentSlot = 'weapon' | 'chest' | 'head' | 'waist' | 'foot' | 'hand' | 'neck' | 'ring';
 
 const equipmentSlots = [
-  { key: 'head' as EquipmentSlot, label: 'Head', style: { top: '8px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/head.svg' },
-  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '68px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/chest.svg' },
-  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '128px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/waist.svg' },
-  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '188px', left: '50%', transform: 'translate(-50%, 0)' }, icon: '/images/types/foot.svg' },
-  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '98px', left: '8px' }, icon: '/images/types/hand.svg' },
-  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '98px', right: '8px' }, icon: '/images/types/ring.svg' },
-  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '158px', left: '8px' }, icon: '/images/types/weapon.svg' },
-  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '38px', right: '8px' }, icon: '/images/types/neck.svg' },
+  { key: 'head' as EquipmentSlot, label: 'Head', style: { top: '8px', left: '50%', transform: 'translate(-50%, 0)' }, icon: assetUrl('/images/types/head.svg') },
+  { key: 'chest' as EquipmentSlot, label: 'Chest', style: { top: '68px', left: '50%', transform: 'translate(-50%, 0)' }, icon: assetUrl('/images/types/chest.svg') },
+  { key: 'waist' as EquipmentSlot, label: 'Waist', style: { top: '128px', left: '50%', transform: 'translate(-50%, 0)' }, icon: assetUrl('/images/types/waist.svg') },
+  { key: 'foot' as EquipmentSlot, label: 'Feet', style: { top: '188px', left: '50%', transform: 'translate(-50%, 0)' }, icon: assetUrl('/images/types/foot.svg') },
+  { key: 'hand' as EquipmentSlot, label: 'Hands', style: { top: '98px', left: '8px' }, icon: assetUrl('/images/types/hand.svg') },
+  { key: 'ring' as EquipmentSlot, label: 'Ring', style: { top: '98px', right: '8px' }, icon: assetUrl('/images/types/ring.svg') },
+  { key: 'weapon' as EquipmentSlot, label: 'Weapon', style: { top: '158px', left: '8px' }, icon: assetUrl('/images/types/weapon.svg') },
+  { key: 'neck' as EquipmentSlot, label: 'Neck', style: { top: '38px', right: '8px' }, icon: assetUrl('/images/types/neck.svg') },
 ];
 
 interface InventoryOverlayProps {
@@ -55,7 +56,7 @@ function CharacterEquipment({ isDropMode, itemsToDrop, onItemClick, newItems, on
   return (
     <Box sx={[styles.equipmentPanel, { height: advancedMode ? '315px' : '250px' }]}>
       <Box sx={styles.characterPortraitWrapper}>
-        <img src={'/images/adventurer.png'} alt="adventurer" style={{ ...styles.characterPortrait, objectFit: 'contain', position: 'absolute', left: '50%', top: '30%', transform: 'translate(-50%, -30%)', zIndex: 1, filter: 'drop-shadow(0 0 8px #000a)' }} />
+        <img src={assetUrl('/images/adventurer.png')} alt="adventurer" style={{ ...styles.characterPortrait, objectFit: 'contain', position: 'absolute', left: '50%', top: '30%', transform: 'translate(-50%, -30%)', zIndex: 1, filter: 'drop-shadow(0 0 8px #000a)' }} />
         {equipmentSlots.map(slot => {
           const item = adventurer?.equipment[slot.key];
           const metadata = item ? ItemUtils.getMetadata(item.id) : null;
@@ -533,7 +534,7 @@ export default function InventoryOverlay({ disabledEquip }: InventoryOverlayProp
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: 24, left: 24, zIndex: 100 }}>
         <Box sx={[styles.buttonWrapper, advancedMode && styles.advancedButtonWrapper]} onClick={() => setShowInventory(!showInventory)}>
-          <img src={'/images/inventory.png'} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />
+          <img src={assetUrl('/images/inventory.png')} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />
         </Box>
         {!advancedMode && <Typography sx={styles.inventoryLabel}>Inventory</Typography>}
       </Box>

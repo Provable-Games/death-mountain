@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from '@/constants/beast';
 import { OBSTACLE_NAMES } from '@/constants/obstacle';
 import { useDynamicConnector } from '@/contexts/starknet';
@@ -77,7 +78,7 @@ export default function DeathOverlay() {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/start.png')` }]} />
+      <Box sx={[styles.imageContainer, { backgroundImage: `url('${assetUrl('/images/start.png')}')` }]} />
 
       <Box sx={styles.content}>
         <Typography variant="h2" sx={styles.title}>

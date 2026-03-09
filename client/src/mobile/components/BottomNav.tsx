@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { useGameStore } from '@/stores/gameStore';
 import { useMarketStore } from '@/stores/marketStore';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -30,7 +31,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem, isExploring
   const navItems = [
     {
       key: 'GAME',
-      icon: <img src={'/images/mobile/adventurer.png'} alt="Game" style={{ height: 32 }} />,
+      icon: <img src={assetUrl('/images/mobile/adventurer.png')} alt="Game" style={{ height: 32 }} />,
       onClick: () => setActiveNavItem('GAME'),
       active: activeNavItem === 'GAME',
       disabled: isActionInProgress,
@@ -38,7 +39,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem, isExploring
     },
     {
       key: 'CHARACTER',
-      icon: <img src={'/images/inventory.png'} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />,
+      icon: <img src={assetUrl('/images/inventory.png')} alt="Inventory" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'hue-rotate(40deg) saturate(1.5) brightness(1.15) contrast(1.2)' }} />,
       onClick: () => setActiveNavItem('CHARACTER'),
       active: activeNavItem === 'CHARACTER',
       disabled: isActionInProgress,
@@ -46,7 +47,7 @@ export default function BottomNav({ activeNavItem, setActiveNavItem, isExploring
     },
     {
       key: 'MARKET',
-      icon: <img src={'/images/mobile/market.png'} alt="Market" style={{ height: 32 }} />,
+      icon: <img src={assetUrl('/images/mobile/market.png')} alt="Market" style={{ height: 32 }} />,
       onClick: () => { setActiveNavItem('MARKET'); setNewMarket(false); },
       active: activeNavItem === 'MARKET',
       hasNew: newMarket,

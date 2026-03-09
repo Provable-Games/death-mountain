@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
@@ -177,7 +178,7 @@ export default function MainMenu() {
                 sx={{ pl: 1, height: "36px" }}
               >
                 <img
-                  src="/images/practice.png"
+                  src={assetUrl("/images/practice.png")}
                   alt="practice"
                   style={{ width: 20, height: 20 }}
                 />

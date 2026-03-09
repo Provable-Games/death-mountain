@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import { STARTING_HEALTH } from '@/constants/game';
 import { useController } from '@/contexts/controller';
 import { useGameStore } from '@/stores/gameStore';
@@ -43,7 +44,7 @@ export default function Adventurer({ combatStats }: { combatStats?: CombatStats 
         sx={{ ...styles.portraitWrapper, cursor: 'pointer' }}
         onClick={() => setShowInventory(!showInventory)}
       >
-        <img src="/images/adventurer.png" alt="Adventurer" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+        <img src={assetUrl("/images/adventurer.png")} alt="Adventurer" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
         <Box sx={styles.levelCircle}>
           <Typography variant="body2" sx={styles.levelText}>
             {calculateLevel(adventurer?.xp || 0)}

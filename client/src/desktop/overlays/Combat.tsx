@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import AnimatedText from '@/desktop/components/AnimatedText';
 import { useGameDirector } from '@/desktop/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
@@ -445,7 +446,7 @@ export default function CombatOverlay() {
 
   return (
     <Box sx={[styles.container, spectating && styles.spectating]}>
-      {beast?.baseName && <Box sx={[styles.imageContainer, { backgroundImage: `url('/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png')` }]} />}
+      {beast?.baseName && <Box sx={[styles.imageContainer, { backgroundImage: `url('${assetUrl(`/images/battle_scenes/${isJackpot ? `jackpot_${beast!.baseName.toLowerCase()}` : beast!.baseName.toLowerCase()}.png`)}')` }]} />}
 
       {/* Adventurer */}
       <Adventurer combatStats={combatStats} />

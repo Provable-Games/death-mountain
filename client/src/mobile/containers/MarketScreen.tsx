@@ -1,3 +1,4 @@
+import { assetUrl } from '@/utils/assetUrl';
 import JewelryTooltip from '@/components/JewelryTooltip';
 import { MAX_BAG_SIZE, STARTING_HEALTH } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
@@ -231,7 +232,7 @@ export default function MarketScreen() {
           <Box sx={styles.potionsSection}>
             <Box sx={styles.potionSliderContainer}>
               <Box sx={styles.potionLeftSection}>
-                <Box component="img" src={'/images/health.png'} alt="Health Icon" sx={styles.potionImage} />
+                <Box component="img" src={assetUrl('/images/health.png')} alt="Health Icon" sx={styles.potionImage} />
                 <Box sx={styles.potionInfo}>
                   <Typography sx={styles.potionLabel}>Buy Potions</Typography>
                   <Typography sx={styles.potionHelperText}>+10 Health</Typography>
