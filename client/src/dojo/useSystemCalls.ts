@@ -28,7 +28,7 @@ export const useSystemCalls = () => {
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
-  const { account } = useController();
+  const { account, isControllerAccount } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
@@ -49,6 +49,10 @@ export const useSystemCalls = () => {
   )?.address;
 
   const executeCalls = async (account: any, calls: any[], gasTokenAddress?: string) => {
+    if (isControllerAccount) {
+      return account.execute(calls);
+    }
+
     if (!gasTokenAddress) {
       return account.execute(calls);
     }

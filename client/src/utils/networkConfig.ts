@@ -176,12 +176,23 @@ export function getDefaultChainId(): ChainId {
 
 // Mainnet policies (hardcoded contract addresses)
 const MAINNET_POLICIES = [
+  { target: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", method: "transfer" },
+  { target: "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", method: "transfer" },
+  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "clear" },
+  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "clear_minimum" },
+  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "multihop_swap" },
+  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "multi_multihop_swap" },
   { target: "0x0452810188C4Cb3AEbD63711a3b445755BC0D6C4f27B923fDd99B1A118858136", method: "approve" },
   { target: "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42", method: "buy_game" },
 ];
 
 // Sepolia policies — derived from the manifest game_token_systems + game_systems
 const SEPOLIA_POLICIES = [
+  { target: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", method: "transfer" },
+  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "clear" },
+  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "clear_minimum" },
+  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "multihop_swap" },
+  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "multi_multihop_swap" },
   { target: "0x7ae26eecf0274aabb31677753ff3a4e15beec7268fa1b104f73ce3c89202831", method: "approve" },
   { target: "0x3012c0bab9e1fb18c36ef4ce02876e2070bf679be4178aa451b6e9d0904a34f", method: "buy_game" },
 ];

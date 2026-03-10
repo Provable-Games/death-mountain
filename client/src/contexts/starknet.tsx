@@ -32,6 +32,7 @@ const cartridgeController =
   typeof window !== "undefined"
     ? new ControllerConnector({
       policies: controllerConfig.policies,
+      shouldOverridePresetPolicies: true,
       namespace: controllerConfig.namespace,
       slot: controllerConfig.slot,
       preset: controllerConfig.preset,

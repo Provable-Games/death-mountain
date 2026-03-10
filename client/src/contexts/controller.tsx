@@ -24,6 +24,7 @@ import { useDungeon } from "@/dojo/useDungeon";
 export interface ControllerContext {
   account: any;
   address: string | undefined;
+  isControllerAccount: boolean;
   playerName: string;
   isPending: boolean;
   tokenBalances: Record<string, string>;
@@ -53,6 +54,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
   const { buyGame } = useSystemCalls();
   const { connector, connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const isControllerAccount = connector?.id === "controller";
   const dungeon = useDungeon();
   const { currentNetworkConfig } = useDynamicConnector();
   const { createBurnerAccount, getTokenBalances, goldenPassReady } =
@@ -267,6 +269,7 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
           currentNetworkConfig.chainId === ChainId.WP_PG_SLOT
             ? burner?.address
             : address,
+        isControllerAccount,
         playerName: userName || "Adventurer",
         isPending: isConnecting || isPending || creatingBurner,
         tokenBalances,
