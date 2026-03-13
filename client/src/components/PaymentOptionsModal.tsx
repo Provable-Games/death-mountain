@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import ROUTER_ABI from "@/abi/router-abi.json";
 import { generateSwapCalls, getSwapQuote } from "@/api/ekubo";
 import { useController } from "@/contexts/controller";
@@ -522,7 +521,7 @@ export default function PaymentOptionsModal({
 
                         <Box sx={styles.goldenTokenContainer}>
                           <img
-                            src={assetUrl("/images/golden_token.svg")}
+                            src={"/images/golden_token.svg"}
                             alt="Golden Token"
                             style={{
                               width: "150px",
@@ -557,7 +556,7 @@ export default function PaymentOptionsModal({
 
                         <Box sx={styles.goldenTokenContainer}>
                           <img
-                            src={assetUrl("/images/dungeon_ticket.png")}
+                            src="/images/dungeon_ticket.png"
                             alt="Dungeon Ticket"
                             style={{
                               width: "120px",

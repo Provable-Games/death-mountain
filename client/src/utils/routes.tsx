@@ -14,8 +14,6 @@ import { ReactNode, useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { ChainId, getNetworkConfig, NetworkConfig } from "./networkConfig";
 
-const defaultDungeon = import.meta.env.VITE_ITCH === 'true' ? '/trials' : '/survivor';
-
 function DungeonRoute({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams();
   let dungeon = useDungeon();
@@ -49,7 +47,7 @@ function DungeonRoute({ children }: { children: ReactNode }) {
 export const desktopRoutes = [
   {
     path: '/',
-    content: <Navigate to={defaultDungeon} replace />,
+    content: <Navigate to="/survivor" replace />,
   },
   {
     path: '/:dungeonId',
@@ -84,7 +82,7 @@ export const desktopRoutes = [
 export const mobileRoutes = [
   {
     path: '/',
-    content: <Navigate to={defaultDungeon} replace />,
+    content: <Navigate to="/survivor" replace />,
   },
   {
     path: '/:dungeonId',

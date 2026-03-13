@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import { BEAST_NAME_PREFIXES, BEAST_NAME_SUFFIXES, BEAST_NAMES, BEAST_SPECIAL_NAME_LEVEL_UNLOCK } from "@/constants/beast";
 import { OBSTACLE_NAMES } from "@/constants/obstacle";
 import { Adventurer, Attack, Beast, Item, ItemPurchase, Obstacle, Stats, useEntityModel } from "@/types/game";
@@ -243,7 +242,7 @@ export const processGameEvent = (event: any, dungeon: Dungeon): GameEvent => {
 
 export const getVideoId = (event: GameEvent) => {
   if (event.type === 'beast') {
-    preloadAssets([assetUrl(`/images/battle_scenes/${event.beast!.baseName.toLowerCase()}.png`)]);
+    preloadAssets([`/images/battle_scenes/${event.beast!.baseName.toLowerCase()}.png`]);
     return streamIds[event.beast!.baseName as keyof typeof streamIds];
   } else if (event.type === 'obstacle') {
     return streamIds[OBSTACLE_NAMES[event.obstacle!.id as keyof typeof OBSTACLE_NAMES] as keyof typeof streamIds];
@@ -283,25 +282,25 @@ export const ExplorerReplayEvents = [
 export const getEventIcon = (event: GameEvent) => {
   switch (event.type) {
     case 'discovery':
-      if (event.discovery?.type === 'Gold') return assetUrl('/images/mobile/gold.png');
-      if (event.discovery?.type === 'Health') return assetUrl('/images/health.png');
+      if (event.discovery?.type === 'Gold') return '/images/mobile/gold.png';
+      if (event.discovery?.type === 'Health') return '/images/health.png';
       if (event.discovery?.type === 'Loot') return ItemUtils.getItemImage(event.discovery?.amount!);
     case 'obstacle':
       const obstacleName = OBSTACLE_NAMES[event.obstacle?.id!];
       const snakeCaseName = obstacleName.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-      return assetUrl(`/images/obstacles/${snakeCaseName}.png`);
+      return `/images/obstacles/${snakeCaseName}.png`;
     case 'defeated_beast':
       return getBeastImageById(event.beast_id!);
     case 'fled_beast':
       return getBeastImageById(event.beast_id!);
     case 'stat_upgrade':
-      return assetUrl('/images/mobile/adventurer.png');
+      return '/images/mobile/adventurer.png';
     case 'level_up':
-      return assetUrl('/images/mobile/upgrade.png');
+      return '/images/mobile/upgrade.png';
     case 'buy_items':
-      return assetUrl('/images/mobile/market.png');
+      return '/images/mobile/market.png';
     default:
-      return assetUrl('/images/mobile/adventurer.png');
+      return '/images/mobile/adventurer.png';
   }
 };
 

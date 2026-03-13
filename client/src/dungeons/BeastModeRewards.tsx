@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import {
   JACKPOT_AMOUNT,
   totalCollectableBeasts,
@@ -34,7 +33,7 @@ export default function BeastModeRewards() {
 
       <Box sx={styles.rewardSection}>
         <Box sx={styles.headerRow}>
-          <img src={assetUrl("/images/survivor_token.png")} alt="beast" height={52} />
+          <img src="/images/survivor_token.png" alt="beast" height={52} />
           <Typography sx={styles.rewardTitle}>Survivor Tokens</Typography>
         </Box>
 
@@ -125,7 +124,7 @@ export default function BeastModeRewards() {
 
       <Box sx={styles.rewardSection}>
         <Box sx={styles.headerRow}>
-          <img src={assetUrl("/images/beast.png")} alt="beast" height={54} />
+          <img src="/images/beast.png" alt="beast" height={54} />
           <Typography sx={styles.rewardTitle}>Collectable Beast</Typography>
         </Box>
         <Typography sx={styles.rewardSubtitle}>
@@ -193,19 +192,19 @@ export default function BeastModeRewards() {
 
         <Box mb={0.5} display="flex" justifyContent="space-between">
           <Box>
-            <img src={assetUrl("/images/jackpot_balrog.png")} alt="beast" height={80} />
+            <img src="/images/jackpot_balrog.png" alt="beast" height={80} />
             <Typography fontWeight={500} fontSize={13}>
               "Torment Bane" Balrog
             </Typography>
           </Box>
           <Box>
-            <img src={assetUrl("/images/jackpot_warlock.png")} alt="beast" height={80} />
+            <img src="/images/jackpot_warlock.png" alt="beast" height={80} />
             <Typography fontWeight={500} fontSize={13}>
               "Pain Whisper" Warlock
             </Typography>
           </Box>
           <Box sx={{ position: "relative" }}>
-            <img src={assetUrl("/images/jackpot_dragon.png")} alt="beast" height={80} />
+            <img src="/images/jackpot_dragon.png" alt="beast" height={80} />
             <Box
               sx={{
                 position: "absolute",

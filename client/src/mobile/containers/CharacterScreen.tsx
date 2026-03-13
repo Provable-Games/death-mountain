@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
 import { Item } from '@/types/game';
@@ -122,7 +121,7 @@ const ItemSlot = memo(({
           </>
         ) : (
           <Box sx={styles.itemImageContainer}>
-            <img src={assetUrl('/images/mobile/empty_slot.png')} alt={`Empty ${slot}`} style={{ ...styles.itemImage, opacity: 0.5 }} />
+            <img src={'/images/mobile/empty_slot.png'} alt={`Empty ${slot}`} style={{ ...styles.itemImage, opacity: 0.5 }} />
             <Typography variant="body2" sx={styles.itemName}>{slot.charAt(0).toUpperCase() + slot.slice(1)}</Typography>
           </Box>
         )}
@@ -259,7 +258,7 @@ export default function CharacterScreen() {
               {Array(15 - (bag?.length || 0)).fill(null).map((_, index) => (
                 <Box key={`empty-${index}`} sx={[styles.item, { opacity: 0.5 }]}>
                   <Box sx={styles.itemImageContainer}>
-                    <img src={assetUrl('/images/mobile/empty_slot.png')} alt="Empty slot" style={styles.itemImage} />
+                    <img src={'/images/mobile/empty_slot.png'} alt="Empty slot" style={styles.itemImage} />
                     <Typography variant="body2" sx={styles.itemName}>Empty</Typography>
                   </Box>
                 </Box>

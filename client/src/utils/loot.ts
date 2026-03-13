@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import { TIER_PRICE } from '@/constants/game';
 import {
   ITEM_NAME_PREFIXES,
@@ -18,25 +17,25 @@ import { Adventurer, Beast, Item, Stats } from '@/types/game';
 import { calculateLevel } from './game';
 
 export const slotIcons = {
-  Weapon: assetUrl('/images/types/weapon.svg'),
-  Head: assetUrl('/images/types/head.svg'),
-  Chest: assetUrl('/images/types/chest.svg'),
-  Waist: assetUrl('/images/types/waist.svg'),
-  Hand: assetUrl('/images/types/hand.svg'),
-  Foot: assetUrl('/images/types/foot.svg'),
-  Ring: assetUrl('/images/types/ring.svg'),
-  Neck: assetUrl('/images/types/neck.svg'),
+  Weapon: '/images/types/weapon.svg',
+  Head: '/images/types/head.svg',
+  Chest: '/images/types/chest.svg',
+  Waist: '/images/types/waist.svg',
+  Hand: '/images/types/hand.svg',
+  Foot: '/images/types/foot.svg',
+  Ring: '/images/types/ring.svg',
+  Neck: '/images/types/neck.svg',
 };
 
 export const typeIcons = {
-  Cloth: assetUrl('/images/types/cloth.svg'),
-  Hide: assetUrl('/images/types/hide.svg'),
-  Metal: assetUrl('/images/types/metal.svg'),
-  Magic: assetUrl('/images/types/magic.svg'),
-  Bludgeon: assetUrl('/images/types/bludgeon.svg'),
-  Blade: assetUrl('/images/types/blade.svg'),
-  Ring: assetUrl('/images/types/ring.svg'),
-  Necklace: assetUrl('/images/types/neck.svg'),
+  Cloth: '/images/types/cloth.svg',
+  Hide: '/images/types/hide.svg',
+  Metal: '/images/types/metal.svg',
+  Magic: '/images/types/magic.svg',
+  Bludgeon: '/images/types/bludgeon.svg',
+  Blade: '/images/types/blade.svg',
+  Ring: '/images/types/ring.svg',
+  Necklace: '/images/types/neck.svg',
 };
 
 // Create a mapping from ID to name
@@ -266,7 +265,7 @@ export const ItemUtils = {
 
     try {
       const fileName = name.replace(/ /g, "_").toLowerCase();
-      return assetUrl(`/images/loot/${fileName}.png`);
+      return `/images/loot/${fileName}.png`;
     } catch (ex) {
       return "";
     }

@@ -38,7 +38,7 @@ b {
 }
 
 .bgImage {
-  background-image: url("./images/mobile/background.png");
+  background-image: url("/images/mobile/background.png");
 }
 
 .main {

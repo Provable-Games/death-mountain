@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import { BEAST_MIN_DAMAGE, JACKPOT_BEASTS } from '@/constants/beast';
 import { STARTING_HEALTH } from '@/constants/game';
 import { useDynamicConnector } from '@/contexts/starknet';
@@ -498,7 +497,7 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
                       {calculateGoldReward(beast!, adventurer!.equipment.ring)}
                     </Typography>
                     <img
-                      src={assetUrl("/images/mobile/gold.png")}
+                      src="/images/mobile/gold.png"
                       alt="Gold"
                       style={{ width: '11px', height: '11px', marginLeft: '2px', paddingBottom: '1px' }}
                     />
@@ -557,7 +556,7 @@ export default function BeastScreen({ setIsBattling }: BeastScreenProps) {
           <Box sx={styles.adventurerStatusRow}>
             <Box sx={styles.adventurerImageContainerSmall}>
               <img
-                src={assetUrl('/images/mobile/adventurer.png')}
+                src={'/images/mobile/adventurer.png'}
                 alt="Adventurer"
                 style={styles.adventurerImageSmall}
               />

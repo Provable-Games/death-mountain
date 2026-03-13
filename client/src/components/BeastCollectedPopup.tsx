@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, IconButton, Paper, Typography, Link } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -49,7 +48,7 @@ export default function BeastCollectedPopup({ onClose, tokenURI, beast }: BeastC
             {!isJackpot && <>
               <Box
                 component="img"
-                src={assetUrl("/images/survivor_token.png")}
+                src="/images/survivor_token.png"
                 alt="Survivor Token"
                 sx={styles.tokenImage}
               />

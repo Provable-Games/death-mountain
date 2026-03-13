@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import { MAX_STAT_VALUE } from '@/constants/game';
 import { useGameDirector } from '@/mobile/contexts/GameDirector';
 import { useGameStore } from '@/stores/gameStore';
@@ -27,13 +26,13 @@ const STAT_DESCRIPTIONS_REDUCTION = {
 };
 
 const STAT_ICONS = {
-  strength: assetUrl('/images/types/Strength.svg'),
-  dexterity: assetUrl('/images/types/Dexterity.svg'),
-  vitality: assetUrl('/images/types/Vitality.svg'),
-  intelligence: assetUrl('/images/types/Intelligence.svg'),
-  wisdom: assetUrl('/images/types/Wisdom.svg'),
-  charisma: assetUrl('/images/types/Charisma.svg'),
-  luck: assetUrl('/images/types/Luck.svg'),
+  strength: '/images/types/Strength.svg',
+  dexterity: '/images/types/Dexterity.svg',
+  vitality: '/images/types/Vitality.svg',
+  intelligence: '/images/types/Intelligence.svg',
+  wisdom: '/images/types/Wisdom.svg',
+  charisma: '/images/types/Charisma.svg',
+  luck: '/images/types/Luck.svg',
 };
 
 export default function StatSelectionScreen() {

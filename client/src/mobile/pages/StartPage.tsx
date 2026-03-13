@@ -1,4 +1,3 @@
-import { assetUrl } from '@/utils/assetUrl';
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import PriceIndicator from "@/components/PriceIndicator";
 import { useController } from "@/contexts/controller";
@@ -91,7 +90,7 @@ export default function LandingPage() {
                 disabled={disableGameButtons}
                 startIcon={
                   <img
-                    src={assetUrl("/images/mobile/dice.png")}
+                    src={"/images/mobile/dice.png"}
                     alt="dice"
                     height="20px"
                     style={{ opacity: disableGameButtons ? 0.3 : 1 }}
