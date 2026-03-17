@@ -1,0 +1,46 @@
+name: Electron Windows Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/electron-desktop
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: client
+        run: pnpm install
+
+      - name: Build Electron TypeScript
+        working-directory: client
+        run: npx tsc -p electron/tsconfig.json
+
+      - name: Build Vite
+        working-directory: client
+        run: npx vite build
+
+      - name: Build Windows executable
+        working-directory: client
+        run: npx electron-builder --win --config.win.target=dir
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: loot-survivor-2-win-x64
+          path: client/release/win-unpacked/
+          retention-days: 30
