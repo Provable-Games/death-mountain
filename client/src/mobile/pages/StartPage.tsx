@@ -1,4 +1,6 @@
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
+import DungeonTicketBalance from "@/components/DungeonTicketBalance";
+import DungeonTicketTransferDialog from "@/components/DungeonTicketTransferDialog";
 import PriceIndicator from "@/components/PriceIndicator";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
@@ -25,6 +27,7 @@ export default function LandingPage() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDungeonRewards, setShowDungeonRewards] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
 
   const handleMainButtonClick = () => {
     if (dungeon.externalLink) {
@@ -201,6 +204,7 @@ export default function LandingPage() {
               )}
 
               {dungeon.ticketAddress && <PriceIndicator />}
+              {dungeon.ticketAddress && <DungeonTicketBalance onTransfer={() => setShowTransfer(true)} />}
             </>
           )}
 
@@ -282,6 +286,11 @@ export default function LandingPage() {
           onClose={() => setShowPaymentOptions(false)}
         />
       )}
+
+      <DungeonTicketTransferDialog
+        open={showTransfer}
+        onClose={() => setShowTransfer(false)}
+      />
     </>
   );
 }

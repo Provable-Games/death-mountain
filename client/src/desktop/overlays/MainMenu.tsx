@@ -26,6 +26,8 @@ import { useAccount } from "@starknet-react/core";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DungeonTicketBalance from "../../components/DungeonTicketBalance";
+import DungeonTicketTransferDialog from "../../components/DungeonTicketTransferDialog";
 import PriceIndicator from "../../components/PriceIndicator";
 import Leaderboard from "../components/Leaderboard";
 import WalletConnect from "../components/WalletConnect";
@@ -41,6 +43,7 @@ export default function MainMenu() {
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
   const [left, setLeft] = useState(getMenuLeftOffset());
 
   useEffect(() => {
@@ -240,6 +243,8 @@ export default function MainMenu() {
                 <>
                   <PriceIndicator />
 
+                  <DungeonTicketBalance onTransfer={() => setShowTransfer(true)} />
+
                   <Link
                     href="#"
                     sx={styles.learnMoreLink}
@@ -324,6 +329,11 @@ export default function MainMenu() {
           onClose={() => setShowPaymentOptions(false)}
         />
       )}
+
+      <DungeonTicketTransferDialog
+        open={showTransfer}
+        onClose={() => setShowTransfer(false)}
+      />
 
       {DungeonRewards ? <Box sx={[styles.rewardsContainer, { right: `${left + 32}px` }]}>
         <DungeonRewards />
