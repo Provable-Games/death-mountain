@@ -56,8 +56,7 @@ export default function DungeonTicketTransferDialog({
   }, [paymentTokens, tokenBalances, dungeon.ticketAddress]);
 
   const totalToSend = recipients.length * Number(amount || 0);
-  // const hasEnoughBalance = dungeonTicketCount >= totalToSend && totalToSend > 0;
-  const hasEnoughBalance = true;
+  const hasEnoughBalance = dungeonTicketCount >= totalToSend && totalToSend > 0;
 
   const isStarknetAddress = (input: string) => {
     return /^0x[0-9a-fA-F]{1,64}$/.test(input.trim());
