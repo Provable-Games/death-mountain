@@ -150,28 +150,9 @@ export async function executeProxySwapAndMint(params: ProxySwapParams): Promise<
       throw new Error("No USDC available for swap");
     }
 
-    // Use 95% of deposit for quoting (leave margin for rounding/fees)
-    const depositUnits = BigInt(Math.floor(depositAmount * 0.95 * 10 ** USDC_DECIMALS));
+    const maxUsdcUnits = BigInt(Math.floor(depositAmount * 10 ** USDC_DECIMALS));
 
-    // 1. Forward quote: how many tickets can we get?
-    const forwardQuote = await getSwapQuote(depositUnits, usdcAddress, ticketAddress);
-    let gamesToBuy = Math.min(MAX_GAMES_PER_BATCH, Number(toAbsBigInt(forwardQuote?.total) / WEI));
-
-    if (gamesToBuy > 1) gamesToBuy -= 1; // safety margin
-    if (gamesToBuy < 1) throw new Error("Not enough USDC to buy even 1 game");
-
-    // 2. Reverse quote for exact ticket count
-    const ticketReverseQuote = await getSwapQuote(
-      -(BigInt(gamesToBuy) * WEI),
-      ticketAddress,
-      usdcAddress
-    );
-
-    if (!ticketReverseQuote?.splits?.length) {
-      throw new Error("No ticket swap route found");
-    }
-
-    // 3. STRK reserve quote
+    // 1. STRK reserve quote first (to know how much USDC is left for tickets)
     let reserveSwapKind = 0;
     let reserveSwapCalldata: string[] = [];
     let reserveUsdcIn = 0n;
@@ -194,19 +175,47 @@ export async function executeProxySwapAndMint(params: ProxySwapParams): Promise<
       }
     }
 
+    // 2. Quote tickets on remaining USDC after reserve
+    const ticketBudget = maxUsdcUnits - reserveUsdcIn;
+    const ticketBudgetBuffered = (ticketBudget * 90n) / 100n; // 10% buffer for slippage
+
+    if (ticketBudgetBuffered <= 0n) {
+      throw new Error("Not enough USDC after STRK reserve");
+    }
+
+    const forwardQuote = await getSwapQuote(ticketBudgetBuffered, usdcAddress, ticketAddress);
+    let gamesToBuy = Math.min(MAX_GAMES_PER_BATCH, Number(toAbsBigInt(forwardQuote?.total) / WEI));
+
+    if (gamesToBuy > 1) gamesToBuy -= 1; // safety margin
+    if (gamesToBuy < 1) throw new Error("Not enough USDC to buy even 1 game");
+
+    // 3. Reverse quote for exact ticket count
+    const ticketReverseQuote = await getSwapQuote(
+      -(BigInt(gamesToBuy) * WEI),
+      ticketAddress,
+      usdcAddress
+    );
+
+    if (!ticketReverseQuote?.splits?.length) {
+      throw new Error("No ticket swap route found");
+    }
+
     // 4. Encode ticket swap
     const ticketEncoded = encodeSwapCalldata(ticketReverseQuote, ticketAddress);
-
-    // max USDC = full deposit units (with small buffer)
-    const maxUsdcUnits = BigInt(Math.floor(depositAmount * 10 ** USDC_DECIMALS));
 
     store.setStage("swapping");
 
     console.log("[ProxySwap] Building tx:", {
+      depositAmount,
       gamesToBuy,
       maxUsdcUnits: maxUsdcUnits.toString(),
+      maxUsdcHuman: Number(maxUsdcUnits) / 1e6,
       reserveUsdcIn: reserveUsdcIn.toString(),
+      reserveUsdcHuman: Number(reserveUsdcIn) / 1e6,
       reserveStrkMinOut: reserveStrkMinOut.toString(),
+      ticketSwapKind: ticketEncoded.kind,
+      ticketSwapCalldataLen: ticketEncoded.calldata.length,
+      reserveSwapCalldataLen: reserveSwapCalldata.length,
     });
 
     // 5. Build multicall
@@ -236,6 +245,8 @@ export async function executeProxySwapAndMint(params: ProxySwapParams): Promise<
         ],
       },
     ];
+
+    console.log("[ProxySwap] Full calls:", JSON.stringify(calls, null, 2));
 
     store.setStage("minting");
     const tx = await account.execute(calls);
