@@ -4,6 +4,8 @@ import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { useSwapStore } from "@/stores/swapStore";
 import { STRK_RESERVE_USDC, estimateSwapPreview, executeSwapAndMint } from "@/utils/swapAndMint";
+import { executeProxySwapAndMint } from "@/utils/proxySwap";
+import { stringToFelt } from "@/utils/utils";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Button, CircularProgress, IconButton, Typography } from "@mui/material";
 import { useAccount, useProvider } from "@starknet-react/core";
@@ -20,9 +22,9 @@ import { Contract } from "starknet";
  */
 export default function SwapConfirmationModal() {
   const { stage, depositAmount, depositTokenSymbol, walletAddress, isSwapping, reset } = useSwapStore();
-  const { purchaseGames } = useController();
+  const { purchaseGames, account: controllerAccount, playerName } = useController();
   const { provider } = useProvider();
-  const { address: accountAddress } = useAccount();
+  const { account: walletAccount, address: accountAddress } = useAccount();
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
 
@@ -98,9 +100,33 @@ export default function SwapConfirmationModal() {
     };
   }, [show, depositAmount, depositToken, dungeon.ticketAddress]);
 
-  const handleConfirm = useCallback(() => {
-    if (!depositAmount || !depositToken || !dungeon.ticketAddress || !routerContract) return;
+  const proxyAddress = currentNetworkConfig.gameProxy;
+  const execAccount = controllerAccount || walletAccount;
+  const useProxy = depositTokenSymbol === "USDC" && !!proxyAddress && !!execAccount;
 
+  const handleConfirm = useCallback(() => {
+    if (!depositAmount || !depositToken || !dungeon.ticketAddress) return;
+
+    // Use proxy for USDC deposits (Chainrails bridge flow)
+    if (useProxy && execAccount) {
+      executeProxySwapAndMint({
+        depositAmount,
+        usdcAddress: depositToken.address,
+        ticketAddress: dungeon.ticketAddress,
+        proxyAddress: proxyAddress!,
+        playerName: playerName || "Adventurer",
+        recipientAddress: execAccount.address,
+        account: execAccount,
+        onSuccess: (gamesMinted) => {
+          console.log("[SwapConfirmation] Proxy minted games:", gamesMinted);
+          useSwapStore.getState().complete(gamesMinted);
+        },
+      });
+      return;
+    }
+
+    // Fallback: direct Ekubo swap for non-USDC deposits
+    if (!routerContract) return;
     executeSwapAndMint({
       depositAmount,
       inputTokenAddress: depositToken.address,
@@ -113,7 +139,7 @@ export default function SwapConfirmationModal() {
       routerContract,
       purchaseGames,
     });
-  }, [depositAmount, depositToken, depositTokenSymbol, dungeon.ticketAddress, routerContract, purchaseGames, strkToken]);
+  }, [depositAmount, depositToken, depositTokenSymbol, dungeon.ticketAddress, routerContract, purchaseGames, strkToken, useProxy, execAccount, proxyAddress, playerName]);
 
   const handleDismiss = useCallback(() => {
     reset();
