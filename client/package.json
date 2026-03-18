@@ -33,6 +33,9 @@
           ]
         }
       ]
+    },
+    "extraMetadata": {
+      "type": "commonjs"
     }
   },
   "dependencies": {
