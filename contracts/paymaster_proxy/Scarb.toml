@@ -1,0 +1,21 @@
+[package]
+cairo-version = "=2.12.2"
+name = "paymaster_proxy"
+version = "0.1.0"
+edition = "2024_07"
+
+[lib]
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+starknet = "2.12.2"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[tool.fmt]
+sort-module-level-items = true
+max-line-length = 120

@@ -1,5 +1,6 @@
 import PaymentOptionsModal from "@/components/PaymentOptionsModal";
 import SwapProgressTracker from "@/components/SwapProgressTracker";
+import TestProxyButton from "@/components/TestProxyButton";
 import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import discordIcon from "@/desktop/assets/images/discord.png";
@@ -272,6 +273,8 @@ export default function MainMenu() {
                   </Typography>
                 </Button>
               )}
+
+              <TestProxyButton />
 
               <Divider sx={{ width: "100%", my: 0.5 }} />
 

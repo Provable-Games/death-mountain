@@ -883,7 +883,7 @@ const ChainrailsTabContent = memo(({
           </Typography>
         )}
         <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
-          Pay from any chain and receive USDC on Starknet. The final swap uses gasless USDC fees.
+          Pay from any chain and receive USDC on Starknet. We guarantee at least 1 game and reserve ~$0.10 in STRK when possible.
         </Typography>
       </Box>
 

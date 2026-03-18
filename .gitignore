@@ -1,5 +1,7 @@
 node_modules
 contracts/target
+contracts/paymaster_proxy/target
+contracts/paymaster_proxy/find_declare.py
 contracts/torii.db
 contracts/KATANA.toml
 contracts/manifests

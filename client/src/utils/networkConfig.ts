@@ -1,6 +1,7 @@
 import manifest_mainnet from "../../manifest_mainnet.json";
 import manifest_sepolia from "../../manifest_sepolia.json";
 import manifest_slot from "../../manifest_slot.json";
+import { DEFAULT_LOCAL_CONTROLLER_PRESETS, LocalControllerPresetName, getLocalControllerPolicies } from "@/utils/controllerPresets";
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -8,6 +9,7 @@ export interface NetworkConfig {
   manifest: any;
   slot: string;
   preset: string;
+  policyPresets: LocalControllerPresetName[];
   policies:
   | Array<{
     target: string;
@@ -25,6 +27,7 @@ export interface NetworkConfig {
   paymentTokens: any[];
   goldenToken: string;
   ekuboRouter: string;
+  gameProxy: string;
   beasts: string;
   gameAddress: string;
 }
@@ -60,6 +63,8 @@ export const NETWORKS = {
       "0x027838dea749f41c6f8a44fcfa791788e6101080c1b3cd646a361f653ad10e2d",
     ekuboRouter:
       "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e",
+    gameProxy:
+      "0x02f9adcc117bb608070d355bfc6387fd92f88aa9036f5e456bcb563ef2190d1c",
     paymentTokens: [
       {
         name: "LORDS",
@@ -129,6 +134,7 @@ export const NETWORKS = {
       "0x031d69dbf2f3057f8c52397d0054b43e6ee386eb6b3454fa66a3d2b770a5c2da",
     ekuboRouter:
       "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763",
+    gameProxy: "",
     paymentTokens: [
       {
         name: "ETH",
@@ -162,6 +168,7 @@ export const NETWORKS = {
       "0x056a32ac6baa3d3e2634d55e6f2ca07bfee4ab09c6c6f0b93d456b0a6da4c84c",
     goldenToken: "",
     ekuboRouter: "",
+    gameProxy: "",
     beasts: "",
   },
 };
@@ -174,36 +181,15 @@ export function getDefaultChainId(): ChainId {
   return ChainId.SN_MAIN;
 }
 
-// Mainnet policies (hardcoded contract addresses)
-const MAINNET_POLICIES = [
-  { target: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", method: "transfer" },
-  { target: "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", method: "transfer" },
-  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "clear" },
-  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "clear_minimum" },
-  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "multihop_swap" },
-  { target: "0x0199741822c2dc722f6f605204f35e56dbc23bceed54818168c4c49e4fb8737e", method: "multi_multihop_swap" },
-  { target: "0x0452810188C4Cb3AEbD63711a3b445755BC0D6C4f27B923fDd99B1A118858136", method: "approve" },
-  { target: "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42", method: "buy_game" },
-];
-
-// Sepolia policies — derived from the manifest game_token_systems + game_systems
-const SEPOLIA_POLICIES = [
-  { target: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", method: "transfer" },
-  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "clear" },
-  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "clear_minimum" },
-  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "multihop_swap" },
-  { target: "0x0045f933adf0607292468ad1c1dedaa74d5ad166392590e72676a34d01d7b763", method: "multi_multihop_swap" },
-  { target: "0x7ae26eecf0274aabb31677753ff3a4e15beec7268fa1b104f73ce3c89202831", method: "approve" },
-  { target: "0x3012c0bab9e1fb18c36ef4ce02876e2070bf679be4178aa451b6e9d0904a34f", method: "buy_game" },
-];
-
 export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
   const network = NETWORKS[networkKey as keyof typeof NETWORKS];
   if (!network) throw new Error(`Network ${networkKey} not found`);
 
-  const policies = networkKey === ChainId.SN_SEPOLIA
-    ? SEPOLIA_POLICIES
-    : MAINNET_POLICIES;
+  const policyPresets = networkKey === ChainId.WP_PG_SLOT
+    ? []
+    : DEFAULT_LOCAL_CONTROLLER_PRESETS;
+
+  const policies = getLocalControllerPolicies(networkKey, policyPresets);
 
   return {
     chainId: network.chainId,
@@ -211,6 +197,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     manifest: network.manifest,
     slot: network.slot,
     preset: "loot-survivor",
+    policyPresets,
     vrf: network.vrf,
     policies,
     rpcUrl: network.rpcUrl,
@@ -221,6 +208,7 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     denshokan: network.denshokan,
     goldenToken: network.goldenToken,
     ekuboRouter: network.ekuboRouter,
+    gameProxy: network.gameProxy,
     beasts: network.beasts,
     gameAddress: network.gameAddress,
   };

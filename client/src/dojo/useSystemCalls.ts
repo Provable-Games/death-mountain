@@ -17,18 +17,15 @@ import { translateGameEvent } from "@/utils/translation";
 import { delay, stringToFelt } from "@/utils/utils";
 import { getContractByName } from "@dojoengine/core";
 import { useSnackbar } from "notistack";
-import { CairoOption, CairoOptionVariant, CallData, PaymasterRpc, byteArray, num } from "starknet";
+import { CairoOption, CairoOptionVariant, CallData, byteArray, num } from "starknet";
 import { useGameTokens } from "./useGameTokens";
-
-const TICKET_PRICE_WEI = BigInt("1000000000000000000");
-const AVNU_PAYMASTER_URL = "https://starknet.paymaster.avnu.fi";
 
 export const useSystemCalls = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { getBeastTokenURI, getAdventurerState } = useStarknetApi();
   const { setCollectableTokenURI, gameId, adventurer, beast, bag, exploreLog } = useGameStore();
   const { getBeastTokenId } = useGameTokens();
-  const { account, isControllerAccount } = useController();
+  const { account } = useController();
   const { currentNetworkConfig } = useDynamicConnector();
   const dungeon = useDungeon();
   const { txRevertedEvent } = useAnalytics();
@@ -48,41 +45,8 @@ export const useSystemCalls = () => {
     "game_token_systems"
   )?.address;
 
-  const executeCalls = async (account: any, calls: any[], gasTokenAddress?: string) => {
-    if (isControllerAccount) {
-      return account.execute(calls);
-    }
-
-    if (!gasTokenAddress) {
-      return account.execute(calls);
-    }
-
-    if (typeof account.executePaymasterTransaction !== "function" || typeof account.estimatePaymasterTransactionFee !== "function") {
-      throw new Error("This wallet does not support paymaster transactions");
-    }
-
-    if (!account.paymaster || typeof account.paymaster.getSupportedTokens !== "function") {
-      account.paymaster = new PaymasterRpc({ nodeUrl: AVNU_PAYMASTER_URL });
-    }
-
-    const paymasterDetails = {
-      feeMode: {
-        mode: "default",
-        gasToken: gasTokenAddress,
-      },
-    } as any;
-
-    try {
-      const feeEstimation = await account.estimatePaymasterTransactionFee(calls, paymasterDetails);
-      return await account.executePaymasterTransaction(
-        calls,
-        paymasterDetails,
-        feeEstimation?.suggested_max_fee_in_gas_token
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`${message}. If the wallet is not deployed yet, deploy it first before using USDC gasless swap.`);
-    }
+  const executeCalls = async (account: any, calls: any[]) => {
+    return account.execute(calls);
   };
   const SETTINGS_ADDRESS = getContractByName(
     currentNetworkConfig.manifest,
@@ -266,7 +230,8 @@ export const useSystemCalls = () => {
           })),
       ];
 
-      const tx = await executeCalls(account, calls, gasTokenAddress);
+      void gasTokenAddress;
+      const tx = await executeCalls(account, calls);
 
       callback();
 

@@ -3,7 +3,7 @@ import { useController } from "@/contexts/controller";
 import { useDynamicConnector } from "@/contexts/starknet";
 import { useDungeon } from "@/dojo/useDungeon";
 import { useSwapStore } from "@/stores/swapStore";
-import { executeSwapAndMint, estimateGamesForDeposit } from "@/utils/swapAndMint";
+import { STRK_RESERVE_USDC, estimateSwapPreview, executeSwapAndMint } from "@/utils/swapAndMint";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Button, CircularProgress, IconButton, Typography } from "@mui/material";
 import { useAccount, useProvider } from "@starknet-react/core";
@@ -27,6 +27,7 @@ export default function SwapConfirmationModal() {
   const dungeon = useDungeon();
 
   const [estimatedGames, setEstimatedGames] = useState<number | null>(null);
+  const [reserveEnabled, setReserveEnabled] = useState(false);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
@@ -47,6 +48,11 @@ export default function SwapConfirmationModal() {
     [currentNetworkConfig.paymentTokens, depositTokenSymbol]
   );
 
+  const strkToken = useMemo(
+    () => currentNetworkConfig.paymentTokens.find((t: any) => t.name === "STRK"),
+    [currentNetworkConfig.paymentTokens]
+  );
+
   const show =
     stage === "deposit_detected" &&
     depositAmount !== null &&
@@ -63,16 +69,19 @@ export default function SwapConfirmationModal() {
     setQuoteLoading(true);
     setQuoteError(null);
     setEstimatedGames(null);
+    setReserveEnabled(false);
 
-    estimateGamesForDeposit(
+    estimateSwapPreview(
       depositAmount,
       depositToken.address,
       dungeon.ticketAddress,
-      depositToken.decimals || 18
+      depositToken.decimals || 18,
+      depositToken.name === "USDC" ? STRK_RESERVE_USDC : 0
     )
-      .then((games) => {
+      .then((preview) => {
         if (!cancelled) {
-          setEstimatedGames(games);
+          setEstimatedGames(preview.gamesToBuy);
+          setReserveEnabled(preview.reserveEnabled);
           setQuoteLoading(false);
         }
       })
@@ -92,19 +101,19 @@ export default function SwapConfirmationModal() {
   const handleConfirm = useCallback(() => {
     if (!depositAmount || !depositToken || !dungeon.ticketAddress || !routerContract) return;
 
-    const gasTokenAddress = depositToken.name === "USDC" ? depositToken.address : undefined;
-
     executeSwapAndMint({
       depositAmount,
       inputTokenAddress: depositToken.address,
       inputTokenSymbol: depositToken.name || depositTokenSymbol || "STRK",
       inputTokenDecimals: depositToken.decimals || 18,
       ticketAddress: dungeon.ticketAddress,
+      reserveTokenAddress: depositToken.name === "USDC" ? strkToken?.address : undefined,
+      reserveTokenSymbol: "STRK",
+      reserveInputAmount: depositToken.name === "USDC" ? STRK_RESERVE_USDC : 0,
       routerContract,
       purchaseGames,
-      gasTokenAddress,
     });
-  }, [depositAmount, depositToken, depositTokenSymbol, dungeon.ticketAddress, routerContract, purchaseGames]);
+  }, [depositAmount, depositToken, depositTokenSymbol, dungeon.ticketAddress, routerContract, purchaseGames, strkToken]);
 
   const handleDismiss = useCallback(() => {
     reset();
@@ -153,9 +162,16 @@ export default function SwapConfirmationModal() {
                 )}
 
                 {!quoteLoading && estimatedGames !== null && estimatedGames > 0 && (
-                  <Typography sx={styles.estimateText}>
-                    Enough for ~{estimatedGames} game{estimatedGames > 1 ? "s" : ""}
-                  </Typography>
+                  <>
+                    <Typography sx={styles.estimateText}>
+                      Enough for ~{estimatedGames} game{estimatedGames > 1 ? "s" : ""}
+                    </Typography>
+                    {reserveEnabled && depositTokenSymbol === "USDC" && (
+                      <Typography sx={{ ...styles.estimateText, fontSize: 11 }}>
+                        Includes a ~$0.10 STRK reserve for future fees
+                      </Typography>
+                    )}
+                  </>
                 )}
 
                 {!quoteLoading && estimatedGames === 0 && (
