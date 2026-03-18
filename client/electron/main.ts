@@ -93,7 +93,7 @@ async function createWindow() {
   if (isDev) {
     await win.loadURL(`http://localhost:5173${ALLOWED_PATH_PREFIX}`);
   } else {
-    const distPath = path.join(process.resourcesPath, "app", "dist");
+    const distPath = path.join(app.getAppPath(), "dist");
     const port = await startLocalServer(distPath);
     await win.loadURL(`http://127.0.0.1:${port}${ALLOWED_PATH_PREFIX}`);
   }
