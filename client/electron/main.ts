@@ -88,16 +88,21 @@ async function createWindow() {
     }
   });
 
-  if (process.env.NODE_ENV === "development") {
+  const isDev = !app.isPackaged;
+
+  if (isDev) {
     await win.loadURL(`http://localhost:5173${ALLOWED_PATH_PREFIX}`);
   } else {
-    const distPath = path.join(__dirname, "..", "dist");
+    const distPath = path.join(process.resourcesPath, "app", "dist");
     const port = await startLocalServer(distPath);
     await win.loadURL(`http://127.0.0.1:${port}${ALLOWED_PATH_PREFIX}`);
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(createWindow).catch((err) => {
+  console.error("Failed to create window:", err);
+  app.quit();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
