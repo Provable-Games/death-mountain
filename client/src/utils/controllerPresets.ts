@@ -8,10 +8,16 @@ export type ControllerNetworkKey = "WP_PG_SLOT" | "SN_MAIN" | "SN_SEPOLIA";
 
 type NetworkPresetMap = Record<LocalControllerPresetName, ControllerPolicy[]>;
 
+// Proxy contract address (mainnet)
+const GAME_PROXY_MAINNET = "0x02f9adcc117bb608070d355bfc6387fd92f88aa9036f5e456bcb563ef2190d1c";
+
 const MAINNET_PRESETS: NetworkPresetMap = {
   base: [
     { target: "0x0452810188c4cb3aebd63711a3b445755bc0d6c4f27b923fdd99b1a118858136", method: "approve" },
     { target: "0x00a67ef20b61a9846e1c82b411175e6ab167ea9f8632bd6c2091823c3629ec42", method: "buy_game" },
+    // USDC approve for proxy + proxy entry point
+    { target: "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", method: "approve" },
+    { target: GAME_PROXY_MAINNET, method: "buy_game_with_usdc" },
   ],
   "swap-paymaster": [
     { target: "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", method: "transfer" },

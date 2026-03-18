@@ -150,8 +150,8 @@ export async function executeProxySwapAndMint(params: ProxySwapParams): Promise<
       throw new Error("No USDC available for swap");
     }
 
-    // Buffered deposit (98% to account for rounding)
-    const depositUnits = BigInt(Math.floor(depositAmount * 0.98 * 10 ** USDC_DECIMALS));
+    // Use 95% of deposit for quoting (leave margin for rounding/fees)
+    const depositUnits = BigInt(Math.floor(depositAmount * 0.95 * 10 ** USDC_DECIMALS));
 
     // 1. Forward quote: how many tickets can we get?
     const forwardQuote = await getSwapQuote(depositUnits, usdcAddress, ticketAddress);
