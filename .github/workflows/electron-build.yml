@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/electron-desktop
+      - main
+    paths:
+      - 'client/**'
 
 jobs:
   build-windows:
