@@ -11,6 +11,13 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - app_host: epic
+            artifact: loot-survivor-2-win-x64-epic
+          - app_host: steam
+            artifact: loot-survivor-2-win-x64-steam
     steps:
       - uses: actions/checkout@v4
 
@@ -34,6 +41,9 @@ jobs:
 
       - name: Build Vite
         working-directory: client
+        env:
+          VITE_PUBLIC_PLATFORM: desktop
+          VITE_PUBLIC_APP_HOST: ${{ matrix.app_host }}
         run: npx vite build
 
       - name: Build Windows executable
@@ -43,6 +53,6 @@ jobs:
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: loot-survivor-2-win-x64
+          name: ${{ matrix.artifact }}
           path: client/release/win-unpacked/
           retention-days: 30

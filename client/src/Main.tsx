@@ -16,9 +16,21 @@ import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import { PostHogProvider } from "posthog-js/react";
 
+import { getPlatform, getAppHost } from "@/utils/platform";
+
 const options = {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   defaults: "2025-05-24" as const,
+  persistence: "localStorage+cookie" as const,
+  bootstrap: {
+    featureFlags: {},
+  },
+  loaded: (posthog: { register: (props: Record<string, string>) => void }) => {
+    posthog.register({
+      platform: getPlatform(),
+      app_host: getAppHost(),
+    });
+  },
 };
 
 function DojoApp() {
