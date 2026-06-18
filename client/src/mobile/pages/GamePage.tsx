@@ -187,7 +187,8 @@ const styles = {
   container: {
     width: "450px",
     maxWidth: "100vw",
-    height: isMobile ? "100dvh" : "calc(100dvh - 50px)",
+    height: isMobile ? "100%" : "calc(100dvh - 50px)",
+    ...(isMobile && { flex: 1, minHeight: 0 }),
     display: "flex",
     flexDirection: "column",
     alignItems: "center",

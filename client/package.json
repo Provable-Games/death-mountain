@@ -8,11 +8,26 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "sync:android": "npx cap sync android",
+    "sync:ios": "npx cap sync ios",
+    "run:android": "npx cap run android",
+    "run:ios": "npx cap run ios",
+    "rerun:android": "pnpm build && pnpm sync:android && pnpm run:android",
+    "rerun:ios": "pnpm build && pnpm sync:ios && pnpm run:ios"
   },
   "dependencies": {
-    "@cartridge/connector": "^0.10.1",
-    "@cartridge/controller": "^0.10.1",
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.0",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/clipboard": "^8.0.1",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@cartridge/connector": "^0.13.9",
+    "@cartridge/controller": "^0.13.9",
+    "@cartridge/controller-wasm": "^0.9.3",
+    "@cartridge/presets": "^0.5.2",
     "@cloudflare/stream-react": "^1.9.3",
     "@dojoengine/core": "^1.7.6",
     "@dojoengine/sdk": "^1.7.6",
@@ -53,6 +68,7 @@
     "vite-plugin-wasm": "^3.4.1"
   },
   "devDependencies": {
+    "@types/node": "^25.2.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-lazy-load-image-component": "^1.6.4",

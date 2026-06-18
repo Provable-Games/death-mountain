@@ -1,5 +1,6 @@
 import { BigNumberish, shortString } from "starknet";
 import * as starknet from "@scure/starknet";
+import { Capacitor } from "@capacitor/core";
 
 export const stringToFelt = (v: string): BigNumberish =>
   v ? shortString.encodeShortString(v) : "0x0";
@@ -187,4 +188,8 @@ export function generateBattleSalt(gameId: number, xp: number, actionCount: numb
   let params = [BigInt(xp), BigInt(gameId), BigInt(actionCount + 1)];
   let poseidon = starknet.poseidonHashMany(params);
   return poseidon;
+}
+
+export function isNative(): boolean {
+  return typeof Capacitor !== "undefined" && Capacitor.isNativePlatform();
 }

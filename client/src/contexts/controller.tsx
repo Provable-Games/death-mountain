@@ -18,8 +18,21 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Account, RpcProvider } from "starknet";
 import { useDynamicConnector } from "./starknet";
-import { delay } from "@/utils/utils";
+import {delay, isNative} from "@/utils/utils";
 import { useDungeon } from "@/dojo/useDungeon";
+import ControllerConnector from "@cartridge/connector/controller";
+import NativeConnector from "@/contexts/connector/NativeConnector.ts";
+import {Browser} from "@capacitor/browser";
+import {App} from "@capacitor/app";
+
+/** Connector that may expose controller methods (ControllerConnector or NativeConnector). */
+type Connector = {
+  username?: () => Promise<string | undefined>;
+  controller?: {
+    openProfile?: (tab?: string) => void;
+    openStarterPack?: (id: string | number) => Promise<void>;
+  };
+};
 
 export interface ControllerContext {
   account: any;
@@ -118,6 +131,38 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
     if (connector) getUsername();
   }, [connector]);
 
+  useEffect(() => {
+    if (!isNative()) return;
+
+    const handleDeepLink = async (url: string) => {
+      try {
+        const parsed = new URL(url);
+        const startapp = parsed.searchParams.get("startapp");
+        if (!startapp) return;
+
+        const connector = NativeConnector.fromConnectors(connectors);
+        const registration = connector.controller.ingestSessionFromRedirect(startapp);
+        if (!registration) {
+          throw new Error("Invalid session payload");
+        }
+
+        await Browser.close().catch(() => undefined);
+
+        const _ = await connector.controller.probe();
+        connect({connector: connector})
+      } catch (error) {
+        console.error("Failed to handle deep link", error);
+      }
+    };
+
+    const listener = App.addListener("appUrlOpen", (event) => {
+      if (event.url) handleDeepLink(event.url);
+    });
+    return () => {
+      listener.then((l) => l.remove());
+    };
+  }, [connectors, connect]);
+
   const enterDungeon = async (payment: Payment, txs: any[]) => {
     let gameId = await buyGame(
       account,
@@ -208,10 +253,11 @@ export const ControllerProvider = ({ children }: PropsWithChildren) => {
 
         openProfile: () => (connector as any)?.controller?.openProfile(),
         openBuyTicket: () => (connector as any)?.controller?.openStarterPack(3),
-        login: () =>
-          connect({
-            connector: connectors.find((conn) => conn.id === "controller"),
-          }),
+        login: () => connect({
+            connector: isNative() ?
+                NativeConnector.fromConnectors(connectors) :
+                ControllerConnector.fromConnectors(connectors),
+        }),
         logout: () => disconnect(),
         enterDungeon,
         bulkMintGames,

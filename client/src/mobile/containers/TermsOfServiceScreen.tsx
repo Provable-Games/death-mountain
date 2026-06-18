@@ -323,6 +323,7 @@ const styles = {
   header: {
     padding: "16px 20px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
+    paddingTop: "env(safe-area-inset-top, 0px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
