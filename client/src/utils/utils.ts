@@ -1,6 +1,10 @@
 import { BigNumberish, shortString } from "starknet";
 import * as starknet from "@scure/starknet";
 
+export const isElectron = (): boolean =>
+  typeof window !== "undefined" &&
+  !!(window as any).electronAPI?.isElectron;
+
 export const stringToFelt = (v: string): BigNumberish =>
   v ? shortString.encodeShortString(v) : "0x0";
 
