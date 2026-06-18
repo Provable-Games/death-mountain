@@ -32,6 +32,7 @@ export const useSystemCalls = () => {
 
   const namespace = currentNetworkConfig.namespace;
   const VRF_PROVIDER_ADDRESS = import.meta.env.VITE_PUBLIC_VRF_PROVIDER_ADDRESS;
+  const DENSHOKAN_ADDRESS = import.meta.env.VITE_PUBLIC_DENSHOKAN_ADDRESS;
   const DUNGEON_ADDRESS = dungeon.address;
   const DUNGEON_TICKET = dungeon.ticketAddress;
   const GAME_ADDRESS = getContractByName(
@@ -502,6 +503,41 @@ export const useSystemCalls = () => {
     }], () => { }, () => { });
   };
 
+  /**
+   * Updates the player name for a game token.
+   * @param tokenId The ID of the game token
+   * @param name The new name for the player (max 31 characters for felt252)
+   * @returns The transaction receipt
+   */
+  const updatePlayerName = async (tokenId: number, name: string) => {
+    if (!DENSHOKAN_ADDRESS) {
+      throw new Error("Denshokan address not configured");
+    }
+    if (!account) {
+      throw new Error("Account not connected");
+    }
+    if (!name || name.length > 31) {
+      throw new Error("Name must be 1-31 characters");
+    }
+
+    try {
+      let tx = await account.execute([
+        {
+          contractAddress: DENSHOKAN_ADDRESS,
+          entrypoint: "update_player_name",
+          calldata: CallData.compile([tokenId, stringToFelt(name)]),
+        },
+      ]);
+
+      const receipt: any = await waitForTransaction(tx.transaction_hash, 0);
+
+      return receipt;
+    } catch (error) {
+      console.error("Error updating player name:", error);
+      throw error;
+    }
+  };
+
   const createSettings = async (settings: GameSettingsData) => {
     let bag = {
       item_1: settings.bag[0]
@@ -594,6 +630,7 @@ export const useSystemCalls = () => {
     requestRandom,
     executeAction,
     claimSurvivorTokens,
-    refreshDungeonStats
+    refreshDungeonStats,
+    updatePlayerName
   };
 };
