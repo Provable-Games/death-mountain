@@ -7,6 +7,7 @@ import { getLocationName } from "./game";
 import { streamIds } from "./cloudflare";
 import { ItemUtils } from "./loot";
 import { Dungeon } from "@/dojo/useDungeon";
+import { getBattleSceneUrl } from "@/config/assets";
 
 export interface GameEvent {
   type: 'adventurer' | 'bag' | 'beast' | 'discovery' | 'obstacle' | 'defeated_beast' | 'fled_beast' | 'stat_upgrade' |
@@ -242,7 +243,7 @@ export const processGameEvent = (event: any, dungeon: Dungeon): GameEvent => {
 
 export const getVideoId = (event: GameEvent) => {
   if (event.type === 'beast') {
-    preloadAssets([`/images/battle_scenes/${event.beast!.baseName.toLowerCase()}.png`]);
+    preloadAssets([getBattleSceneUrl(event.beast!.baseName)]);
     return streamIds[event.beast!.baseName as keyof typeof streamIds];
   } else if (event.type === 'obstacle') {
     return streamIds[OBSTACLE_NAMES[event.obstacle!.id as keyof typeof OBSTACLE_NAMES] as keyof typeof streamIds];
