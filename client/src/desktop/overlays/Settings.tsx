@@ -21,7 +21,7 @@ export default function SettingsOverlay() {
   const { skipAllAnimations, setSkipAllAnimations, fastBattle, setFastBattle, advancedMode, setAdvancedMode } = useUIStore();
   const navigate = useNavigate();
   const handleExitGame = () => {
-    navigate('/');
+    navigate(`/${dungeon?.id ?? ''}`);
   };
 
   const handleVolumeChange = (_: Event, newValue: number | number[]) => {

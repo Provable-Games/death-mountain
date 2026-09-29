@@ -1,14 +1,17 @@
 import { usePostHog } from "posthog-js/react";
 import { track } from "@vercel/analytics";
 import { calculateLevel } from "@/utils/game";
+import { getPlatform, getAppHost } from "@/utils/platform";
 
 export const useAnalytics = () => {
   const posthog = usePostHog();
 
   const identifyAddress = ({ address }: { address: string }) => {
     posthog.identify(address, {
-      wallet: address, // custom property on the person
-      login_method: "controller", // optional metadata
+      wallet: address,
+      login_method: "controller",
+      platform: getPlatform(),
+      app_host: getAppHost(),
     });
   };
 
