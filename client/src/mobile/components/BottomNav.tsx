@@ -68,118 +68,70 @@ export default function BottomNav({ activeNavItem, setActiveNavItem, isExploring
     }
   ];
 
-  return (
-    <>
-      <Box sx={styles.navContainer}>
-        <Box sx={styles.mainNavItems}>
-          {navItems.slice(0, 3).map((item) => {
-            return item.tooltip ? (
-              <Box key={item.key} sx={{ position: 'relative' }}>
-                <Tooltip
-                  title={item.tooltip}
-                >
-                  <Box
-                    sx={{
-                      ...styles.navItem,
-                      opacity: item.disabled ? 0.3 : item.active ? 1 : 0.7,
-                      cursor: item.disabled ? 'default' : 'pointer',
-                      pointerEvents: 'auto',
-                      touchAction: 'manipulation',
-                      WebkitTapHighlightColor: 'transparent',
-                      '&:hover': item.disabled ? {} : {
-                        opacity: 1,
-                        transform: 'translateY(-2px)'
-                      }
-                    }}
-                    onClick={item.disabled ? undefined : item.onClick}
-                  >
-                    <Box
-                      sx={{
-                        ...styles.navIcon,
-                        backgroundColor: item.active ? 'rgba(128, 255, 0, 0.1)' : 'transparent',
-                        border: `1px solid ${item.active ? 'rgba(128, 255, 0, 0.2)' : 'rgba(128, 255, 0, 0.1)'}`,
-                        boxShadow: item.active ? '0 0 10px rgba(128, 255, 0, 0.2)' : 'none',
-                        '&:hover': item.disabled ? {} : {
-                          backgroundColor: 'rgba(128, 255, 0, 0.15)',
-                          border: '1px solid rgba(128, 255, 0, 0.3)',
-                          boxShadow: '0 0 15px rgba(128, 255, 0, 0.3)'
-                        }
-                      }}
-                    >
-                      {item.icon}
-                      {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && (
-                        <Box sx={styles.newIndicator}>!</Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Tooltip>
-              </Box>
-            ) : (
-              <Box
-                key={item.key}
-                sx={{
-                  ...styles.navItem,
-                  opacity: item.disabled ? 0.3 : item.active ? 1 : 0.7,
-                  cursor: item.disabled ? 'default' : 'pointer',
-                  pointerEvents: 'auto',
-                  '&:hover': item.disabled ? {} : {
-                    opacity: 1,
-                    transform: 'translateY(-2px)'
-                  }
-                }}
-                onClick={item.disabled ? undefined : item.onClick}
-              >
-                <Box
-                  sx={{
-                    ...styles.navIcon,
-                    backgroundColor: item.active ? 'rgba(128, 255, 0, 0.1)' : 'transparent',
-                    border: `1px solid ${item.active ? 'rgba(128, 255, 0, 0.2)' : 'rgba(128, 255, 0, 0.1)'}`,
-                    boxShadow: item.active ? '0 0 10px rgba(128, 255, 0, 0.2)' : 'none',
-                    '&:hover': item.disabled ? {} : {
-                      backgroundColor: 'rgba(128, 255, 0, 0.15)',
-                      border: '1px solid rgba(128, 255, 0, 0.3)',
-                      boxShadow: '0 0 15px rgba(128, 255, 0, 0.3)'
-                    }
-                  }}
-                >
-                  {item.icon}
-                  {item.key === 'MARKET' && item.hasNew && (
-                    <Box sx={styles.newIndicator}>!</Box>
-                  )}
-                </Box>
-
-                {/* Forced market tooltip when new market is available */}
-                {item.key === 'MARKET' && item.hasNew && adventurer?.stat_upgrades_available! === 0 && !spectating && (
-                  <Box sx={styles.forcedMarketTooltip}>
-                    <Typography sx={styles.forcedMarketTooltipText}>
-                      New Market Available
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            );
-          })}
-        </Box>
-        <Box sx={styles.settingsContainer}>
-          <Tooltip title={navItems[3].disabled ? navItems[3].tooltip : ''}>
-            <Box
-              sx={{
-                ml: 1,
-                ...styles.navItem,
-                opacity: navItems[3].disabled ? 0.3 : navItems[3].active ? 1 : 0.5,
-                cursor: navItems[3].disabled ? 'default' : 'pointer',
-                '&:hover': navItems[3].disabled ? {} : {
-                  opacity: 1
-                }
-              }}
-              onClick={navItems[3].disabled ? undefined : navItems[3].onClick}
-            >
-              {navItems[3].icon}
-            </Box>
-          </Tooltip>
-        </Box>
+  const renderNavItem = (item: (typeof navItems)[0]) => {
+    const inactiveOpacity = item.key === 'SETTINGS' ? 0.5 : 0.7;
+    const content = (
+      <Box
+        sx={{
+          ...styles.navItem,
+          opacity: item.disabled ? 0.3 : item.active ? 1 : inactiveOpacity,
+          cursor: item.disabled ? 'default' : 'pointer',
+          pointerEvents: 'auto',
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          '&:hover': item.disabled ? {} : {
+            opacity: 1,
+            transform: item.key === 'SETTINGS' ? undefined : 'translateY(-2px)'
+          }
+        }}
+        onClick={item.disabled ? undefined : item.onClick}
+      >
+        {item.key === 'SETTINGS' ? (
+          item.icon
+        ) : (
+          <Box
+            sx={{
+              ...styles.navIcon,
+              backgroundColor: item.active ? 'rgba(128, 255, 0, 0.1)' : 'transparent',
+              border: `1px solid ${item.active ? 'rgba(128, 255, 0, 0.2)' : 'rgba(128, 255, 0, 0.1)'}`,
+              boxShadow: item.active ? '0 0 10px rgba(128, 255, 0, 0.2)' : 'none',
+              '&:hover': item.disabled ? {} : {
+                backgroundColor: 'rgba(128, 255, 0, 0.15)',
+                border: '1px solid rgba(128, 255, 0, 0.3)',
+                boxShadow: '0 0 15px rgba(128, 255, 0, 0.3)'
+              }
+            }}
+          >
+            {item.icon}
+            {item.key === 'MARKET' && item.hasNew && (adventurer?.stat_upgrades_available ?? 0) === 0 && (
+              <Box sx={styles.newIndicator}>!</Box>
+            )}
+          </Box>
+        )}
+        {item.key === 'MARKET' && item.hasNew && (adventurer?.stat_upgrades_available ?? 0) === 0 && !spectating && (
+          <Box sx={styles.forcedMarketTooltip}>
+            <Typography sx={styles.forcedMarketTooltipText}>
+              New Market Available
+            </Typography>
+          </Box>
+        )}
       </Box>
-    </>
+    );
+    return (
+      <Box key={item.key} sx={{ position: 'relative' }}>
+        {item.tooltip ? (
+          <Tooltip title={item.tooltip}>{content}</Tooltip>
+        ) : (
+          content
+        )}
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={styles.navContainer}>
+      {navItems.map(renderNavItem)}
+    </Box>
   );
 }
 
@@ -192,23 +144,11 @@ const styles = {
     height: '64px',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     padding: '0 16px',
     boxSizing: 'border-box',
     zIndex: 1000,
-  },
-  mainNavItems: {
-    display: 'flex',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    gap: '32px',
-    flex: 1,
-  },
-  settingsContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    marginLeft: 'auto',
   },
   navItem: {
     display: 'flex',

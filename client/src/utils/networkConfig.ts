@@ -1,5 +1,14 @@
 import manifest_mainnet from "../../manifest_mainnet.json";
 import manifest_slot from "../../manifest_slot.json";
+import { ContractPolicies, ContractPolicy, SessionPolicies} from "@cartridge/presets";
+import cartridgeNativePresets from "./cartridgeNativePresets.json";
+
+export interface PaymentToken {
+  name: string;
+  address: string;
+  displayDecimals: number;
+  decimals?: number;
+}
 
 export interface NetworkConfig {
   chainId: ChainId;
@@ -21,7 +30,7 @@ export interface NetworkConfig {
   }>;
   tokens: any;
   denshokan: string;
-  paymentTokens: any[];
+  paymentTokens: PaymentToken[];
   goldenToken: string;
   ekuboRouter: string;
   beasts: string;
@@ -117,7 +126,7 @@ export const NETWORKS = {
     },
     manifest: manifest_slot,
     vrf: false,
-    paymentTokens: [],
+    paymentTokens: [] as PaymentToken[],
     denshokan:
       "0x01d3950941c7cbb80160d2fd3f112bb9885244833e547b298dfed040ce1e140f",
     gameAddress:
@@ -152,6 +161,30 @@ export function getNetworkConfig(networkKey: ChainId): NetworkConfig {
     ekuboRouter: network.ekuboRouter,
     beasts: network.beasts,
     gameAddress: network.gameAddress,
+  };
+}
+
+export function getNativePolicies(networkKey: ChainId): SessionPolicies {
+  const network = NETWORKS[networkKey as keyof typeof NETWORKS];
+  if (!network) throw new Error(`Network ${networkKey} not found`);
+
+  const policiesWithPayments: Record<string, ContractPolicy> = {
+    ...cartridgeNativePresets,
+  };
+  network.paymentTokens.forEach((token) => {
+    policiesWithPayments[token.address] = {
+      methods: [
+        {
+          name: "Transfer",
+          entrypoint: "transfer"
+        }
+      ],
+      description: `Approve of transfer of ${token.name} tokens.`
+    };
+  });
+
+  return {
+    contracts: policiesWithPayments
   };
 }
 

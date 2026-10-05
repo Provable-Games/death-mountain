@@ -11,6 +11,10 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
 }
 
 a {
@@ -41,10 +45,19 @@ b {
   background-image: url("/images/mobile/background.png");
 }
 
+/* Safe-area-aware full height: constrain to viewport minus insets so content
+   (game, nav) doesn't sit under notch/home indicator. Use flex so route content
+   fills remaining space after Header. */
 .main {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
   width: 100dvw;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-width: calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
   overflow: hidden;
+  box-sizing: border-box;
+  min-height: 0;
 }
 
 .container {
@@ -57,10 +70,12 @@ b {
 
 .imageContainer {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: env(safe-area-inset-top, 0px);
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  width: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;

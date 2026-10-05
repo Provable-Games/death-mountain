@@ -1,9 +1,9 @@
 import {
-  ChainId,
-  getNetworkConfig,
-  NetworkConfig,
+    ChainId, getNativePolicies,
+    getNetworkConfig,
+    NetworkConfig,
 } from "@/utils/networkConfig";
-import { stringToFelt } from "@/utils/utils";
+import {isNative, stringToFelt} from "@/utils/utils";
 import ControllerConnector from "@cartridge/connector/controller";
 import { mainnet } from "@starknet-react/chains";
 import { jsonRpcProvider, StarknetConfig, voyager } from "@starknet-react/core";
@@ -14,6 +14,8 @@ import {
   useContext,
   useState
 } from "react";
+import NativeConnector from "@/contexts/connector/NativeConnector.ts";
+import {num} from "starknet";
 
 interface DynamicConnectorContext {
   setCurrentNetworkConfig: (network: NetworkConfig) => void;
@@ -25,17 +27,25 @@ const DynamicConnectorContext = createContext<DynamicConnectorContext | null>(
 );
 
 const controllerConfig = getNetworkConfig(ChainId.SN_MAIN);
-const cartridgeController =
-  typeof window !== "undefined"
-    ? new ControllerConnector({
-      policies: controllerConfig.policies,
-      namespace: controllerConfig.namespace,
-      slot: controllerConfig.slot,
-      preset: controllerConfig.preset,
-      chains: controllerConfig.chains,
-      defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
-    })
-    : null;
+function createConnector() {
+    if (typeof window === "undefined") return null;
+    if (isNative()) {
+        return new NativeConnector({
+            rpc: controllerConfig.rpcUrl,
+            chainId: num.toHex(stringToFelt(controllerConfig.chainId)),
+            redirectUrl: "lootsurvivor://session",
+            policies: getNativePolicies(ChainId.SN_MAIN),
+        });
+    }
+    return new ControllerConnector({
+        namespace: controllerConfig.namespace,
+        slot: controllerConfig.slot,
+        preset: controllerConfig.preset,
+        chains: controllerConfig.chains,
+        defaultChainId: stringToFelt(controllerConfig.chainId).toString(),
+    });
+}
+const cartridgeController = createConnector();
 
 export function DynamicConnectorProvider({ children }: PropsWithChildren) {
   const [currentNetworkConfig, setCurrentNetworkConfig] =
